@@ -1,0 +1,12 @@
+{
+  "extends": ["plugin:github/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["jest", "@typescript-eslint"],
+  "rules": {},
+  "env": {
+    "jest/globals": true
+  }
+}
