@@ -1,11 +1,16 @@
 {
-  "extends": ["plugin:github/recommended"],
+  "extends": ["plugin:github/recommended", "eslint:recommended"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json"
   },
   "plugins": ["jest", "@typescript-eslint"],
-  "rules": {},
+  "rules": {
+    "import/no-namespace": "off",
+    "eslint-comments/no-use": "off",
+    "i18n-text/no-en": "off",
+    "camelcase": "off"
+  },
   "env": {
     "jest/globals": true
   }
