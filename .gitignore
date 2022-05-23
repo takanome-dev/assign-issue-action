@@ -1,5 +1,10 @@
 # dependencies
 node_modules/
 
+# vscode settings
+.vscode/
+
+ignore/
+
 # cache
 .dccache
