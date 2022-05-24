@@ -14,7 +14,8 @@ export default async function scheduleHandler(core: Core) {
     if (!issue.assignee) continue;
 
     // Unassign the user
-    core.info(`-- Unassigning @${issue.assignee.login} from #${issue.number}`);
+    core.info(`-- UnAssigning @${issue.assignee.login} from #${issue.number}`);
+
     await processor.unassignIssue(issue);
 
     core.info(`-- Done processing issue #${issue.number}`);
