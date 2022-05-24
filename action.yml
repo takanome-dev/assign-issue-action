@@ -1,6 +1,12 @@
 name: Assign-To-Me Action
 author: TAKANOME-DEV
 description: Enable a '/assign-to-me' command that allows contributors to assign themselves issues.
+runs:
+  using: node16
+  main: src/index.ts
+branding:
+  icon: activity
+  color: white
 inputs:
   github_token:
     default: ${{ github.token }}
@@ -25,7 +31,7 @@ inputs:
         * `inputs` (the inputs given to the action)
         * `comment` (an object of the comment that was created)
         * `totalDays` (7 days)
-        # * `env` (`process.env`, anything you pass to the action via `env`)
+        * `env` (`process.env`, anything you pass to the action via `env`)
     default: |
       This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }}!
       It will become unassigned if it isn't closed within {{ totalDays }} days. 

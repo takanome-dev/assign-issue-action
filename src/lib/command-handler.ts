@@ -10,9 +10,10 @@ export default async function commentHandler(core: Core, github: Github) {
   const comment = github.context.payload.comment;
   console.log({ issue, comment });
 
-  const token = core.getInput('github_token');
+  const token = core.getInput('github_token', { required: true });
   console.log({ token });
   const client = github.getOctokit(token);
+  console.log('client rest issues', client.rest.issues);
 
   // Check if the issue has the configured label
   if (core.getInput('required_label')) {
@@ -52,12 +53,15 @@ export default async function commentHandler(core: Core, github: Github) {
   ]);
 
   const totalDays = parseInt(core.getInput('days_until_unassign'), 10);
+  console.log({ totalDays });
 
   const body = mustache.render(core.getInput('assigned_comment'), {
     totalDays,
     comment,
+    env: process.env,
     inputs: getInputs(),
   });
+  console.log({ body });
 
   // Comment saying passus
   await client.rest.issues.createComment({
