@@ -6,5 +6,8 @@ node_modules/
 
 ignore/
 
+# eslint cache
+.eslintcache
+
 # cache
 .dccache

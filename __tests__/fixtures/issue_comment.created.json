@@ -1,0 +1,15 @@
+{
+  "action": "created",
+  "comment": {
+    "user": {
+      "login": "Shaxx"
+    },
+    "body": "/assign",
+    "html_url": "https://github.com/my-comment"
+  },
+  "issue": {
+    "labels": [],
+    "assignee": null,
+    "number": 1
+  }
+}

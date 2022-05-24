@@ -12,7 +12,7 @@ export default class StaleAssignments {
       core.getInput('days_until_unassign'),
       10
     );
-    this.token = core.getInput('github_token', { required: true });
+    this.token = core.getInput('github_token');
     this.client = github.getOctokit(this.token);
   }
 

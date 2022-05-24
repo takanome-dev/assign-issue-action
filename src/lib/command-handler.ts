@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-console */
+
 import mustache from 'mustache';
 import { Core, Github } from '..';
 import getInputs from './helpers';
@@ -5,8 +8,10 @@ import getInputs from './helpers';
 export default async function commentHandler(core: Core, github: Github) {
   const issue = github.context.payload.issue;
   const comment = github.context.payload.comment;
+  console.log({ issue, comment });
 
-  const token = core.getInput('github_token', { required: true });
+  const token = core.getInput('github_token');
+  console.log({ token });
   const client = github.getOctokit(token);
 
   // Check if the issue has the configured label
