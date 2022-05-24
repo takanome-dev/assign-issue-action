@@ -36,7 +36,3 @@ inputs:
       This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }}!
       It will become unassigned if it isn't closed within {{ totalDays }} days. 
       A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned.
-  trigger:
-    description: The command that triggers the action
-    required: false
-    default: '/assign-to-me'

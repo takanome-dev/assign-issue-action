@@ -3,7 +3,8 @@
     "target": "es6",
     "module": "commonjs",
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": "lib",
+    "lib": ["es6"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -16,6 +17,6 @@
     "noImplicitThis": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "exclude": ["node_modules", "__mocks__", "lib", "*.js", "**/*.test.ts"]
   // "exclude": ["node_modules", "__tests__", "__mocks__"]
 }

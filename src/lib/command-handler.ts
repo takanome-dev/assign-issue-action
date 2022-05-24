@@ -3,17 +3,29 @@
 
 import mustache from 'mustache';
 import { Core, Github } from '..';
-import getInputs from './helpers';
+import helpers from './helpers';
 
 export default async function commentHandler(core: Core, github: Github) {
   const issue = github.context.payload.issue;
   const comment = github.context.payload.comment;
   console.log({ issue, comment });
 
+  // Check required context properties exist
+  if (!issue || !comment) {
+    throw new Error(
+      `Required context properties are missing: issue: ${issue} - comment: ${comment}`
+    );
+  }
+
   const token = core.getInput('github_token', { required: true });
   console.log({ token });
+
+  // Check required inputs
+  // if (!token) {
+  //   throw new Error(`Missing required input 'token': ${token}`);
+  // }
+
   const client = github.getOctokit(token);
-  console.log('client rest issues', client.rest.issues);
 
   // Check if the issue has the configured label
   if (core.getInput('required_label')) {
@@ -59,7 +71,7 @@ export default async function commentHandler(core: Core, github: Github) {
     totalDays,
     comment,
     env: process.env,
-    inputs: getInputs(),
+    inputs: helpers.getInputs(),
   });
   console.log({ body });
 

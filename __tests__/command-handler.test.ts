@@ -2,51 +2,9 @@
 
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import fs from 'fs';
-import jsYaml from 'js-yaml';
 import path from 'path';
 import commandHandler from '../src/lib/command-handler';
-
-/**
- * Helper that reads the `action.yml` and includes the default values
- * for each input as an environment variable, like the Actions runtime does.
- */
-function getDefaultValues() {
-  // eslint-disable-next-line no-undef
-  const yaml = fs.readFileSync(path.join(__dirname, '../action.yml'), 'utf8');
-  const { inputs } = jsYaml.load(yaml) as any;
-
-  return Object.keys(inputs).reduce((acc, key) => {
-    if ('default' in inputs[key]) {
-      return {
-        ...acc,
-        [`INPUT_${key.toUpperCase()}`]: inputs[key].default,
-      };
-    } else {
-      return acc;
-    }
-  }, {});
-}
-
-console.log('default Values', getDefaultValues());
-
-Object.assign(
-  process.env,
-  {
-    GITHUB_ACTION: 'my-action',
-    GITHUB_ACTOR: 'TAKANOME-DEV',
-    GITHUB_EVENT_NAME: 'issue_comment',
-    GITHUB_EVENT_PATH: path.join(__dirname, '../__mocks__/@actions/github.ts'),
-    GITHUB_REF: 'main',
-    GITHUB_REPOSITORY: 'TAKANOME-DEV/testing',
-    GITHUB_SHA: '123abc',
-    GITHUB_TOKEN: '_',
-    GITHUB_WORKFLOW: 'my-workflow',
-    GITHUB_WORKSPACE: path.join(__dirname, '../__mocks__/@actions/github.ts'),
-    HOME: '?',
-  },
-  getDefaultValues()
-);
+import helpers from '../src/lib/helpers';
 
 jest.mock('@actions/core');
 jest.mock('@actions/github');
@@ -56,9 +14,83 @@ const addAssigneesMock = jest.spyOn(gh.rest.issues, 'addAssignees');
 const addLabelsMock = jest.spyOn(gh.rest.issues, 'addLabels');
 // const createCommentMock = jest.spyOn(gh.rest.issues, 'createComment');
 
-afterAll(() => jest.restoreAllMocks());
+const originalGitHubWorkspace = process.env['GITHUB_WORKSPACE'];
+
+// Inputs for mock @actions/core
+// let inputs = {} as any;
+
+// Shallow clone original @actions/github context
+let originalContext = { ...github.context };
 
 describe('command-handler', () => {
+  beforeAll(() => {
+    // Mock getInput
+    // jest.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    //   return inputs[name];
+    // });
+
+    // Mock github context
+    // jest.spyOn(github.context, 'repo', 'get').mockImplementation(() => {
+    //   return {
+    //     owner: 'some-owner',
+    //     repo: 'some-repo'
+    //   }
+    // })
+    Object.assign(
+      process.env,
+      {
+        GITHUB_ACTION: 'my-action',
+        GITHUB_ACTOR: 'TAKANOME-DEV',
+        GITHUB_EVENT_NAME: 'issue_comment',
+        GITHUB_EVENT_PATH: path.join(
+          __dirname,
+          '../__mocks__/@actions/github.ts'
+        ),
+        GITHUB_REF: 'main',
+        GITHUB_REPOSITORY: 'TAKANOME-DEV/testing',
+        GITHUB_SHA: '123abc',
+        GITHUB_TOKEN: '_',
+        GITHUB_WORKFLOW: 'my-workflow',
+        GITHUB_WORKSPACE: path.join(
+          __dirname,
+          '../__mocks__/@actions/github.ts'
+        ),
+        HOME: '?',
+      },
+      helpers.getDefaultValues()
+    );
+
+    // GitHub workspace
+    process.env['GITHUB_WORKSPACE'] = path.join(
+      __dirname,
+      '../__mocks__/@actions/github.ts'
+    );
+  });
+
+  // beforeEach(() => {
+  //   // Reset inputs
+  //   inputs = {};
+  // });
+
+  afterEach(() => {
+    delete process.env.INPUT_REQUIRED_LABEL;
+  });
+
+  afterAll(() => {
+    // Restore GitHub workspace
+    delete process.env['GITHUB_WORKSPACE'];
+    if (originalGitHubWorkspace) {
+      process.env['GITHUB_WORKSPACE'] = originalGitHubWorkspace;
+    }
+
+    // Restore @actions/github context
+    github.context.ref = originalContext.ref;
+    github.context.sha = originalContext.sha;
+
+    // Restore
+    jest.restoreAllMocks();
+  });
+
   it('should assigns the user to the issue', async () => {
     await commandHandler(core, github);
 
