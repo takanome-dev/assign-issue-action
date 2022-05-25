@@ -9,7 +9,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
-    "test": "jest --detectOpenHandles",
+    "test": "jest --coverage",
     "all": "npm run build && npm run format && npm run lint && npm run package && npm test",
     "prepare": "husky install"
   },
@@ -19,8 +19,7 @@
   "dependencies": {
     "@actions/core": "^1.8.2",
     "@actions/github": "^5.0.3",
-    "mustache": "^4.2.0",
-    "un": "^0.0.0"
+    "mustache": "^4.2.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.0",
@@ -38,7 +37,6 @@
     "jest": "^28.1.0",
     "js-yaml": "^4.1.0",
     "lint-staged": "^12.4.1",
-    "nock": "^13.2.4",
     "prettier": "^2.6.2",
     "ts-jest": "^28.0.3",
     "typescript": "^4.6.4"
