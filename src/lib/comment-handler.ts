@@ -1,28 +1,38 @@
+/* eslint-disable no-undef */
 import mustache from 'mustache';
 import { Core, Github } from '..';
-import getInputs from './helpers';
+import helpers from './helpers';
 
 export default async function commentHandler(core: Core, github: Github) {
   const issue = github.context.payload.issue;
   const comment = github.context.payload.comment;
+  const token = core.getInput('github_token');
 
-  const token = core.getInput('github_token', { required: true });
+  // Check if github_token input is provided
+  if (!token) return core.setFailed(`Missing required input: token = ${token}`);
+
   const client = github.getOctokit(token);
+  const requiredLabel = core.getInput('required_label');
 
-  // Check if the issue has the configured label
-  if (core.getInput('required_label')) {
-    const hasLabel = issue?.labels?.some(
-      (label: { name: string }) =>
-        label.name === core.getInput('required_label')
+  // Check if required_label input is provided
+  if (!requiredLabel)
+    return core.setFailed(
+      `Missing required input: required_label = ${core.getInput(
+        'required_label'
+      )}`
     );
 
-    if (!hasLabel)
-      return core.setFailed(
-        `Required label [${core.getInput(
-          'required_label'
-        )}] label not found in issue #${issue?.number}.`
-      );
-  }
+  // Check if the issue has the required label
+  const hasLabel = issue?.labels?.find(
+    (label: { name: string }) => label.name === requiredLabel
+  );
+
+  if (!hasLabel)
+    return core.setFailed(
+      `Required label: [${core.getInput(
+        'required_label'
+      )}] label not found in issue #${issue?.number}.`
+    );
 
   // Check if it has no assignees
   if (issue?.assignee) {
@@ -33,6 +43,7 @@ export default async function commentHandler(core: Core, github: Github) {
 
   core.info(`Assigning @${comment?.user?.login} to #${issue?.number}`);
 
+  // Assign the issue to the user and add label assigned_label
   await Promise.all([
     await client.rest.issues.addAssignees({
       ...github.context.repo,
@@ -51,10 +62,11 @@ export default async function commentHandler(core: Core, github: Github) {
   const body = mustache.render(core.getInput('assigned_comment'), {
     totalDays,
     comment,
-    inputs: getInputs(),
+    env: process.env,
+    inputs: helpers.getInputs(),
   });
 
-  // Comment saying passus
+  // Comment
   await client.rest.issues.createComment({
     ...github.context.repo,
     issue_number: issue?.number as number,

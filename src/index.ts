@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import commentHandler from './lib/command-handler';
+import commentHandler from './lib/comment-handler';
 import scheduleHandler from './lib/schedule-handler';
 
 export type Core = typeof core;
@@ -10,7 +10,10 @@ async function AssignToMeAction() {
   try {
     if (github.context.eventName === 'issue_comment') {
       await commentHandler(core, github);
-    } else if (github.context.eventName === 'workflow_dispatch') {
+    } else if (
+      github.context.eventName === 'workflow_dispatch' ||
+      github.context.eventName === 'schedule'
+    ) {
       await scheduleHandler(core);
     } else {
       throw new Error(`Unhandled event ${github.context.eventName}`);

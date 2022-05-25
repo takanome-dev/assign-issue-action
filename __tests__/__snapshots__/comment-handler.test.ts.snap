@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`command-handler uses a custom assigned_comment message 1`] = `
+Object {
+  "body": "/assign-to-me",
+  "html_url": "https://github.com/TAKANOME-DEV/testing",
+  "user": Object {
+    "login": "John",
+  },
+}
+`;

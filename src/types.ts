@@ -6,7 +6,6 @@ export interface Inputs {
   pin_label?: string;
   required_label?: string;
   stale_assignment_label: string;
-  trigger?: string;
 }
 
 export interface Issue {
