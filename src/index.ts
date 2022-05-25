@@ -10,7 +10,10 @@ async function AssignToMeAction() {
   try {
     if (github.context.eventName === 'issue_comment') {
       await commentHandler(core, github);
-    } else if (github.context.eventName === 'workflow_dispatch') {
+    } else if (
+      github.context.eventName === 'workflow_dispatch' ||
+      github.context.eventName === 'schedule'
+    ) {
       await scheduleHandler(core);
     } else {
       throw new Error(`Unhandled event ${github.context.eventName}`);

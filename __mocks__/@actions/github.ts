@@ -29,6 +29,22 @@ const mockApi = {
       removeLabel: jest.fn(),
       removeAssignee: jest.fn(),
     },
+    search: {
+      issuesAndPullRequests: jest.fn().mockImplementation(() => ({
+        status: 200,
+        body: {
+          items: [
+            {
+              number: 1,
+              labels: [],
+              assignee: {
+                login: 'John',
+              },
+            },
+          ],
+        },
+      })),
+    },
   },
 };
 

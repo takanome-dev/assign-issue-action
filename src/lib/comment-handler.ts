@@ -1,5 +1,4 @@
 /* eslint-disable no-undef */
-/* eslint-disable no-console */
 
 import mustache from 'mustache';
 import { Core, Github } from '..';
@@ -8,42 +7,33 @@ import helpers from './helpers';
 export default async function commentHandler(core: Core, github: Github) {
   const issue = github.context.payload.issue;
   const comment = github.context.payload.comment;
-  // console.log({ issue, comment });
+  const token = core.getInput('github_token');
 
-  // Check required context properties exist
-  if (!issue || !comment) {
-    throw new Error(
-      `Required context properties are missing: issue: ${issue} - comment: ${comment}`
-    );
-  }
-
-  const token = core.getInput('github_token', { required: true });
-  console.log({ token });
-
-  // Check required inputs
-  if (!token) {
-    throw new Error(`Missing required input 'token': ${token}`);
-  }
+  // Check if github_token input is provided
+  if (!token) return core.setFailed(`Missing required input: token = ${token}`);
 
   const client = github.getOctokit(token);
   const requiredLabel = core.getInput('required_label');
-  console.log({ requiredLabel });
 
-  // Check if the issue has the required label
-  if (requiredLabel) {
-    const hasLabel = issue?.labels?.find(
-      (label: { name: string }) => label.name === requiredLabel
+  // Check if required_label input is provided
+  if (!requiredLabel)
+    return core.setFailed(
+      `Missing required input: required_label = ${core.getInput(
+        'required_label'
+      )}`
     );
 
-    console.log({ hasLabel });
+  // Check if the issue has the required label
+  const hasLabel = issue?.labels?.find(
+    (label: { name: string }) => label.name === requiredLabel
+  );
 
-    if (!hasLabel)
-      return core.setFailed(
-        `Required label [${core.getInput(
-          'required_label'
-        )}] label not found in issue #${issue?.number}.`
-      );
-  }
+  if (!hasLabel)
+    return core.setFailed(
+      `Required label: [${core.getInput(
+        'required_label'
+      )}] label not found in issue #${issue?.number}.`
+    );
 
   // Check if it has no assignees
   if (issue?.assignee) {
@@ -54,6 +44,7 @@ export default async function commentHandler(core: Core, github: Github) {
 
   core.info(`Assigning @${comment?.user?.login} to #${issue?.number}`);
 
+  // Assign the issue to the user and add label assigned_label
   await Promise.all([
     await client.rest.issues.addAssignees({
       ...github.context.repo,
@@ -68,7 +59,6 @@ export default async function commentHandler(core: Core, github: Github) {
   ]);
 
   const totalDays = parseInt(core.getInput('days_until_unassign'), 10);
-  console.log({ totalDays });
 
   const body = mustache.render(core.getInput('assigned_comment'), {
     totalDays,
@@ -76,9 +66,8 @@ export default async function commentHandler(core: Core, github: Github) {
     env: process.env,
     inputs: helpers.getInputs(),
   });
-  console.log({ body });
 
-  // Comment saying passus
+  // Comment
   await client.rest.issues.createComment({
     ...github.context.repo,
     issue_number: issue?.number as number,

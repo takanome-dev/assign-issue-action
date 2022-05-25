@@ -36,7 +36,7 @@ export default class StaleAssignments {
       'assigned:*',
       // Only find opened issues/PRs
       'is:open',
-      // Updated within the last X days
+      // Updated within the last 7 days
       `updated:<${timestamp}`,
     ];
 
@@ -51,7 +51,7 @@ export default class StaleAssignments {
   }
 
   hasStaleAssignmentLabel() {
-    return github.context.payload.issue?.labels?.some(
+    return github.context.payload.issue?.labels?.find(
       (l: { name: string }) =>
         l.name === core.getInput('stale_assignment_label')
     );
