@@ -27,16 +27,15 @@ const mockApi = {
       addLabels: jest.fn(),
       createComment: jest.fn(),
       removeLabel: jest.fn(),
-      removeAssignee: jest.fn(),
+      removeAssignees: jest.fn(),
     },
     search: {
       issuesAndPullRequests: jest.fn().mockImplementation(() => ({
-        status: 200,
-        body: {
+        data: {
           items: [
             {
               number: 1,
-              labels: [],
+              labels: [{ name: 'Stale-Assignment' }],
               assignee: {
                 login: 'John',
               },

@@ -1,5 +1,4 @@
 /* eslint-disable no-undef */
-
 import mustache from 'mustache';
 import { Core, Github } from '..';
 import helpers from './helpers';

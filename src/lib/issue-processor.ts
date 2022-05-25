@@ -50,12 +50,12 @@ export default class StaleAssignments {
     return issues.data.items;
   }
 
-  hasStaleAssignmentLabel() {
-    return github.context.payload.issue?.labels?.find(
-      (l: { name: string }) =>
-        l.name === core.getInput('stale_assignment_label')
-    );
-  }
+  // hasStaleAssignmentLabel() {
+  //   return github.context.payload.issue?.labels?.find(
+  //     (l: { name: string }) =>
+  //       l.name === core.getInput('stale_assignment_label')
+  //   );
+  // }
 
   async unassignIssue(issue: Issue) {
     return Promise.all([
@@ -74,17 +74,12 @@ export default class StaleAssignments {
 
   since(days: number) {
     const ttl = days * 24 * 60 * 60 * 1000;
-    let date = new Date(+new Date() - ttl);
+    const date = new Date(+new Date() - ttl);
 
     // const ttl = new Date().setDate(
     //   new Date().getDate() - days
     // );
     // return new Date(date).toISOString().substring(0, 10);
-
-    // ? GitHub won't allow it
-    if (date < new Date(0)) {
-      date = new Date(0);
-    }
 
     return new Date(date).toISOString().substring(0, 10);
   }
