@@ -25,6 +25,7 @@ const mockApi = {
     issues: {
       addAssignees: jest.fn(),
       addLabels: jest.fn(),
+      createComment: jest.fn(),
       removeLabel: jest.fn(),
       removeAssignee: jest.fn(),
     },

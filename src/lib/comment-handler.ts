@@ -8,7 +8,7 @@ import helpers from './helpers';
 export default async function commentHandler(core: Core, github: Github) {
   const issue = github.context.payload.issue;
   const comment = github.context.payload.comment;
-  console.log({ issue, comment });
+  // console.log({ issue, comment });
 
   // Check required context properties exist
   if (!issue || !comment) {
@@ -21,18 +21,21 @@ export default async function commentHandler(core: Core, github: Github) {
   console.log({ token });
 
   // Check required inputs
-  // if (!token) {
-  //   throw new Error(`Missing required input 'token': ${token}`);
-  // }
+  if (!token) {
+    throw new Error(`Missing required input 'token': ${token}`);
+  }
 
   const client = github.getOctokit(token);
+  const requiredLabel = core.getInput('required_label');
+  console.log({ requiredLabel });
 
-  // Check if the issue has the configured label
-  if (core.getInput('required_label')) {
-    const hasLabel = issue?.labels?.some(
-      (label: { name: string }) =>
-        label.name === core.getInput('required_label')
+  // Check if the issue has the required label
+  if (requiredLabel) {
+    const hasLabel = issue?.labels?.find(
+      (label: { name: string }) => label.name === requiredLabel
     );
+
+    console.log({ hasLabel });
 
     if (!hasLabel)
       return core.setFailed(

@@ -33,6 +33,6 @@ inputs:
         * `totalDays` (7 days)
         * `env` (`process.env`, anything you pass to the action via `env`)
     default: |
-      This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }}!
+      This issue [has been assigned]({{ comment.html_url.replace(//g, '/&#x2F;') }}) to @{{ comment.user.login }}!
       It will become unassigned if it isn't closed within {{ totalDays }} days. 
       A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned.

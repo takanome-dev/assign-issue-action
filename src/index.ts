@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import commentHandler from './lib/command-handler';
+import commentHandler from './lib/comment-handler';
 import scheduleHandler from './lib/schedule-handler';
 
 export type Core = typeof core;
