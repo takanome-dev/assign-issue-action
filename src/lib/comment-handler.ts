@@ -37,9 +37,7 @@ export default async function commentHandler(core: Core, github: Github) {
   // Check if it has no assignees
   if (issue?.assignee) {
     return core.setFailed(
-      `Issue #${issue?.number} is already assigned to @${JSON.parse(
-        issue?.assignee
-      )}`
+      `Issue #${issue?.number} is already assigned to @${issue?.assignee}`
     );
   }
 
