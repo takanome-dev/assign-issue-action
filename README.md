@@ -6,6 +6,8 @@
 
 A GitHub Action that listens for a `/assign-to-me` "command" (an issue comment that starts with `/assign-to-me`) and assigns the commenter to the issue. It can also unassign issues that have been assigned for a configured amount of time.
 
+This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
+
 ## Usage
 
 ```yaml
@@ -57,3 +59,12 @@ if: >
   (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/assign')) ||
   github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 ```
+
+## Contributing
+
+We would love you to contribute to `takanome-dev/assign-to-me`, pull requests are welcome!
+Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+
+## ⚖️ Licence
+
+The scripts and documentation in this project are released under the [MIT License](LICENSE)
