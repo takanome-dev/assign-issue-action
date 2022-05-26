@@ -1,7 +1,7 @@
 # Contributing
 
 Thank you so much for your interest in contributing!. All types of contributions are encouraged and valued.
-Please read the [CODE of CONDUCT](../../../../../../CODE_OF_CONDUCT.md).
+Please read the [CODE of CONDUCT](CODE_OF_CONDUCT.md).
 
 ## Setting Up Your Code
 

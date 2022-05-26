@@ -1,4 +1,4 @@
-# Assign To Me Action
+<h2 align="center">💬 Assign To Me Action ✋</h2>
 
 <p align="center"><a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/ci.yml/badge.svg"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/codeql-analysis.yml/badge.svg"></a> <a href="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action"><img src="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action/branch/master/graph/badge.svg?token=MX3SB0GFB3" /></a></p>
 
@@ -9,6 +9,8 @@ A GitHub Action that listens for a `/assign-to-me` "command" (an issue comment t
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
 
 ## Usage
+
+Create a workflow (eg: `.github/workflows/assign-to-me.yml` learn more about [Creating a Workflow file](https://docs.github.com/en/actions/using-workflows#creating-a-workflow-file)) to utilize the `assign-to-me` action with content:
 
 ```yaml
 name: Assign To Me Action
