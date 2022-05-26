@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign the user or unassign stale assignments
-        uses: takanome-dev/assign-to-me-action@v1
+        uses: takanome-dev/assign-to-me-action@v1.0.1
         with:
           github_token: '${{ secrets.GITHUB_TOKEN }}'
           required_label: good-first-issue # you can change this label if you wish
