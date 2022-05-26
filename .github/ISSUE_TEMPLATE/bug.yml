@@ -31,16 +31,6 @@ body:
     validations:
       required: false
   - type: textarea
-    id: environment
-    attributes:
-      label: Working Environment (e.g. operating system, browser, device)
-      placeholder: |
-        - OS: [e.g.: Windows]
-        - Browser: [e.g.: Chrome, Safari]
-        - Version: [e.g.: 91]
-    validations:
-      required: true
-  - type: textarea
     id: extra_information
     attributes:
       label: Additional information

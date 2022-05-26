@@ -1,8 +1,7 @@
-name: Other
+name: Others
 description: Use this for any other issues. PLEASE do not create blank issues
-title: '[OTHER] - <description>'
+title: '[OTHERS] - <description>'
 labels: ['🚦 status: awaiting triage']
-assignees:
 body:
   - type: markdown
     attributes:
