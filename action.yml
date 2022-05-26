@@ -19,7 +19,7 @@ inputs:
     default: 7
     description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
   stale_assignment_label:
-    default: Stale-Assignment
+    default: Open
     description: The label applied when the assignment is stale (7 days).
   pin_label:
     default: Pinned
@@ -33,6 +33,8 @@ inputs:
         * `totalDays` (7 days)
         * `env` (`process.env`, anything you pass to the action via `env`)
     default: |
-      This issue [has been assigned]({{ comment.html_url.replace(//g, '/&#x2F;') }}) to @{{ comment.user.login }}!
+      This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }}!
       It will become unassigned if it isn't closed within {{ totalDays }} days. 
       A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned.
+
+# .replace(//g, '/&#x2F;')

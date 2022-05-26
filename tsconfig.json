@@ -19,6 +19,7 @@
   },
   "exclude": [
     "node_modules",
+    "coverage",
     "__mocks__",
     "dist",
     "lib",
