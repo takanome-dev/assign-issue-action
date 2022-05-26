@@ -4,7 +4,8 @@ node_modules/
 # vscode settings
 .vscode/
 
-ignore/
+# lib folder
+lib/
 
 # eslint cache
 .eslintcache
