@@ -39,7 +39,7 @@ Push your changes to your forked repository by using `git push -u origin <branch
 - `origin` tells `git` to push to your fork
 - `branch_name` tells `git` to push to a branch - this MUST match the name of the branch you created locally.
 
-Make sure to change the PR title in something like: `fix: correct typo` or `feat: add node 18`
+Make sure to change the PR title in something like: `fix: correct typo` or `feat: add node latest`
 
 ## Pull Request Reviews
 
