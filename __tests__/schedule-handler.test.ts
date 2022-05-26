@@ -13,7 +13,7 @@ describe('Schedule Handler', () => {
     process.env.INPUT_PIN_LABEL = 'Pinned';
   });
 
-  it('should search issues with assigned_label/stale_assignment_label and unassign the user', async () => {
+  it('should search issues with assigned_label and unassign the user', async () => {
     await scheduleHandler(core);
     expect(core.getInput).toHaveBeenCalled();
     expect(client.rest.search.issuesAndPullRequests).toHaveBeenCalled();

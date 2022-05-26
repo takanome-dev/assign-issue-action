@@ -263,12 +263,6 @@ class StaleAssignments {
             return issues.data.items;
         });
     }
-    // hasStaleAssignmentLabel() {
-    //   return github.context.payload.issue?.labels?.find(
-    //     (l: { name: string }) =>
-    //       l.name === core.getInput('stale_assignment_label')
-    //   );
-    // }
     unassignIssue(issue) {
         return __awaiter(this, void 0, void 0, function* () {
             return Promise.all([

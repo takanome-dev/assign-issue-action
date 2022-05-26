@@ -35,7 +35,7 @@ const mockApi = {
           items: [
             {
               number: 1,
-              labels: [{ name: 'Stale-Assignment' }],
+              labels: [],
               assignee: {
                 login: 'John',
               },

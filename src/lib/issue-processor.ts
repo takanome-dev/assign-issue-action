@@ -50,13 +50,6 @@ export default class StaleAssignments {
     return issues.data.items;
   }
 
-  // hasStaleAssignmentLabel() {
-  //   return github.context.payload.issue?.labels?.find(
-  //     (l: { name: string }) =>
-  //       l.name === core.getInput('stale_assignment_label')
-  //   );
-  // }
-
   async unassignIssue(issue: Issue) {
     return Promise.all([
       await this.client.rest.issues.removeAssignees({

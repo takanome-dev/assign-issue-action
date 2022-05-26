@@ -18,9 +18,6 @@ inputs:
   days_until_unassign:
     default: 7
     description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
-  stale_assignment_label:
-    default: Open
-    description: The label applied when the assignment is stale (7 days).
   pin_label:
     default: Pinned
     description: A label that prevents the user from being unassigned, typically for issues that are expected to take a long time.
