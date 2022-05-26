@@ -3,7 +3,7 @@ author: TAKANOME-DEV
 description: Enable a '/assign-to-me' command that allows contributors to assign themselves issues.
 runs:
   using: node16
-  main: src/index.ts
+  main: dist/index.js
 branding:
   icon: activity
   color: white

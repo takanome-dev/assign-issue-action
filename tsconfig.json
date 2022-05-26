@@ -17,5 +17,12 @@
     "noImplicitThis": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "__mocks__", "dist", "*.js", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "__mocks__",
+    "dist",
+    "lib",
+    "*.js",
+    "**/*.test.ts"
+  ]
 }
