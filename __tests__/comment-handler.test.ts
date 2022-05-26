@@ -55,7 +55,7 @@ describe('command-handler', () => {
   });
 
   it('exits early if the issue is already assigned', async () => {
-    github.context.payload.issue!.assignee = 'Saladin';
+    github.context.payload.issue!.assignee = JSON.stringify('Saladin');
     await commentHandler(core, github);
     expect(core.setFailed).toHaveBeenCalled();
     expect(core.setFailed).toHaveBeenCalledWith(

@@ -112,7 +112,7 @@ function commentHandler(core, github) {
             return core.setFailed(`Required label: [${core.getInput('required_label')}] label not found in issue #${issue === null || issue === void 0 ? void 0 : issue.number}.`);
         // Check if it has no assignees
         if (issue === null || issue === void 0 ? void 0 : issue.assignee) {
-            return core.setFailed(`Issue #${issue === null || issue === void 0 ? void 0 : issue.number} is already assigned to @${issue === null || issue === void 0 ? void 0 : issue.assignee}`);
+            return core.setFailed(`Issue #${issue === null || issue === void 0 ? void 0 : issue.number} is already assigned to @${JSON.parse(issue === null || issue === void 0 ? void 0 : issue.assignee)}`);
         }
         core.info(`Assigning @${(_b = comment === null || comment === void 0 ? void 0 : comment.user) === null || _b === void 0 ? void 0 : _b.login} to #${issue === null || issue === void 0 ? void 0 : issue.number}`);
         // Assign the issue to the user and add label assigned_label
