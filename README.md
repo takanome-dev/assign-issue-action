@@ -4,7 +4,8 @@
 
 ---
 
-A GitHub Action that listens for a `/assign-to-me` "command" (an issue comment that starts with `/assign-to-me`) and assigns the commenter to the issue. It can also unassign issues that have been assigned for a configured amount of time.
+A GitHub Action that listens for a `/assign-to-me` "command" (an issue comment that starts with `/assign-to-me`) and assigns the commenter to the issue.
+It can also unassign issues that have been assigned for a configured amount of time.
 
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
 
@@ -31,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign the user or unassign stale assignments
-        uses: takanome-dev/assign-to-me-action@v1.0.1
+        uses: takanome-dev/assign-to-me-action@v1.0.2
         with:
           github_token: '${{ secrets.GITHUB_TOKEN }}'
           required_label: good-first-issue # you can change this label if you wish
@@ -63,7 +64,7 @@ if: >
 
 ## Contributing
 
-We would love you to contribute to `takanome-dev/assign-to-me`, pull requests are welcome!
+We would love you to contribute to `takanome-dev/assign-to-me-action`, pull requests are welcome!
 Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 ## ⚖️ Licence

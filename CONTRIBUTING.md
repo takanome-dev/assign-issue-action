@@ -9,7 +9,7 @@ First, fork the repository to your own account and run the following command:
 
 - Clone your repo: `git clone https://github.com/<your_name>/assign-to-me-action`
 - Change directory to the working dir: `cd assign-to-me-action`
-- Install the dependencies: `npm ci`
+- Install the dependencies: `npm i`
 
 ## Issue
 
