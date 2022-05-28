@@ -9,7 +9,7 @@ It can also unassign issues that have been assigned for a configured amount of t
 
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
 
-## Usage
+## 🚀 Usage
 
 Create a workflow (eg: `.github/workflows/assign-to-me.yml` learn more about [Creating a Workflow file](https://docs.github.com/en/actions/using-workflows#creating-a-workflow-file)) to utilize the `assign-to-me` action with content:
 
@@ -62,7 +62,7 @@ if: >
   github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 ```
 
-## Contributing
+## ✏️ Contributing
 
 We would love you to contribute to `takanome-dev/assign-to-me-action`, pull requests are welcome!
 Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
