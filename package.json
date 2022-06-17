@@ -17,6 +17,7 @@
     "all": "npm run format && npm run lint && npm run build && npm run package && npm test",
     "prepare": "husky install"
   },
+  "homepage": "https://github.com/TAKANOME-DEV/assign-to-me-action#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TAKANOME-DEV/assign-to-me-action.git"
