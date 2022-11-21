@@ -4,7 +4,7 @@
   "description": "Assign to me action",
   "engines": {
     "node": "16.x",
-    "npm": "8.x"
+    "npm": "9.x"
   },
   "main": "lib/index.js",
   "scripts": {
