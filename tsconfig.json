@@ -21,6 +21,7 @@
     "node_modules",
     "coverage",
     "__mocks__",
+    "__tests__",
     "dist",
     "lib",
     "*.js",

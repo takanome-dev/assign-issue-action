@@ -6,7 +6,7 @@ import scheduleHandler from './lib/schedule-handler';
 export type Core = typeof core;
 export type Github = typeof github;
 
-async function AssignToMeAction() {
+(async () => {
   try {
     if (github.context.eventName === 'issue_comment') {
       await commentHandler(core, github);
@@ -21,6 +21,4 @@ async function AssignToMeAction() {
   } catch (error) {
     if (error instanceof Error) return core.setFailed(error.message);
   }
-}
-
-AssignToMeAction();
+})();
