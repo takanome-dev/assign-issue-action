@@ -1,10 +1,10 @@
 {
-  "name": "assign-to-me-action",
+  "name": "assign-issue-action",
   "version": "1.0.2",
-  "description": "Assign to me action",
+  "description": "Comment /assign-issue to assign an issue yourself 🥳",
   "engines": {
     "node": "16.x",
-    "npm": "8.x"
+    "npm": "9.x"
   },
   "main": "lib/index.js",
   "scripts": {
