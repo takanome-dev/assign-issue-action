@@ -21,8 +21,16 @@ export default class Comment {
   }
 
   public async handleAssignIssue() {
+    this.core.info(`🤖 Starting issue assignment...`);
     const trigger = this.core.getInput('trigger');
-    const isTriggered = this.github.context.payload.body.includes(trigger);
+    const isTriggered =
+      this.github.context.payload.comment?.body?.includes(trigger);
+    this.core.info(
+      `🤖 this is the comment object: ${JSON.stringify(
+        this.github.context.payload.comment
+      )}`
+    );
+    // log payload.comment which is a object
 
     if (!isTriggered) {
       return this.core.info(
