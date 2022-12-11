@@ -1,7 +1,7 @@
 {
   "name": "assign-issue-action",
   "version": "1.0.2",
-  "description": "Comment /assign-issue to assign an issue yourself 🥳",
+  "description": "Comment /assign-me to assign an issue yourself 🎉",
   "engines": {
     "node": "16.x",
     "npm": "9.x"
@@ -11,7 +11,7 @@
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint . --ext .ts --report-unused-disable-directives",
     "package": "ncc build --license licenses.txt",
     "test": "jest --coverage",
     "all": "npm run format && npm run lint && npm run build && npm run package && npm test",

@@ -1,8 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import Comment from './lib/comment';
-// import commentHandler from './lib/comment-handler';
-import scheduleHandler from './lib/schedule-handler';
+import scheduleHandler from './lib/schedule';
 
 export type Core = typeof core;
 export type Github = typeof github;

@@ -13,5 +13,14 @@
   },
   "env": {
     "jest/globals": true
-  }
+  },
+  "ignorePatterns": [
+    "lib",
+    "dist",
+    "coverage",
+    "node_modules",
+    "__tests__",
+    "__mocks__",
+    "**/*.js"
+  ]
 }

@@ -13,6 +13,7 @@ branding:
 inputs:
   github_token:
     default: ${{ github.token }}
+    required: true
   trigger:
     description: The comment that triggers the action
     default: /assign-me
