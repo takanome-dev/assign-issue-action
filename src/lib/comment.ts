@@ -1,7 +1,7 @@
 import mustache from 'mustache';
-import { WebhookPayload } from '@actions/github/lib/interfaces';
 import { Core, Github } from '../index';
 import helpers from './helpers';
+import { WebhookPayload } from '@actions/github/lib/interfaces';
 
 export default class Comment {
   private issue: WebhookPayload['issue'];
@@ -25,16 +25,10 @@ export default class Comment {
     const trigger = this.core.getInput('trigger');
     const isTriggered =
       this.github.context.payload.comment?.body?.includes(trigger);
-    this.core.info(
-      `🤖 this is the comment object: ${JSON.stringify(
-        this.github.context.payload.comment
-      )}`
-    );
-    // log payload.comment which is a object
 
     if (!isTriggered) {
       return this.core.info(
-        `🤖 Ignoring comment: ${this.github.context.payload.body}`
+        `🤖 Ignoring comment: ${this.github.context.payload.comment?.body}`
       );
     }
 
@@ -45,7 +39,16 @@ export default class Comment {
 
     await this.checkRequiredLabel();
 
-    await this.checkAssignee();
+    // Check if the issue is already assigned
+    if (this.issue?.assignee) {
+      await this.createComment('already_assigned_comment', {
+        totalDays: Number(this.core.getInput('day_until_unassign')),
+      });
+
+      return this.core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
+      );
+    }
 
     this.core.info(
       `🤖 Assigning @${this.comment?.user?.login} to #${this.issue?.number}`
@@ -65,14 +68,6 @@ export default class Comment {
     };
 
     await this.createComment('assigned_comment', options);
-  }
-
-  private async checkAssignee() {
-    if (this.issue?.assignee) {
-      return await this.createComment('already_assigned_comment', {
-        totalDays: Number(this.core.getInput('day_until_unassign')),
-      });
-    }
   }
 
   private async checkRequiredLabel() {
