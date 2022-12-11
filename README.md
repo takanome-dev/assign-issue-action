@@ -32,7 +32,7 @@ jobs:
         with:
           github_token: '${{ secrets.GITHUB_TOKEN }}'
           # trigger: '/assign-me' # you can change the default trigger to something else
-          # required_label: help wanted # if present, the issue must have this label to be assigned
+          # required_label: # if present, the issue must have this label to be assigned
           # assigned_label: Assigned
           # days_until_unassign: 7
           # learn more about the inputs below ⬇
