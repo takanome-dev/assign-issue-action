@@ -134,13 +134,13 @@ export default class Comment {
 
     await this.createComment('already_assigned_comment', {
       daysUntilUnassign,
+      comment: this.comment,
+      assignee: this.issue?.assignee,
     });
   }
 
   private calculateDaysUntilUnassign(createAt: string, totalDays: number) {
-    console.log(createAt);
-    // TODO: Fix this
-    const createdAt = new Date('2022-12-09');
+    const createdAt = new Date(createAt);
     const currentDate = new Date();
     const diffTime = Math.abs(currentDate.getTime() - createdAt.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

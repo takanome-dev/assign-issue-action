@@ -1,16 +1,18 @@
 /* eslint-disable filenames/match-regex */
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import commentHandler from '../src/lib/comment-handler';
+import Comment from '../src/lib/comment';
 import helpers from '../src/lib/helpers';
 
 describe('command-handler', () => {
   let client: any;
+  let commentHandler: any;
 
   beforeAll(() => {
     jest.spyOn(core, 'setFailed');
 
     client = github.getOctokit('_');
+    commentHandler = new Comment(core, github).handleAssignIssue;
 
     Object.assign(process.env, helpers.getDefaultValues());
   });

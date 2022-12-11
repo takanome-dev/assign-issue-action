@@ -32,19 +32,17 @@ inputs:
     description: >
       The comment posted after a user has assigned themselves to an issue.
     default: |
-      🎉 This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }} 🎉
+      👋 Hey @{{ comment.user.login }}, thanks for your interest in this issue! 🎉
 
-      ⚠ It will become unassigned if it isn't closed within **{{ totalDays }} days**.
+      ⚠ Note that this issue will become unassigned if it isn't closed within **{{ totalDays }} days**.
 
-      A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned.
+      🔧 A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned automatically.
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
-      ### ℹ Info
+      👋 Hey @{{ comment.user.login }}, this issue is already assigned to @{{ assignee.login }}.
 
-      This issue is already assigned 🏷
-
-      It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
+      ⚠️ It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
 
       🔧 A maintainer can also add you to the list of assignees or swap you with the current assignee.
