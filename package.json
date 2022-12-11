@@ -8,13 +8,14 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc",
+    "tsc": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint . --ext .ts --report-unused-disable-directives",
-    "package": "ncc build --license licenses.txt",
+    "build": "ncc build --license licenses.txt",
+    "tsc:build": "npm run tsc && npm run build",
     "test": "jest --coverage",
-    "all": "npm run format && npm run lint && npm run build && npm run package && npm test",
+    "all": "npm run format && npm run lint && npm run tsc && npm run build && npm test",
     "prepare": "husky install"
   },
   "homepage": "https://github.com/TAKANOME-DEV/assign-to-me-action#readme",

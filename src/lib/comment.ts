@@ -2,10 +2,11 @@ import mustache from 'mustache';
 import { Core, Github } from '../index';
 import helpers from './helpers';
 import { WebhookPayload } from '@actions/github/lib/interfaces';
+import { Issue, Comment as IComment } from '../types';
 
 export default class Comment {
-  private issue: WebhookPayload['issue'];
-  private comment: WebhookPayload['comment'];
+  private issue: WebhookPayload['issue'] | Issue;
+  private comment: WebhookPayload['comment'] | IComment;
   private token: string;
   private core: Core;
   private github: Github;
@@ -39,12 +40,11 @@ export default class Comment {
 
     await this.checkRequiredLabel();
 
+    const totalDays = Number(this.core.getInput('days_until_unassign'));
+
     // Check if the issue is already assigned
     if (this.issue?.assignee) {
-      await this.createComment('already_assigned_comment', {
-        totalDays: Number(this.core.getInput('day_until_unassign')),
-      });
-
+      await this.issueAssignedComment(totalDays);
       return this.core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
       );
@@ -56,8 +56,6 @@ export default class Comment {
 
     // Assign the issue to the user and add label "assigned_label"
     await this.addAssignee();
-
-    const totalDays = Number(this.core.getInput('days_until_unassign'));
 
     const options = {
       totalDays,
@@ -111,5 +109,42 @@ export default class Comment {
       issue_number: this.issue?.number as number,
       body,
     });
+  }
+
+  private async issueAssignedComment(totalDays: number) {
+    const comments = await this.client.rest.issues.listComments({
+      ...this.github.context.repo,
+      issue_number: this.issue?.number!,
+    });
+
+    const assignedComment = comments.data.find(
+      (comment) => comment.user!.login === this.issue?.assignee?.login
+    );
+
+    if (!assignedComment) {
+      return this.core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
+      );
+    }
+
+    const daysUntilUnassign = this.calculateDaysUntilUnassign(
+      assignedComment?.created_at,
+      totalDays
+    );
+
+    await this.createComment('already_assigned_comment', {
+      daysUntilUnassign,
+    });
+  }
+
+  private calculateDaysUntilUnassign(createAt: string, totalDays: number) {
+    console.log(createAt);
+    // TODO: Fix this
+    const createdAt = new Date('2022-12-09');
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate.getTime() - createdAt.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return totalDays - diffDays;
   }
 }

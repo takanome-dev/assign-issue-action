@@ -31,11 +31,6 @@ inputs:
   assigned_comment:
     description: >
       The comment posted after a user has assigned themselves to an issue.
-      This is a Mustache template that supports the following variables:
-        * `inputs` (the inputs given to the action)
-        * `comment` (an object of the comment that was created)
-        * `totalDays` (7 days)
-        * `env` (`process.env`, anything you pass to the action via `env`)
     default: |
       🎉 This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }} 🎉
 
@@ -46,8 +41,10 @@ inputs:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
-      ⚠ This issue is already assigned!
+      ### ℹ Info
 
-      It will become unassigned if it isn't closed within **{{ totalDays }} days**. 
+      This issue is already assigned 🏷
 
-      A maintainer can also add you to the list of assignees or swap you with the current assignee.
+      It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
+
+      🔧 A maintainer can also add you to the list of assignees or swap you with the current assignee.

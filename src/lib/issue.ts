@@ -17,7 +17,7 @@ export default class IssueHandler {
     this.exemptLabel = core.getInput('pin_label');
   }
 
-  async getIssues() {
+  async getIssues(): Promise<Issue[]> {
     const { owner, repo } = github.context.repo;
 
     const timestamp = this.since(this.assignmentDuration);
@@ -54,7 +54,7 @@ export default class IssueHandler {
       await this.client.rest.issues.removeAssignees({
         ...github.context.repo,
         issue_number: issue?.number,
-        assignees: [issue?.assignee.login],
+        assignees: [issue?.assignee!.login],
       }),
       await this.client.rest.issues.removeLabel({
         ...github.context.repo,
