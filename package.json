@@ -18,6 +18,7 @@
     "prepare": "husky install"
   },
   "homepage": "https://github.com/TAKANOME-DEV/assign-to-me-action#readme",
+  "bugs": "https://github.com/TAKANOME-DEV/assign-to-me-action/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TAKANOME-DEV/assign-to-me-action.git"

@@ -21,6 +21,15 @@ export default class Comment {
   }
 
   public async handleAssignIssue() {
+    const trigger = this.core.getInput('trigger');
+    const isTriggered = this.github.context.payload.body.includes(trigger);
+
+    if (!isTriggered) {
+      return this.core.info(
+        `🤖 Ignoring comment: ${this.github.context.payload.body}`
+      );
+    }
+
     if (!this.token)
       return this.core.setFailed(
         `🚫 Missing required input: token = ${this.token}`

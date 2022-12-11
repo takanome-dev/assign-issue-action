@@ -8,10 +8,7 @@ export type Github = typeof github;
 
 (async () => {
   try {
-    if (
-      github.context.eventName === 'issue_comment' &&
-      github.context.payload.body.includes(core.getInput('trigger'))
-    ) {
+    if (github.context.eventName === 'issue_comment') {
       const issue = new Comment(core, github);
       await issue.handleAssignIssue();
     } else if (

@@ -48,8 +48,7 @@ const comment_1 = __importDefault(__nccwpck_require__(1190));
 const schedule_1 = __importDefault(__nccwpck_require__(8229));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        if (github.context.eventName === 'issue_comment' &&
-            github.context.payload.body.includes(core.getInput('trigger'))) {
+        if (github.context.eventName === 'issue_comment') {
             const issue = new comment_1.default(core, github);
             yield issue.handleAssignIssue();
         }
@@ -102,6 +101,11 @@ class Comment {
     handleAssignIssue() {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
+            const trigger = this.core.getInput('trigger');
+            const isTriggered = this.github.context.payload.body.includes(trigger);
+            if (!isTriggered) {
+                return this.core.info(`🤖 Ignoring comment: ${this.github.context.payload.body}`);
+            }
             if (!this.token)
                 return this.core.setFailed(`🚫 Missing required input: token = ${this.token}`);
             yield this.checkRequiredLabel();
