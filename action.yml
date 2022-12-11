@@ -1,23 +1,29 @@
-name: Assign-To-Me Action
+name: Assign Me Action
 author: TAKANOME-DEV
-description: Enable a '/assign-to-me' command that allows contributors to assign themselves issues.
+description: Enable a '/assign-me' command that allows contributors to assign themselves issues.
+
 runs:
   using: node16
   main: dist/index.js
+
 branding:
   icon: activity
   color: white
+
 inputs:
   github_token:
     default: ${{ github.token }}
+  trigger:
+    description: The comment that triggers the action
+    default: /assign-me
   assigned_label:
-    default: Is-Assigned
     description: A label that is added to issues when they're assigned, to track which issues were assigned by this action.
+    default: Assigned
   required_label:
     description: If set, the issue must have this label to be assigned.
   days_until_unassign:
-    default: 7
     description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
+    default: 7
   pin_label:
     default: Pinned
     description: A label that prevents the user from being unassigned, typically for issues that are expected to take a long time.
@@ -30,6 +36,17 @@ inputs:
         * `totalDays` (7 days)
         * `env` (`process.env`, anything you pass to the action via `env`)
     default: |
-      This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }}!
-      It will become unassigned if it isn't closed within {{ totalDays }} days. 
+      🎉 This issue [has been assigned]({{ comment.html_url }}) to @{{ comment.user.login }} 🎉
+
+      ⚠ It will become unassigned if it isn't closed within **{{ totalDays }} days**.
+
       A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned.
+  already_assigned_comment:
+    description: >
+      The comment posted when a user tries to assign themselves to an issue that is already assigned.
+    default: |
+      ⚠ This issue is already assigned!
+
+      It will become unassigned if it isn't closed within **{{ totalDays }} days**. 
+
+      A maintainer can also add you to the list of assignees or swap you with the current assignee.

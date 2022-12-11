@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import commentHandler from './lib/comment-handler';
+import Comment from './lib/comment';
+// import commentHandler from './lib/comment-handler';
 import scheduleHandler from './lib/schedule-handler';
 
 export type Core = typeof core;
@@ -8,15 +9,19 @@ export type Github = typeof github;
 
 (async () => {
   try {
-    if (github.context.eventName === 'issue_comment') {
-      await commentHandler(core, github);
+    if (
+      github.context.eventName === 'issue_comment' &&
+      github.context.payload.body.includes(core.getInput('trigger'))
+    ) {
+      const issue = new Comment(core, github);
+      await issue.handleAssignIssue();
     } else if (
       github.context.eventName === 'workflow_dispatch' ||
       github.context.eventName === 'schedule'
     ) {
       await scheduleHandler(core);
     } else {
-      throw new Error(`Unhandled event ${github.context.eventName}`);
+      return;
     }
   } catch (error) {
     if (error instanceof Error) return core.setFailed(error.message);
