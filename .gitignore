@@ -4,13 +4,13 @@ node_modules/
 # vscode settings
 .vscode/
 
-# lib folder
-lib/
-
 # coverage
 coverage/
+
 # eslint cache
 .eslintcache
 
 # cache
 .dccache
+
+TODO.md

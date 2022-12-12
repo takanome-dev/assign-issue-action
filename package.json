@@ -1,23 +1,26 @@
 {
   "name": "assign-issue-action",
-  "version": "1.0.2",
-  "description": "Comment /assign-issue to assign an issue yourself 🥳",
+  "version": "2.0.0",
+  "description": "Comment /assign-me to assign an issue yourself 🎉",
   "engines": {
     "node": "16.x",
     "npm": "9.x"
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc",
+    "tsc": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint src/**/*.ts",
-    "package": "ncc build --license licenses.txt",
+    "lint": "eslint . --ext .ts --report-unused-disable-directives",
+    "build": "ncc build --license licenses.txt",
+    "tsc:build": "npm run tsc && npm run build",
     "test": "jest --coverage",
-    "all": "npm run format && npm run lint && npm run build && npm run package && npm test",
+    "test:watch": "jest --watch",
+    "all": "npm run format && npm run lint && npm run tsc && npm run build && npm test",
     "prepare": "husky install"
   },
   "homepage": "https://github.com/TAKANOME-DEV/assign-to-me-action#readme",
+  "bugs": "https://github.com/TAKANOME-DEV/assign-to-me-action/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TAKANOME-DEV/assign-to-me-action.git"

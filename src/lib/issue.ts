@@ -1,33 +1,33 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { WebhookPayload } from '@actions/github/lib/interfaces';
 import { Issue } from '../types';
 
-export default class StaleAssignments {
+export default class IssueHandler {
   private assignmentDuration: number;
-  private client: any;
+  private client: ReturnType<typeof github.getOctokit>;
   private token: string;
+  private assignedLabel: string;
+  private exemptLabel: string;
 
   constructor() {
-    this.assignmentDuration = parseInt(
-      core.getInput('days_until_unassign'),
-      10
-    );
+    this.assignmentDuration = Number(core.getInput('days_until_unassign'));
     this.token = core.getInput('github_token', { required: true });
     this.client = github.getOctokit(this.token);
+    this.assignedLabel = core.getInput('assigned_label');
+    this.exemptLabel = core.getInput('pin_label');
   }
 
-  async getStaleAssignments() {
-    const assignedLabel = core.getInput('assigned_label');
-    const exemptLabel = core.getInput('pin_label');
+  async getIssues(): Promise<Issue[]> {
     const { owner, repo } = github.context.repo;
 
     const timestamp = this.since(this.assignmentDuration);
 
     const q = [
       // Only get issues with the label that shows they've been assigned
-      `label:"${assignedLabel}"`,
-      // Don't include include issues that can be stale
-      `-label:"${exemptLabel}"`,
+      `label:"${this.assignedLabel}"`,
+      // Don't include include pinned issues
+      `-label:"${this.exemptLabel}"`,
       // Only include issues, not PRs
       'is:issue',
       // Only search within this repository
@@ -36,7 +36,7 @@ export default class StaleAssignments {
       'assigned:*',
       // Only find opened issues/PRs
       'is:open',
-      // Updated within the last 7 days
+      // Updated within the last 7 days (or whatever the user has set)
       `updated:<${timestamp}`,
     ];
 
@@ -50,29 +50,24 @@ export default class StaleAssignments {
     return issues.data.items;
   }
 
-  async unassignIssue(issue: Issue) {
+  async unassignIssue(issue: Issue | WebhookPayload['issue']) {
     return Promise.all([
       await this.client.rest.issues.removeAssignees({
         ...github.context.repo,
-        issue_number: issue?.number as number,
-        assignees: [issue?.assignee.login],
+        issue_number: issue?.number!,
+        assignees: [issue?.assignee!.login],
       }),
       await this.client.rest.issues.removeLabel({
         ...github.context.repo,
-        issue_number: issue?.number as number,
-        name: core.getInput('assigned_label'),
+        issue_number: issue?.number!,
+        name: this.assignedLabel,
       }),
     ]);
   }
 
-  since(days: number) {
-    const ttl = days * 24 * 60 * 60 * 1000;
-    const date = new Date(+new Date() - ttl);
-
-    // const ttl = new Date().setDate(
-    //   new Date().getDate() - days
-    // );
-    // return new Date(date).toISOString().substring(0, 10);
+  private since(days: number) {
+    const totalDaysInMiliseconds = days * 24 * 60 * 60 * 1000;
+    const date = new Date(+new Date() - totalDaysInMiliseconds);
 
     return new Date(date).toISOString().substring(0, 10);
   }
