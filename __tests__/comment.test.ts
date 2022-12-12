@@ -16,7 +16,7 @@ function calculateDaysUntilUnassign(createAt: string, totalDays: number) {
   return totalDays - diffDays;
 }
 
-describe('🗨 Comment Handler', () => {
+describe('Comment Handler', () => {
   let client: ReturnType<typeof github.getOctokit>;
   let commentHandler: Comment;
 
@@ -67,6 +67,7 @@ describe('🗨 Comment Handler', () => {
   });
 
   it('should failed if required_label is provided but not in the issue', async () => {
+    commentHandler = new Comment(core, github);
     process.env.INPUT_REQUIRED_LABEL = 'Required';
     await commentHandler.handleAssignIssue();
     expect(core.setFailed).toHaveBeenCalled();
