@@ -66,11 +66,36 @@ const mockApi = {
           items: [
             {
               number: 1,
-              labels: [],
+              labels: ['📍 Assigned'],
               assignee: {
                 login: 'John',
               },
+              updated_at: '2022-12-09T00:00:00Z',
             },
+            {
+              number: 2,
+              labels: ['📍 Assigned'],
+              assignee: {
+                login: 'Brian',
+              },
+              updated_at: '2022-12-05T00:00:00Z',
+            },
+            // {
+            //   number: 3,
+            //   labels: [],
+            //   assignee: {
+            //     login: 'Jim',
+            //   },
+            //   updated_at: '2022-12-06T00:00:00Z',
+            // },
+            // {
+            //   number: 4,
+            //   labels: ['📍 Assigned', '📌 Pinned'],
+            //   assignee: {
+            //     login: 'Steve',
+            //   },
+            //   updated_at: '2022-12-07T00:00:00Z',
+            // },
           ],
         },
       })),

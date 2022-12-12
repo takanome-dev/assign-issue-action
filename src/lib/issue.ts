@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { WebhookPayload } from '@actions/github/lib/interfaces';
 import { Issue } from '../types';
 
 export default class IssueHandler {
@@ -49,16 +50,16 @@ export default class IssueHandler {
     return issues.data.items;
   }
 
-  async unassignIssue(issue: Issue) {
+  async unassignIssue(issue: Issue | WebhookPayload['issue']) {
     return Promise.all([
       await this.client.rest.issues.removeAssignees({
         ...github.context.repo,
-        issue_number: issue?.number,
+        issue_number: issue?.number!,
         assignees: [issue?.assignee!.login],
       }),
       await this.client.rest.issues.removeLabel({
         ...github.context.repo,
-        issue_number: issue?.number,
+        issue_number: issue?.number!,
         name: this.assignedLabel,
       }),
     ]);
