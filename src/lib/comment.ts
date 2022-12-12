@@ -15,7 +15,7 @@ export default class Comment {
   constructor(core: Core, github: Github) {
     this.issue = github.context.payload.issue;
     this.comment = github.context.payload.comment;
-    this.token = core.getInput('github_token');
+    this.token = '';
     this.core = core;
     this.github = github;
     this.client = this.github.getOctokit(this.token);
@@ -23,6 +23,7 @@ export default class Comment {
 
   public async handleAssignIssue() {
     this.core.info(`🤖 Starting issue assignment...`);
+
     const trigger = this.core.getInput('trigger');
     const isTriggered =
       this.github.context.payload.comment?.body?.includes(trigger);
@@ -33,42 +34,14 @@ export default class Comment {
       );
     }
 
+    this.token = this.core.getInput('github_token');
+    this.client = this.github.getOctokit(this.token);
+
     if (!this.token)
       return this.core.setFailed(
         `🚫 Missing required input: token = ${this.token}`
       );
 
-    await this.checkRequiredLabel();
-
-    const totalDays = Number(this.core.getInput('days_until_unassign'));
-
-    // Check if the issue is already assigned
-    if (this.issue?.assignee) {
-      await this.issueAssignedComment(totalDays);
-      return this.core.info(
-        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
-      );
-    }
-
-    this.core.info(
-      `🤖 Assigning @${this.comment?.user?.login} to #${this.issue?.number}`
-    );
-
-    // Assign the issue to the user and add label "assigned_label"
-    await this.addAssignee();
-
-    const options = {
-      totalDays,
-      comment: this.comment,
-      // eslint-disable-next-line no-undef
-      env: process.env,
-      inputs: helpers.getInputs(),
-    };
-
-    await this.createComment('assigned_comment', options);
-  }
-
-  private async checkRequiredLabel() {
     const requiredLabel = this.core.getInput('required_label');
 
     if (requiredLabel) {
@@ -84,6 +57,37 @@ export default class Comment {
           )}]" label not found in issue #${this.issue?.number}.`
         );
     }
+
+    const totalDays = Number(this.core.getInput('days_until_unassign'));
+
+    // Check if the issue is already assigned
+    if (this.issue?.assignee) {
+      await this.issueAssignedComment(totalDays);
+      return this.core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
+      );
+    }
+
+    this.core.info(
+      `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`
+    );
+
+    // Assign the issue to the user and add label "assigned_label"
+    await this.addAssignee();
+
+    // Add a comment to the issue
+    this.core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
+
+    const options = {
+      totalDays,
+      comment: this.comment,
+      // eslint-disable-next-line no-undef
+      env: process.env,
+      inputs: helpers.getInputs(),
+    };
+
+    await this.createComment('assigned_comment', options);
+    this.core.info(`🤖 Issue #${this.issue?.number} assigned!`);
   }
 
   private async addAssignee() {

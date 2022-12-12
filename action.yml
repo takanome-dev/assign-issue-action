@@ -19,14 +19,14 @@ inputs:
     default: /assign-me
   assigned_label:
     description: A label that is added to issues when they're assigned, to track which issues were assigned by this action.
-    default: Assigned
+    default: 📍 Assigned
   required_label:
     description: If set, the issue must have this label to be assigned.
   days_until_unassign:
     description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
     default: 7
   pin_label:
-    default: Pinned
+    default: 📌 Pinned
     description: A label that prevents the user from being unassigned, typically for issues that are expected to take a long time.
   assigned_comment:
     description: >

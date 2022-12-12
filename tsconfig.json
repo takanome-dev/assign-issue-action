@@ -20,11 +20,10 @@
   "exclude": [
     "node_modules",
     "coverage",
-    "__mocks__",
-    "__tests__",
     "dist",
     "lib",
     "*.js",
-    "**/*.test.ts"
+    "__tests__",
+    "__mocks__"
   ]
 }

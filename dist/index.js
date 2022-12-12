@@ -93,13 +93,13 @@ class Comment {
     constructor(core, github) {
         this.issue = github.context.payload.issue;
         this.comment = github.context.payload.comment;
-        this.token = core.getInput('github_token');
+        this.token = '';
         this.core = core;
         this.github = github;
         this.client = this.github.getOctokit(this.token);
     }
     handleAssignIssue() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
         return __awaiter(this, void 0, void 0, function* () {
             this.core.info(`🤖 Starting issue assignment...`);
             const trigger = this.core.getInput('trigger');
@@ -107,18 +107,28 @@ class Comment {
             if (!isTriggered) {
                 return this.core.info(`🤖 Ignoring comment: ${(_c = this.github.context.payload.comment) === null || _c === void 0 ? void 0 : _c.body}`);
             }
+            this.token = this.core.getInput('github_token');
+            this.client = this.github.getOctokit(this.token);
             if (!this.token)
                 return this.core.setFailed(`🚫 Missing required input: token = ${this.token}`);
-            yield this.checkRequiredLabel();
+            const requiredLabel = this.core.getInput('required_label');
+            if (requiredLabel) {
+                // Check if the issue has the required label
+                const hasLabel = (_e = (_d = this.issue) === null || _d === void 0 ? void 0 : _d.labels) === null || _e === void 0 ? void 0 : _e.find((label) => label.name === requiredLabel);
+                if (!hasLabel)
+                    return this.core.setFailed(`🚫 Missing required label: "[${this.core.getInput('required_label')}]" label not found in issue #${(_f = this.issue) === null || _f === void 0 ? void 0 : _f.number}.`);
+            }
             const totalDays = Number(this.core.getInput('days_until_unassign'));
             // Check if the issue is already assigned
-            if ((_d = this.issue) === null || _d === void 0 ? void 0 : _d.assignee) {
+            if ((_g = this.issue) === null || _g === void 0 ? void 0 : _g.assignee) {
                 yield this.issueAssignedComment(totalDays);
-                return this.core.info(`🤖 Issue #${(_e = this.issue) === null || _e === void 0 ? void 0 : _e.number} is already assigned to @${(_g = (_f = this.issue) === null || _f === void 0 ? void 0 : _f.assignee) === null || _g === void 0 ? void 0 : _g.login}`);
+                return this.core.info(`🤖 Issue #${(_h = this.issue) === null || _h === void 0 ? void 0 : _h.number} is already assigned to @${(_k = (_j = this.issue) === null || _j === void 0 ? void 0 : _j.assignee) === null || _k === void 0 ? void 0 : _k.login}`);
             }
-            this.core.info(`🤖 Assigning @${(_j = (_h = this.comment) === null || _h === void 0 ? void 0 : _h.user) === null || _j === void 0 ? void 0 : _j.login} to #${(_k = this.issue) === null || _k === void 0 ? void 0 : _k.number}`);
+            this.core.info(`🤖 Assigning @${(_m = (_l = this.comment) === null || _l === void 0 ? void 0 : _l.user) === null || _m === void 0 ? void 0 : _m.login} to issue #${(_o = this.issue) === null || _o === void 0 ? void 0 : _o.number}`);
             // Assign the issue to the user and add label "assigned_label"
             yield this.addAssignee();
+            // Add a comment to the issue
+            this.core.info(`🤖 Adding comment to issue #${(_p = this.issue) === null || _p === void 0 ? void 0 : _p.number}`);
             const options = {
                 totalDays,
                 comment: this.comment,
@@ -127,18 +137,7 @@ class Comment {
                 inputs: helpers_1.default.getInputs(),
             };
             yield this.createComment('assigned_comment', options);
-        });
-    }
-    checkRequiredLabel() {
-        var _a, _b, _c;
-        return __awaiter(this, void 0, void 0, function* () {
-            const requiredLabel = this.core.getInput('required_label');
-            if (requiredLabel) {
-                // Check if the issue has the required label
-                const hasLabel = (_b = (_a = this.issue) === null || _a === void 0 ? void 0 : _a.labels) === null || _b === void 0 ? void 0 : _b.find((label) => label.name === requiredLabel);
-                if (!hasLabel)
-                    return this.core.setFailed(`🚫 Missing required label: "[${this.core.getInput('required_label')}]" label not found in issue #${(_c = this.issue) === null || _c === void 0 ? void 0 : _c.number}.`);
-            }
+            this.core.info(`🤖 Issue #${(_q = this.issue) === null || _q === void 0 ? void 0 : _q.number} assigned!`);
         });
     }
     addAssignee() {
