@@ -15,7 +15,7 @@ export default class Comment {
   constructor(core: Core, github: Github) {
     this.issue = github.context.payload.issue;
     this.comment = github.context.payload.comment;
-    this.token = core.getInput('github_token');
+    this.token = '';
     this.core = core;
     this.github = github;
     this.client = this.github.getOctokit(this.token);
@@ -23,7 +23,6 @@ export default class Comment {
 
   public async handleAssignIssue() {
     this.core.info(`🤖 Starting issue assignment...`);
-    this.core.info(`🤖 GITHUB_TOKEN: ${this.token}`);
 
     const trigger = this.core.getInput('trigger');
     const isTriggered =
@@ -35,8 +34,8 @@ export default class Comment {
       );
     }
 
-    // this.token = this.core.getInput('github_token');
-    // this.client = this.github.getOctokit(this.token);
+    this.token = this.core.getInput('github_token');
+    this.client = this.github.getOctokit(this.token);
 
     if (!this.token)
       return this.core.setFailed(
