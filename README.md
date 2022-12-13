@@ -9,6 +9,13 @@ It can also unassign issues that have been assigned for a configured amount of t
 
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
 
+## 📸 Screenshots
+
+| ![assign_1](https://user-images.githubusercontent.com/79809121/207156221-9ef2da18-018e-46be-846b-f80bd1b60402.png) | ![assign_2](https://user-images.githubusercontent.com/79809121/207156278-8c338712-9519-4987-83d0-22c6bd63b7f5.png) | 
+| ------ | ------ |
+
+
+
 ## 🚀 Usage
 
 Create a workflow (eg: `.github/workflows/assign.yml` learn more about [Creating a Workflow file](https://docs.github.com/en/actions/using-workflows#creating-a-workflow-file)) to utilize the `trigger` action with content:
