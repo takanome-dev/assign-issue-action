@@ -1,6 +1,6 @@
 <h2 align="center">💬 Assign Issue Action ✋</h2>
 
-<p align="center"><a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="Licence Badge" src="https://img.shields.io/github/license/TAKANOME-DEV/assign-to-me-action?color=%2330C151"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="Licence Badge" src="https://img.shields.io/github/release/TAKANOME-DEV/assign-to-me-action?color=%2330C151"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/ci.yml/badge.svg"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/codeql-analysis.yml/badge.svg"></a> <a href="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action"><img src="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action/branch/master/graph/badge.svg?token=MX3SB0GFB3" /></a></p>
+<p align="center"><a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="Licence Badge" src="https://img.shields.io/github/license/TAKANOME-DEV/assign-to-me-action?color=%2330C151"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="Release Badge" src="https://img.shields.io/github/release/TAKANOME-DEV/assign-to-me-action?color=%2330C151"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/ci.yml/badge.svg"></a> <a href="https://github.com/TAKANOME-DEV/assign-to-me-action"><img alt="GitHub Actions status" src="https://github.com/TAKANOME-DEV/assign-to-me-action/actions/workflows/codeql-analysis.yml/badge.svg"></a> <a href="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action"><img src="https://codecov.io/gh/TAKANOME-DEV/assign-to-me-action/branch/master/graph/badge.svg?token=MX3SB0GFB3" /></a></p>
 
 ---
 
@@ -8,6 +8,13 @@ A GitHub Action that listens for a `/assign-me` "command" (an issue comment that
 It can also unassign issues that have been assigned for a configured amount of time.
 
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
+
+## 📸 Screenshots
+
+| ![assign_1](https://user-images.githubusercontent.com/79809121/207156221-9ef2da18-018e-46be-846b-f80bd1b60402.png) | ![assign_2](https://user-images.githubusercontent.com/79809121/207156278-8c338712-9519-4987-83d0-22c6bd63b7f5.png) | 
+| ------ | ------ |
+
+
 
 ## 🚀 Usage
 
