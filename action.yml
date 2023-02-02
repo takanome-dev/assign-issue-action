@@ -1,6 +1,6 @@
 name: Assign Me Action
 author: TAKANOME-DEV
-description: Enable a '/assign-me' command that allows contributors to assign themselves issues.
+description: Enable a '/assign-me' command/comment that allows contributors to assign themselves issues.
 
 runs:
   using: node16
