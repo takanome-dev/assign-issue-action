@@ -42,7 +42,7 @@
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.21.5",
+    "@babel/preset-env": "7.22.1",
     "@babel/preset-typescript": "7.21.5",
     "@types/jest": "27.5.2",
     "@types/js-yaml": "4.0.5",
