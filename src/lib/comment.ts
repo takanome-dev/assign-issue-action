@@ -30,13 +30,13 @@ export default class Comment {
 
     if (!isTriggered) {
       return this.core.info(
-        `🤖 Ignoring comment: ${this.github.context.payload.comment?.body}`
+        `🤖 Ignoring comment: ${this.github.context.payload.comment?.body}`,
       );
     }
 
     if (!this.token)
       return this.core.setFailed(
-        `🚫 Missing required input: token = ${this.token}`
+        `🚫 Missing required input: token = ${this.token}`,
       );
 
     const requiredLabel = this.core.getInput('required_label');
@@ -44,14 +44,14 @@ export default class Comment {
     if (requiredLabel) {
       // Check if the issue has the required label
       const hasLabel = this.issue?.labels?.find(
-        (label: { name: string }) => label.name === requiredLabel
+        (label: { name: string }) => label.name === requiredLabel,
       );
 
       if (!hasLabel)
         return this.core.setFailed(
           `🚫 Missing required label: "[${this.core.getInput(
-            'required_label'
-          )}]" label not found in issue #${this.issue?.number}.`
+            'required_label',
+          )}]" label not found in issue #${this.issue?.number}.`,
         );
     }
 
@@ -61,12 +61,12 @@ export default class Comment {
     if (this.issue?.assignee) {
       await this.issueAssignedComment(totalDays);
       return this.core.info(
-        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
     }
 
     this.core.info(
-      `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`
+      `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`,
     );
 
     // Assign the issue to the user and add label "assigned_label"
@@ -119,18 +119,18 @@ export default class Comment {
     });
 
     const assignedComment = comments.data.find(
-      (comment) => comment.user!.login === this.issue?.assignee?.login
+      (comment) => comment.user!.login === this.issue?.assignee?.login,
     );
 
     if (!assignedComment) {
       return this.core.info(
-        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
     }
 
     const daysUntilUnassign = this.calculateDaysUntilUnassign(
       assignedComment?.created_at,
-      totalDays
+      totalDays,
     );
 
     await this.createComment('already_assigned_comment', {
