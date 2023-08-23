@@ -1,45 +1,45 @@
-name: 🐛 Bug report
-description: Create a bug report to help us improve this action.
-title: 'Bug: <a short description of the bug>'
-labels: [👀 needs triage, 🐛 bug]
+name: 🚀 Feature request
+description: Suggest an idea for this project 💡
+title: 'Feature: <a short description of the feature request>'
+labels: [👀 needs triage, 💡 feature]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
-  - type: textarea
-    attributes:
-      label: Describe the bug
-      description: A clear and concise description of what the bug is.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Steps to reproduce
-      description: Describe how to reproduce the behavior.
-      placeholder: |
-        1. Go to '...'
-        2. Click on '...'
-        3. Scroll down to '...'
-        4. See error
-    validations:
-      required: true
+        Thanks for taking the time to fill out this feature request!
   - type: dropdown
     attributes:
-      multiple: true
-      label: Browsers
-      description: Select the browsers where the issue can be reproduced (that you know of).
+      multiple: false
+      label: Type of feature
+      description: Select the type of feature request, the lowercase should also be the PR prefix.
       options:
-        - 'Chrome'
-        - 'Firefox'
-        - 'Safari'
-        - 'Edge'
-        - 'Opera'
-        - 'Other (add additional context)'
-  - type: input
-    id: textarea
+        - '💡 Feature'
+        - '🐛 Fix'
+        - '📝 Documentation'
+        - '🎨 Style'
+        - '🧑‍💻 Refactor'
+        - '🔥 Performance'
+        - '✅ Test'
+        - '🤖 Build'
+        - '🔁 CI'
+        - '📦 Chore'
+        - '⏩ Revert'
+    validations:
+      required: true
+  - type: textarea
     attributes:
-      label: Additional context (Is this in dev or production?)
+      label: Current behavior
+      description: Is your feature request related to a problem? Please describe.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Suggested solution
+      description: Describe the solution you'd like.
+  - type: input
+    id: context
+    attributes:
+      label: Additional context
       description: Add any other context about the problem or helpful links here.
   - type: checkboxes
     id: terms

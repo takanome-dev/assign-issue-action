@@ -1,20 +1,19 @@
-name: Documentation
+name: 📝 Documentation Request
 description: Request an update to invalid/outdated documentation
-title: '[DOCS] - <description>'
-labels: ['🚦 status: awaiting triage']
+title: 'Docs: <a short description of the documentation error>'
+labels: ['👀 needs triage', '📝 documentation']
 body:
   - type: markdown
     attributes:
-      value: '# Incorrect Documentation'
+      value: |
+        Thanks for taking the time to fill out this documentation request!
   - type: textarea
-    id: doc_error_description
     attributes:
       label: What is incorrect in the documentation?
       description: Please explain the information that is incorrect in the documentation, and why you think it needs to be updated.
     validations:
       required: true
   - type: textarea
-    id: expected_information
     attributes:
       label: What should that text say?
       description: Provide the information that the documentation should actually contain instead of the incorrect content.
@@ -31,7 +30,15 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/TAKANOME-DEV/assign-to-me-action/blob/master/CODE_OF_CONDUCT.md)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/takanome-dev/assign-issue-action/blob/master/CODE_OF_CONDUCT.md)
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contributing Docs
+      description: If you plan on contributing code please read - [Contribution Guide](https://github.com/takanome-dev/assign-issue-action/blob/master/CONTRIBUTING.md)
+      options:
+        - label: I agree to follow this project's Contribution Docs
+          required: false

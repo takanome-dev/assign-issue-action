@@ -7,13 +7,13 @@ Please read the [CODE of CONDUCT](CODE_OF_CONDUCT.md).
 
 First, fork the repository to your own account and run the following command:
 
-- Clone your repo: `git clone https://github.com/<your_name>/assign-to-me-action`
-- Change directory to the working dir: `cd assign-to-me-action`
-- Install the dependencies: `npm i`
+- Clone your repo: `git clone https://github.com/<your_name>/assign-issue-action`
+- Change directory to the working dir: `cd assign-issue-action`
+- Install the dependencies: `npm ci`
 
 ## Issue
 
-If you see an open issue you would like to work on, just comment `/assign-to-me` and the action will assign the issue to you 😉
+If you see an open issue you would like to work on, just comment `.take` and the action will assign the issue to you 😉
 Issues that are not assigned are assumed open, and to avoid conflicts, please assign yourself before beginning work on any issues.
 
 > [!NOTE]
@@ -43,7 +43,7 @@ Make sure to change the PR title in something like: `fix: correct typo` or `feat
 
 ## Pull Request Reviews
 
-All pull requests require a review before being merged. Most reviews will come from [@takanome_dev](https://github.com/TAKANOME-DEV).
+All pull requests require a review before being merged. Most reviews will come from [@takanome_dev](https://github.com/takanome-dev).
 
 If your pull request is approved, it will be merged.
 

@@ -53,7 +53,7 @@ describe('Comment Handler', () => {
     await commentHandler.handleAssignIssue();
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Ignoring comment: ${github.context.payload.comment?.body}`
+      `🤖 Ignoring comment: ${github.context.payload.comment?.body}`,
     );
   });
 
@@ -62,7 +62,7 @@ describe('Comment Handler', () => {
     await commentHandler.handleAssignIssue();
     expect(core.setFailed).toHaveBeenCalled();
     expect(core.setFailed).toHaveBeenCalledWith(
-      `🚫 Missing required input: token = ${process.env.INPUT_GITHUB_TOKEN}`
+      `🚫 Missing required input: token = ${process.env.INPUT_GITHUB_TOKEN}`,
     );
   });
 
@@ -72,7 +72,7 @@ describe('Comment Handler', () => {
     await commentHandler.handleAssignIssue();
     expect(core.setFailed).toHaveBeenCalled();
     expect(core.setFailed).toHaveBeenCalledWith(
-      `🚫 Missing required label: "[${process.env.INPUT_REQUIRED_LABEL}]" label not found in issue #${github.context.payload.issue?.number}.`
+      `🚫 Missing required label: "[${process.env.INPUT_REQUIRED_LABEL}]" label not found in issue #${github.context.payload.issue?.number}.`,
     );
   });
 
@@ -81,7 +81,7 @@ describe('Comment Handler', () => {
     const assignee = github.context.payload.issue!.assignee!.login;
     const daysUntilUnassign = calculateDaysUntilUnassign(
       github.context.payload.issue!.created_at,
-      Number(process.env.INPUT_DAYS_UNTIL_UNASSIGN)
+      Number(process.env.INPUT_DAYS_UNTIL_UNASSIGN),
     );
 
     await commentHandler.handleAssignIssue();
@@ -104,7 +104,7 @@ describe('Comment Handler', () => {
     });
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Issue #${github.context.payload.issue?.number} is already assigned to @${assignee}`
+      `🤖 Issue #${github.context.payload.issue?.number} is already assigned to @${assignee}`,
     );
   });
 
@@ -114,7 +114,7 @@ describe('Comment Handler', () => {
 
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Assigning @${github.context.payload.comment?.user.login} to issue #${github.context.payload.issue?.number}`
+      `🤖 Assigning @${github.context.payload.comment?.user.login} to issue #${github.context.payload.issue?.number}`,
     );
     expect(client.rest.issues.addAssignees).toHaveBeenCalled();
     expect(client.rest.issues.addAssignees).toHaveBeenCalledWith({
@@ -130,7 +130,7 @@ describe('Comment Handler', () => {
 
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Assigning @${github.context.payload.comment?.user.login} to issue #${github.context.payload.issue?.number}`
+      `🤖 Assigning @${github.context.payload.comment?.user.login} to issue #${github.context.payload.issue?.number}`,
     );
     expect(client.rest.issues.addLabels).toHaveBeenCalled();
     expect(client.rest.issues.addLabels).toHaveBeenCalledWith({
@@ -149,7 +149,7 @@ describe('Comment Handler', () => {
     await commentHandler.handleAssignIssue();
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Adding comment to issue #${github.context.payload.issue?.number}`
+      `🤖 Adding comment to issue #${github.context.payload.issue?.number}`,
     );
     expect(client.rest.issues.createComment).toHaveBeenCalled();
     expect(client.rest.issues.createComment).toHaveBeenCalledWith({
@@ -164,7 +164,7 @@ describe('Comment Handler', () => {
     });
     expect(core.info).toHaveBeenCalled();
     expect(core.info).toHaveBeenCalledWith(
-      `🤖 Issue #${github.context.payload.issue?.number} assigned!`
+      `🤖 Issue #${github.context.payload.issue?.number} assigned!`,
     );
   });
 });
