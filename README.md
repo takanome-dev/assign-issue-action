@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign the user or unassign stale assignments
-        uses: takanome-dev/assign-issue-action@v2.0.0
+        uses: takanome-dev/assign-issue-action@v2.1.1
         with:
           github_token: '${{ secrets.GITHUB_TOKEN }}'
           # trigger: '/assign-me' # you can change the default trigger to something else

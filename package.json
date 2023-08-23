@@ -1,7 +1,7 @@
 {
   "name": "assign-issue-action",
-  "version": "2.0.0",
-  "description": "Comment /assign-me to assign an issue yourself 🎉",
+  "version": "2.1.1",
+  "description": "Comment /assign (or any trigger you want) to assign an issue yourself 🎉",
   "engines": {
     "node": "18.x",
     "npm": "9.x"
@@ -19,11 +19,11 @@
     "all": "npm run format && npm run lint && npm run tsc && npm run build && npm test",
     "prepare": "husky install"
   },
-  "homepage": "https://github.com/TAKANOME-DEV/assign-to-me-action#readme",
-  "bugs": "https://github.com/TAKANOME-DEV/assign-to-me-action/issues",
+  "homepage": "https://github.com/takanome-dev/assign-to-me-action#readme",
+  "bugs": "https://github.com/takanome-dev/assign-to-me-action/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TAKANOME-DEV/assign-to-me-action.git"
+    "url": "git+https://github.com/takanome-dev/assign-to-me-action.git"
   },
   "keywords": [
     "github",
@@ -34,7 +34,7 @@
     "slash-commands",
     "github-actions"
   ],
-  "author": "TAKANOME-DEV",
+  "author": "takanome-dev <takanomedev221@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.9.1",
