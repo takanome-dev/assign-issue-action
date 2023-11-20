@@ -4,7 +4,7 @@
   "description": "Comment /assign (or any trigger you want) to assign an issue yourself 🎉",
   "engines": {
     "node": "18.x",
-    "npm": "9.x"
+    "npm": "10.x"
   },
   "main": "lib/index.js",
   "scripts": {
