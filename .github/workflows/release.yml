@@ -23,47 +23,47 @@ jobs:
     name: Test and lint
     uses: ./.github/workflows/development.yml
 
-  docker:
-    name: Build container
-    runs-on: ubuntu-latest
-    steps:
-      - name: '☁️ checkout repository'
-        uses: actions/checkout@v3
+  # docker:
+  #   name: Build container
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: '☁️ checkout repository'
+  #       uses: actions/checkout@v3
 
-      - name: '🔧 setup buildx'
-        uses: docker/setup-buildx-action@v2
+  #     - name: '🔧 setup buildx'
+  #       uses: docker/setup-buildx-action@v2
 
-      - name: '🔧 cache docker layers'
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+  #     - name: '🔧 cache docker layers'
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: /tmp/.buildx-cache
+  #         key: ${{ runner.os }}-buildx-${{ github.sha }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-buildx-
 
-      - name: '🔧 docker meta'
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ github.repository }}
-          tags: latest
+  #     - name: '🔧 docker meta'
+  #       id: meta
+  #       uses: docker/metadata-action@v4
+  #       with:
+  #         images: ${{ github.repository }}
+  #         tags: latest
 
-      - name: '📦 docker build'
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=docker,dest=/tmp/docker.tar
-          push: false
-          cache-from: type=gha, scope=${{ github.workflow }}
-          cache-to: type=gha, scope=${{ github.workflow }}
+  #     - name: '📦 docker build'
+  #       uses: docker/build-push-action@v4
+  #       with:
+  #         context: .
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         outputs: type=docker,dest=/tmp/docker.tar
+  #         push: false
+  #         cache-from: type=gha, scope=${{ github.workflow }}
+  #         cache-to: type=gha, scope=${{ github.workflow }}
 
-      - name: '📂 docker artifacts'
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker
-          path: /tmp/docker.tar
+  #     - name: '📂 docker artifacts'
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: docker
+  #         path: /tmp/docker.tar
 
   build:
     name: Build application
@@ -100,8 +100,8 @@ jobs:
     needs:
       - setup
       - test
-      - docker
       - build
+      # - docker
     runs-on: ubuntu-latest
     steps:
       - name: '☁️ checkout repository'
@@ -109,11 +109,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: '📂 download docker artifacts'
-        uses: actions/download-artifact@v3
-        with:
-          name: docker
-          path: /tmp
+      # - name: '📂 download docker artifacts'
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: docker
+      #     path: /tmp
 
       - name: '📦 load tag'
         run: |
@@ -143,4 +143,4 @@ jobs:
         with:
           name: |
             build
-            docker
+        # docker
