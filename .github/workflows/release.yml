@@ -115,10 +115,10 @@ jobs:
       #     name: docker
       #     path: /tmp
 
-      - name: '📦 load tag'
-        run: |
-          docker load --input /tmp/docker.tar
-          docker image ls -a
+      # - name: '📦 load tag'
+      #   run: |
+      #     docker load --input /tmp/docker.tar
+      #     docker image ls -a
 
       - name: '📂 download build artifacts'
         uses: actions/download-artifact@v3
