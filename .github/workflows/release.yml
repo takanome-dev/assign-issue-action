@@ -131,6 +131,8 @@ jobs:
         uses: open-sauced/release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_NPM_PUBLISH: true
+          SKIP_DOCKER_PUBLISH: true
 
   cleanup:
     name: Cleanup actions
