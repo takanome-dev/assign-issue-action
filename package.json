@@ -37,8 +37,8 @@
   "author": "takanome-dev <takanomedev221@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.9.1",
-    "@actions/github": "^5.0.3",
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
     "mustache": "^4.2.0"
   },
   "devDependencies": {

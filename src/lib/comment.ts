@@ -1,45 +1,40 @@
 import mustache from 'mustache';
-import { Core, Github } from '../index';
+import { context, getOctokit } from '@actions/github';
+import { getInput, info, setFailed } from '@actions/core';
+
+import type { WebhookPayload } from '@actions/github/lib/interfaces';
+
 import helpers from './helpers';
-import { WebhookPayload } from '@actions/github/lib/interfaces';
 import { Issue, Comment as IComment } from '../types';
 
 export default class Comment {
   private issue: WebhookPayload['issue'] | Issue;
   private comment: WebhookPayload['comment'] | IComment;
   private token: string;
-  private core: Core;
-  private github: Github;
-  private client: ReturnType<Github['getOctokit']>;
+  private context = context;
+  private client: ReturnType<typeof getOctokit>;
 
-  constructor(core: Core, github: Github) {
-    this.issue = github.context.payload.issue;
-    this.comment = github.context.payload.comment;
-    this.token = core.getInput('github_token');
-    this.core = core;
-    this.github = github;
-    this.client = this.github.getOctokit(this.token);
+  constructor() {
+    this.issue = this.context.payload.issue;
+    this.comment = this.context.payload.comment;
+    this.token = getInput('github_token');
+    this.client = getOctokit(this.token);
   }
 
   public async handleAssignIssue() {
-    this.core.info(`🤖 Starting issue assignment...`);
+    info(`🤖 Starting issue assignment...`);
 
-    const trigger = this.core.getInput('trigger');
-    const isTriggered =
-      this.github.context.payload.comment?.body?.includes(trigger);
+    const trigger = getInput('trigger');
+    const isTriggered = this.context.payload.comment?.body?.includes(trigger);
 
     if (!isTriggered) {
-      return this.core.info(
-        `🤖 Ignoring comment: ${this.github.context.payload.comment?.body}`,
-      );
+      return info(`🤖 Ignoring comment: ${this.context.payload.comment?.body}`);
     }
 
     if (!this.token)
-      return this.core.setFailed(
-        `🚫 Missing required input: token = ${this.token}`,
-      );
+      return setFailed(`🚫 Missing required input: token = ${this.token}`);
 
-    const requiredLabel = this.core.getInput('required_label');
+    const requiredLabel = getInput('required_label');
 
     if (requiredLabel) {
       // Check if the issue has the required label
@@ -48,24 +43,24 @@ export default class Comment {
       );
 
       if (!hasLabel)
-        return this.core.setFailed(
-          `🚫 Missing required label: "[${this.core.getInput(
+        return setFailed(
+          `🚫 Missing required label: "[${getInput(
             'required_label',
           )}]" label not found in issue #${this.issue?.number}.`,
         );
     }
 
-    const totalDays = Number(this.core.getInput('days_until_unassign'));
+    const totalDays = Number(getInput('days_until_unassign'));
 
     // Check if the issue is already assigned
     if (this.issue?.assignee) {
       await this.issueAssignedComment(totalDays);
-      return this.core.info(
+      return info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
     }
 
-    this.core.info(
+    info(
       `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`,
     );
 
@@ -73,7 +68,7 @@ export default class Comment {
     await this.addAssignee();
 
     // Add a comment to the issue
-    this.core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
+    info(`🤖 Adding comment to issue #${this.issue?.number}`);
 
     const options = {
       totalDays,
@@ -84,29 +79,29 @@ export default class Comment {
     };
 
     await this.createComment('assigned_comment', options);
-    this.core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+    info(`🤖 Issue #${this.issue?.number} assigned!`);
   }
 
   private async addAssignee() {
     await Promise.all([
       await this.client.rest.issues.addAssignees({
-        ...this.github.context.repo,
+        ...this.context.repo,
         issue_number: this.issue?.number!,
         assignees: [this.comment?.user.login],
       }),
       await this.client.rest.issues.addLabels({
-        ...this.github.context.repo,
+        ...this.context.repo,
         issue_number: this.issue?.number!,
-        labels: [this.core.getInput('assigned_label')],
+        labels: [getInput('assigned_label')],
       }),
     ]);
   }
 
   private async createComment(inputName: string, options: unknown) {
-    const body = mustache.render(this.core.getInput(inputName), options);
+    const body = mustache.render(getInput(inputName), options);
 
     await this.client.rest.issues.createComment({
-      ...this.github.context.repo,
+      ...this.context.repo,
       issue_number: this.issue?.number as number,
       body,
     });
@@ -114,7 +109,7 @@ export default class Comment {
 
   private async issueAssignedComment(totalDays: number) {
     const comments = await this.client.rest.issues.listComments({
-      ...this.github.context.repo,
+      ...this.context.repo,
       issue_number: this.issue?.number!,
     });
 
@@ -123,7 +118,7 @@ export default class Comment {
     );
 
     if (!assignedComment) {
-      return this.core.info(
+      return info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
     }
