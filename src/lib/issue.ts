@@ -1,25 +1,27 @@
-import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { WebhookPayload } from '@actions/github/lib/interfaces';
+import { getInput } from '@actions/core';
+import { context, getOctokit } from '@actions/github';
+
+import type { WebhookPayload } from '@actions/github/lib/interfaces';
+
 import { Issue } from '../types';
 
 export default class IssueHandler {
   private assignmentDuration: number;
-  private client: ReturnType<typeof github.getOctokit>;
+  private client: ReturnType<typeof getOctokit>;
   private token: string;
   private assignedLabel: string;
   private exemptLabel: string;
 
   constructor() {
-    this.assignmentDuration = Number(core.getInput('days_until_unassign'));
-    this.token = core.getInput('github_token', { required: true });
-    this.client = github.getOctokit(this.token);
-    this.assignedLabel = core.getInput('assigned_label');
-    this.exemptLabel = core.getInput('pin_label');
+    this.assignmentDuration = Number(getInput('days_until_unassign'));
+    this.token = getInput('github_token', { required: true });
+    this.client = getOctokit(this.token);
+    this.assignedLabel = getInput('assigned_label');
+    this.exemptLabel = getInput('pin_label');
   }
 
   async getIssues(): Promise<Issue[]> {
-    const { owner, repo } = github.context.repo;
+    const { owner, repo } = context.repo;
 
     const timestamp = this.since(this.assignmentDuration);
 
@@ -53,12 +55,12 @@ export default class IssueHandler {
   async unassignIssue(issue: Issue | WebhookPayload['issue']) {
     return Promise.all([
       await this.client.rest.issues.removeAssignees({
-        ...github.context.repo,
+        ...context.repo,
         issue_number: issue?.number!,
         assignees: [issue?.assignee!.login],
       }),
       await this.client.rest.issues.removeLabel({
-        ...github.context.repo,
+        ...context.repo,
         issue_number: issue?.number!,
         name: this.assignedLabel,
       }),
@@ -66,8 +68,8 @@ export default class IssueHandler {
   }
 
   private since(days: number) {
-    const totalDaysInMiliseconds = days * 24 * 60 * 60 * 1000;
-    const date = new Date(+new Date() - totalDaysInMiliseconds);
+    const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1000;
+    const date = new Date(+new Date() - totalDaysInMilliseconds);
 
     return new Date(date).toISOString().substring(0, 10);
   }

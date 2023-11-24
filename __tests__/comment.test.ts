@@ -32,7 +32,7 @@ describe('Comment Handler', () => {
     });
 
     client = github.getOctokit('_');
-    commentHandler = new Comment(core, github);
+    commentHandler = new Comment();
 
     Object.assign(process.env, helpers.getDefaultValues());
   });
@@ -67,7 +67,7 @@ describe('Comment Handler', () => {
   });
 
   it('should failed if required_label is provided but not in the issue', async () => {
-    commentHandler = new Comment(core, github);
+    commentHandler = new Comment();
     process.env.INPUT_REQUIRED_LABEL = 'Required';
     await commentHandler.handleAssignIssue();
     expect(core.setFailed).toHaveBeenCalled();
