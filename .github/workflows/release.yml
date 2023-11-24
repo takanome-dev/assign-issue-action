@@ -128,10 +128,12 @@ jobs:
 
       - name: '🚀 release'
         id: semantic-release
-        uses: open-sauced/release@v2
+        # uses: open-sauced/release@v2
+        uses: open-sauced/release@fix-release-gh-action-repo
         env:
           SKIP_NPM_PUBLISH: true
           SKIP_DOCKER_PUBLISH: true
+          SKIP_ACTION_REPLACEMENT: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   cleanup:
