@@ -129,7 +129,7 @@ jobs:
       - name: '🚀 release'
         id: semantic-release
         # uses: open-sauced/release@v2
-        uses: takanome-dev/opensauced@fix-release-gh-action-repo
+        uses: takanome-dev/opensauced.release@fix-release-gh-action-repo
         env:
           SKIP_NPM_PUBLISH: true
           SKIP_DOCKER_PUBLISH: true
