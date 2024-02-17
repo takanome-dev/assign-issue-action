@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: '☁️ checkout repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '🔧 setup node'
         uses: actions/setup-node@v4
@@ -43,7 +43,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: '☁️ checkout repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '🔧 setup node'
         uses: actions/setup-node@v4
@@ -65,7 +65,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: '☁️ checkout repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '🔧 setup node'
         uses: actions/setup-node@v4
