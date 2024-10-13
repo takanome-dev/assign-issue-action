@@ -4,7 +4,7 @@
 
 ---
 
-A GitHub Action that listens for a `/assign` "command" (or any trigger you want) and assigns the issue to the user who commented (or the user who triggered the action).
+A GitHub Action that listens for a `/assign-me` "command" (or any trigger you want) and assigns the issue to the user who commented (or the user who triggered the action).
 It can also unassign issues that have been assigned for a configured amount of time.
 
 This Action is heavily inspired by [JasonEtco/slash-assign-action](https://github.com/JasonEtco/slash-assign-action)
