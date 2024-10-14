@@ -3,7 +3,7 @@ import { context, getOctokit } from '@actions/github';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 
-import { Issue } from '../types';
+import { Issue } from '../../types';
 
 export default class IssueHandler {
   private assignmentDuration: number;

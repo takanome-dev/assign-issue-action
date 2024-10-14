@@ -1,9 +1,6 @@
 import { setFailed } from '@actions/core';
 import { context } from '@actions/github';
 
-import Comment from './lib/comment';
-import scheduleHandler from './lib/schedule';
-
 (async () => {
   const event = context.eventName;
 

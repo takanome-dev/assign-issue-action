@@ -14,9 +14,21 @@ inputs:
   github_token:
     default: ${{ github.token }}
     required: true
+    # TODO: remove trigger
   trigger:
     description: The comment that triggers the action
     default: /assign-me
+  self_assign_cmd:
+    description: The command that assigns the issue to the one who triggered it
+    default: /assign-me
+  self_unassign_cmd:
+    description: The command that unassign the issue to the one who triggered it if he is assigned
+  assign_commenter_cmd:
+    description: TODO
+    default: /assign-commenter
+  unassign_commenter_cmd:
+    description: TODO
+    default: /unassign-commenter
   assigned_label:
     description: A label that is added to issues when they're assigned, to track which issues were assigned by this action.
     default: 📍 Assigned
