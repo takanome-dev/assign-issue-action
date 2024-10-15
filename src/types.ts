@@ -1,17 +1,17 @@
 import { WebhookPayload } from '@actions/github/lib/interfaces';
 
-export interface Inputs {
-  assigned_label?: string;
-  assigned_comment?: string;
-  days_until_unassign?: number;
-  github_token: string;
-  trigger?: string;
-  pin_label?: string;
-  required_label?: string;
-  stale_assignment_label?: string;
-}
+// export interface Inputs {
+//   assigned_label?: string;
+//   assigned_comment?: string;
+//   days_until_unassign?: number;
+//   github_token: string;
+//   trigger?: string;
+//   pin_label?: string;
+//   required_label?: string;
+//   stale_assignment_label?: string;
+// }
 
-export interface Issue {
+export interface GhIssue {
   id: number;
   node_id: string;
   url: string;
@@ -24,11 +24,11 @@ export interface Issue {
   state: string;
   title: string;
   body?: string;
-  user: User | null;
-  labels: Label[];
-  assignee: User | null;
-  assignees?: User[] | null;
-  milestone: Milestone | null;
+  user: GhUser | null;
+  labels: GhLabel[];
+  assignee: GhUser | null;
+  assignees?: GhUser[] | null;
+  milestone: GhMilestone | null;
   locked: boolean;
   active_lock_reason?: string | null;
   comments: number;
@@ -45,7 +45,7 @@ export interface Issue {
   author_association: string;
 }
 
-export interface User {
+export interface GhUser {
   login: string;
   id: number;
   node_id: string;
@@ -66,7 +66,7 @@ export interface User {
   site_admin: boolean;
 }
 
-export interface Label {
+export interface GhLabel {
   id?: number;
   node_id?: string;
   url?: string;
@@ -76,7 +76,7 @@ export interface Label {
   default?: boolean;
 }
 
-export interface Milestone {
+export interface GhMilestone {
   url: string;
   html_url: string;
   labels_url: string;
@@ -86,7 +86,7 @@ export interface Milestone {
   state: string;
   title: string;
   description: string | null;
-  creator: User | null;
+  creator: GhUser | null;
   open_issues: number;
   closed_issues: number;
   created_at: string;
@@ -95,7 +95,7 @@ export interface Milestone {
   due_on: string | null;
 }
 
-export interface Comment {
+export interface GhComment {
   author_association: string;
   body: string;
   created_at: string;
@@ -118,10 +118,10 @@ export interface Comment {
   };
   updated_at: string;
   url: string;
-  user: User;
+  user: GhUser;
 }
 
 export interface GithubPayload extends WebhookPayload {
-  issue?: Issue;
-  comment?: Comment | undefined;
+  issue?: GhIssue;
+  comment?: GhComment | undefined;
 }

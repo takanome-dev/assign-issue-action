@@ -10,7 +10,9 @@ export enum INPUTS {
   REQUIRED_LABEL = 'required_label',
   DAYS_UNTIL_UNASSIGN = 'days_until_unassign',
   PIN_LABEL = 'pin_label',
-  ASSIGNED_COMMENT = 'assigned_comment',
-  ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
   STALE_ASSIGNMENT_LABEL = 'stale_assignment_label',
+
+  ASSIGNED_COMMENT = 'assigned_comment',
+  UNASSIGNED_COMMENT = 'unassigned_comment',
+  ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
 }

@@ -14,32 +14,30 @@ inputs:
   github_token:
     default: ${{ github.token }}
     required: true
-    # TODO: remove trigger
-  trigger:
-    description: The comment that triggers the action
-    default: /assign-me
+    description: The GitHub token used to authenticate API requests.
   self_assign_cmd:
     description: The command that assigns the issue to the one who triggered it
     default: /assign-me
   self_unassign_cmd:
-    description: The command that unassign the issue to the one who triggered it if he is assigned
+    description: The command that unassigns the issue from the user who triggered it, if they are already assigned.
+    default: /unassign-me
   assign_commenter_cmd:
-    description: TODO
+    description: The command that assigns the commenter to the issue
     default: /assign-commenter
   unassign_commenter_cmd:
-    description: TODO
+    description: The command that unassigns the commenter from the issue, if they are assigned.
     default: /unassign-commenter
   assigned_label:
-    description: A label that is added to issues when they're assigned, to track which issues were assigned by this action.
+    description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
   required_label:
-    description: If set, the issue must have this label to be assigned.
+    description: If set, the issue must have this label in order for users to self-assign it.
   days_until_unassign:
-    description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
+    description: The number of days after assignment before the user is automatically unassigned (if the issue remains open).
     default: 7
   pin_label:
     default: 📌 Pinned
-    description: A label that prevents the user from being unassigned, typically for issues that are expected to take a long time.
+    description: A label that prevents automatic unassignment, typically for long-term issues.
   assigned_comment:
     description: >
       The comment posted after a user has assigned themselves to an issue.
@@ -58,3 +56,12 @@ inputs:
       ⚠️ It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
 
       🔧 A maintainer can also add you to the list of assignees or swap you with the current assignee.
+  unassigned_comment:
+     description: >
+      The comment posted after a user is unassigned from an issue.
+    default: |
+      👋 Hey @{{ comment.user.login }}, you've been unassigned from this issue.
+
+      🔧 If you'd like to get re-assigned, feel free to comment again or ask a maintainer to re-assign you.
+
+      📝 Remember, if you are actively working on the issue, let us know by commenting and we can pin it for you.

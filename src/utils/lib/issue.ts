@@ -2,8 +2,7 @@ import { getInput } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
-
-import { Issue } from '../../types';
+import { GhIssue } from '../../types';
 
 export default class IssueHandler {
   private assignmentDuration: number;
@@ -20,7 +19,7 @@ export default class IssueHandler {
     this.exemptLabel = getInput('pin_label');
   }
 
-  async getIssues(): Promise<Issue[]> {
+  async getIssues(): Promise<GhIssue[]> {
     const { owner, repo } = context.repo;
 
     const timestamp = this.since(this.assignmentDuration);
@@ -52,7 +51,7 @@ export default class IssueHandler {
     return issues.data.items;
   }
 
-  async unassignIssue(issue: Issue | WebhookPayload['issue']) {
+  async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
     return Promise.all([
       await this.client.rest.issues.removeAssignees({
         ...context.repo,

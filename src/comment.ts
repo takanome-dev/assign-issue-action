@@ -3,14 +3,20 @@ import mustache from 'mustache';
 import { context, getOctokit } from '@actions/github';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
-import type { Issue, Comment as IComment } from './types';
+import type { GhIssue, GhComment } from './types';
+import type {
+  AlreadyAssignedCommentArg,
+  AssignUserCommentArg,
+  UnAssignUserCommentArg,
+} from './types/comment';
 
 import { INPUTS } from './utils/lib/inputs';
-import { getInputs } from './utils/helpers/get-inputs';
+// import { getInputs } from './utils/helpers/get-inputs';
+import { add, formatDistanceStrict } from 'date-fns';
 
 export default class Comment {
-  private issue: WebhookPayload['issue'] | Issue;
-  private comment: WebhookPayload['comment'] | IComment;
+  private issue: WebhookPayload['issue'] | GhIssue;
+  private comment: WebhookPayload['comment'] | GhComment;
   private token: string;
   private context = context;
   private client: ReturnType<typeof getOctokit>;
@@ -41,11 +47,11 @@ export default class Comment {
     const body = this.context.payload.comment?.body as string;
 
     if (body.includes(selfAssignCmd)) {
-      // TODO: handle self assign
+      return this.$_handle_self_assignment();
     }
 
     if (body.includes(selfUnassignCmd)) {
-      // TODO: handle self unassign
+      return this.$_handle_self_unassignment();
     }
 
     if (body.includes(assignCommenterCmd)) {
@@ -56,25 +62,29 @@ export default class Comment {
       // TODO: handle unassign commenter
     }
 
+    // TODO: have an input where I can determise if I should comment a info msg with the cmd available
+    // or just ignore it
+
     return core.info(
       `🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`,
     );
   }
 
-  public async handleAssignIssue() {
+  private async $_handle_self_assignment() {
     core.info(
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     );
 
+    // TODO: maybe move this to "handle_issue_comment"
     const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
 
     if (requiredLabel) {
-      // Check if the issue has the required label
       const hasLabel = this.issue?.labels?.find(
         (label: { name: string }) => label.name === requiredLabel,
       );
 
       if (!hasLabel)
+        // TODO: post a comment
         return core.setFailed(
           `🚫 Missing required label: "${core.getInput(
             'required_label',
@@ -82,11 +92,10 @@ export default class Comment {
         );
     }
 
-    const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
 
-    // Check if the issue is already assigned
     if (this.issue?.assignee) {
-      await this.issueAssignedComment(totalDays);
+      await this._already_assigned_comment(daysUntilUnassign);
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
@@ -95,26 +104,48 @@ export default class Comment {
     core.info(
       `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`,
     );
-
-    // Assign the issue to the user and add label "assigned_label"
-    await this.addAssignee();
-
-    // Add a comment to the issue
     core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
 
-    const options = {
-      totalDays,
-      comment: this.comment,
-      // eslint-disable-next-line no-undef
-      env: process.env,
-      inputs: getInputs(),
-    };
+    await Promise.all([
+      this._add_assignee(),
+      await this._create_comment<AssignUserCommentArg>(
+        INPUTS.ASSIGNED_COMMENT,
+        {
+          totalDays: daysUntilUnassign,
+          unassigned_date: add(new Date(), { days: daysUntilUnassign }),
+          comment: this.comment as GhComment,
+        },
+      ),
+    ]);
 
-    await this.createComment('assigned_comment', options);
     core.info(`🤖 Issue #${this.issue?.number} assigned!`);
   }
 
-  private async addAssignee() {
+  private async $_handle_self_unassignment() {
+    core.info(
+      `🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
+    );
+
+    if (this.issue?.assignee?.login === this.comment?.user?.login) {
+      await Promise.all([
+        this._remove_assignee(),
+        await this._create_comment<UnAssignUserCommentArg>(
+          INPUTS.UNASSIGNED_COMMENT,
+          {
+            comment: this.comment as GhComment,
+          },
+        ),
+      ]);
+
+      core.info(`🤖 Done issue unassignment!`);
+    }
+
+    return core.info(
+      `🤖 Commenter is different from the assignee, ignoring...`,
+    );
+  }
+
+  private async _add_assignee() {
     await Promise.all([
       await this.client.rest.issues.addAssignees({
         ...this.context.repo,
@@ -129,50 +160,61 @@ export default class Comment {
     ]);
   }
 
-  private async createComment(inputName: string, options: unknown) {
-    const body = mustache.render(core.getInput(inputName), options);
+  private async _remove_assignee() {
+    return Promise.all([
+      await this.client.rest.issues.removeAssignees({
+        ...this.context.repo,
+        issue_number: this.issue?.number!,
+        assignees: [this.issue?.assignee!.login],
+      }),
+      await this.client.rest.issues.removeLabel({
+        ...this.context.repo,
+        issue_number: this.issue?.number!,
+        name: core.getInput(INPUTS.ASSIGNED_LABEL),
+      }),
+    ]);
+  }
+
+  private async _already_assigned_comment(totalDays: number) {
+    const comments = await this.client.rest.issues.listComments({
+      ...this.context.repo,
+      issue_number: this.issue?.number!,
+    });
+
+    // TODO: should return the comments made by the assigned user to search which one contains the cmd
+    const assignedComment = comments.data.find(
+      (comment) => comment.user!.login === this.issue?.assignee?.login,
+    );
+
+    if (!assignedComment) {
+      // TODO: maybe post a comment here?
+      return core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+      );
+    }
+
+    const daysUntilUnassign = formatDistanceStrict(
+      new Date(assignedComment?.created_at),
+      add(new Date(assignedComment.created_at), { days: totalDays }),
+    );
+
+    await this._create_comment<AlreadyAssignedCommentArg>(
+      INPUTS.ALREADY_ASSIGNED_COMMENT,
+      {
+        unassigned_date: daysUntilUnassign,
+        comment: this.comment as GhComment,
+        assignee: this.issue?.assignee,
+      },
+    );
+  }
+
+  private async _create_comment<T>(input: INPUTS, options: T) {
+    const body = mustache.render(core.getInput(input), options);
 
     await this.client.rest.issues.createComment({
       ...this.context.repo,
       issue_number: this.issue?.number as number,
       body,
     });
-  }
-
-  private async issueAssignedComment(totalDays: number) {
-    const comments = await this.client.rest.issues.listComments({
-      ...this.context.repo,
-      issue_number: this.issue?.number!,
-    });
-
-    const assignedComment = comments.data.find(
-      (comment) => comment.user!.login === this.issue?.assignee?.login,
-    );
-
-    if (!assignedComment) {
-      return core.info(
-        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-      );
-    }
-
-    const daysUntilUnassign = this.calculateDaysUntilUnassign(
-      assignedComment?.created_at,
-      totalDays,
-    );
-
-    await this.createComment('already_assigned_comment', {
-      daysUntilUnassign,
-      comment: this.comment,
-      assignee: this.issue?.assignee,
-    });
-  }
-
-  private calculateDaysUntilUnassign(createAt: string, totalDays: number) {
-    const createdAt = new Date(createAt);
-    const currentDate = new Date();
-    const diffTime = Math.abs(currentDate.getTime() - createdAt.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return totalDays - diffDays;
   }
 }
