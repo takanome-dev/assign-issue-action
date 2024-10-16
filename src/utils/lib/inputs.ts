@@ -2,8 +2,8 @@ export enum INPUTS {
   TRIGGER = 'trigger',
   SELF_ASSIGN_CMD = 'self_assign_cmd',
   SELF_UNASSIGN_CMD = 'self_unassign_cmd',
-  ASSIGN_COMMENTER_CMD = 'assign_commenter_cmd',
-  UNASSIGN_COMMENTER_CMD = 'unassign_commenter_cmd',
+  ASSIGN_USER_CMD = 'assign_user_cmd',
+  UNASSIGN_USER_CMD = 'unassign_user_cmd',
 
   GITHUB_TOKEN = 'github_token',
   ASSIGNED_LABEL = 'assigned_label',

@@ -1,23 +1,16 @@
-import { GhComment } from '../types';
-
 export interface AlreadyAssignedCommentArg {
   unassigned_date: string;
-  comment: GhComment;
-  assignee: {
-    login: string;
-  };
+  handle: string;
+  assignee: string;
 }
 
 export interface AssignUserCommentArg {
   unassigned_date: Date;
-  totalDays: number;
-  comment: GhComment;
-  // env: any;
-  // inputs: any;
+  total_days: number;
+  handle: string;
+  pin_label: string;
 }
 
 export interface UnAssignUserCommentArg {
-  comment: GhComment;
-  // env: any;
-  // inputs: any;
+  handle: string;
 }

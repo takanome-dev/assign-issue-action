@@ -21,12 +21,14 @@ inputs:
   self_unassign_cmd:
     description: The command that unassigns the issue from the user who triggered it, if they are already assigned.
     default: /unassign-me
-  assign_commenter_cmd:
-    description: The command that assigns the commenter to the issue
-    default: /assign-commenter
-  unassign_commenter_cmd:
-    description: The command that unassigns the commenter from the issue, if they are assigned.
-    default: /unassign-commenter
+  assign_user_cmd:
+    description: The command that assigns the user to the issue
+    default: /assign
+  unassign_user_cmd:
+    description: The command that unassigns the user from the issue, if they are assigned.
+    default: /unassign
+  # TODO: input for list of persons authorized to use certain cmds
+  # TODO: comment a welcome msg with the list of commands that can be used
   assigned_label:
     description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
@@ -34,7 +36,7 @@ inputs:
     description: If set, the issue must have this label in order for users to self-assign it.
   days_until_unassign:
     description: The number of days after assignment before the user is automatically unassigned (if the issue remains open).
-    default: 7
+    default: '7'
   pin_label:
     default: 📌 Pinned
     description: A label that prevents automatic unassignment, typically for long-term issues.
@@ -42,26 +44,27 @@ inputs:
     description: >
       The comment posted after a user has assigned themselves to an issue.
     default: |
-      👋 Hey @{{ comment.user.login }}, thanks for your interest in this issue! 🎉
+      👋 Hey @{{ handle }}, thanks for your interest in this issue! 🎉
 
-      ⚠ Note that this issue will become unassigned if it isn't closed within **{{ totalDays }} days**.
+      You will be unassigned if it isn't closed within **{{ total_days }} days** (**{{ unassigned_date }}**).
 
-      🔧 A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned automatically.
+      > [!NOTE]
+      > A maintainer can also add the **{{ pin_label }}** label to prevent it from being unassigned automatically.
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
-      👋 Hey @{{ comment.user.login }}, this issue is already assigned to @{{ assignee.login }}.
+      👋 Hey @{{ handle }}, this issue is already assigned to @{{ assignee }}.
+      It will become unassigned if it isn't closed within **{{ unassigned_date }}**. 
 
-      ⚠️ It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
-
-      🔧 A maintainer can also add you to the list of assignees or swap you with the current assignee.
+      > [!NOTE]
+      > A maintainer can also add you to the list of assignees or swap you with the current assignee.
   unassigned_comment:
-     description: >
+    description: >
       The comment posted after a user is unassigned from an issue.
     default: |
-      👋 Hey @{{ comment.user.login }}, you've been unassigned from this issue.
+      👋 Hey @{{ handle }}, you've been unassigned from this issue.
+      If you'd like to get re-assigned, feel free to comment again or ask a maintainer to re-assign you.
 
-      🔧 If you'd like to get re-assigned, feel free to comment again or ask a maintainer to re-assign you.
-
-      📝 Remember, if you are actively working on the issue, let us know by commenting and we can pin it for you.
+      > [!NOTE]
+      > Remember, if you are actively working on the issue, let us know by commenting and we can pin it for you.

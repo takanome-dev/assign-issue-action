@@ -3,18 +3,17 @@ import mustache from 'mustache';
 import { context, getOctokit } from '@actions/github';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
-import type { GhIssue, GhComment } from './types';
+import type { GhIssue, GhComment } from '../types';
 import type {
   AlreadyAssignedCommentArg,
   AssignUserCommentArg,
   UnAssignUserCommentArg,
-} from './types/comment';
+} from '../types/comment';
 
-import { INPUTS } from './utils/lib/inputs';
-// import { getInputs } from './utils/helpers/get-inputs';
+import { INPUTS } from '../utils/lib/inputs';
 import { add, formatDistanceStrict } from 'date-fns';
 
-export default class Comment {
+export default class CommentHandler {
   private issue: WebhookPayload['issue'] | GhIssue;
   private comment: WebhookPayload['comment'] | GhComment;
   private token: string;
@@ -41,8 +40,8 @@ export default class Comment {
 
     const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
     const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
-    const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_COMMENTER_CMD);
-    const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_COMMENTER_CMD);
+    const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
+    const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
 
     const body = this.context.payload.comment?.body as string;
 
@@ -55,11 +54,11 @@ export default class Comment {
     }
 
     if (body.includes(assignCommenterCmd)) {
-      // TODO: handle assign commenter
+      return this.$_handle_user_assignment(assignCommenterCmd);
     }
 
     if (body.includes(unassignCommenterCmd)) {
-      // TODO: handle unassign commenter
+      return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
 
     // TODO: have an input where I can determise if I should comment a info msg with the cmd available
@@ -111,9 +110,10 @@ export default class Comment {
       await this._create_comment<AssignUserCommentArg>(
         INPUTS.ASSIGNED_COMMENT,
         {
-          totalDays: daysUntilUnassign,
+          total_days: daysUntilUnassign,
           unassigned_date: add(new Date(), { days: daysUntilUnassign }),
-          comment: this.comment as GhComment,
+          handle: this.comment?.user?.login,
+          pin_label: core.getInput(INPUTS.PIN_LABEL),
         },
       ),
     ]);
@@ -131,9 +131,7 @@ export default class Comment {
         this._remove_assignee(),
         await this._create_comment<UnAssignUserCommentArg>(
           INPUTS.UNASSIGNED_COMMENT,
-          {
-            comment: this.comment as GhComment,
-          },
+          { handle: this.comment?.user?.login },
         ),
       ]);
 
@@ -143,6 +141,117 @@ export default class Comment {
     return core.info(
       `🤖 Commenter is different from the assignee, ignoring...`,
     );
+  }
+
+  private async $_handle_user_assignment(input: string) {
+    core.info(`Starting issue assignment to user`);
+
+    const idx = this.comment?.body.indexOf(input);
+    if (idx !== -1) {
+      const afterAssignCmd = this.comment?.body
+        ?.slice(idx + input.length)
+        .trim();
+
+      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+
+      if (userHandleMatch && userHandleMatch[1]) {
+        const userHandle = userHandleMatch[1];
+
+        if (this.issue?.assignee) {
+          const template = `
+          👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
+          You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
+          `;
+
+          const body = mustache.render(template, {
+            user: this.comment?.user.login,
+            assignee: this.issue.assignee?.login,
+          });
+
+          await this.client.rest.issues.createComment({
+            ...this.context.repo,
+            issue_number: this.issue?.number as number,
+            body,
+          });
+          return core.info(
+            `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+          );
+        }
+
+        core.info(
+          `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
+        );
+
+        const daysUntilUnassign = Number(
+          core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
+        );
+
+        await Promise.all([
+          await this.client.rest.issues.addAssignees({
+            ...this.context.repo,
+            issue_number: this.issue?.number!,
+            assignees: [userHandle],
+          }),
+          await this.client.rest.issues.addLabels({
+            ...this.context.repo,
+            issue_number: this.issue?.number!,
+            labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+          }),
+          await this._create_comment<AssignUserCommentArg>(
+            INPUTS.ASSIGNED_COMMENT,
+            {
+              total_days: daysUntilUnassign,
+              unassigned_date: add(new Date(), { days: daysUntilUnassign }),
+              handle: this.comment?.user?.login,
+              pin_label: core.getInput(INPUTS.PIN_LABEL),
+            },
+          ),
+        ]);
+
+        core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+      } else {
+        core.info(`No valid user handle found after /assign command`);
+        // TODO: add a comment?
+      }
+    }
+  }
+
+  private async $_handle_user_unassignment(input: string) {
+    core.info(`Starting issue unassignment to user`);
+
+    const idx = this.comment?.body.indexOf(input);
+    if (idx !== -1) {
+      const afterAssignCmd = this.comment?.body
+        ?.slice(idx + input.length)
+        .trim();
+
+      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+
+      if (userHandleMatch && userHandleMatch[1]) {
+        const userHandle = userHandleMatch[1];
+
+        if (this.issue?.assignee?.login === userHandle) {
+          await Promise.all([
+            this._remove_assignee(),
+            this._create_comment<UnAssignUserCommentArg>(
+              INPUTS.UNASSIGNED_COMMENT,
+              { handle: userHandle },
+            ),
+          ]);
+          return core.info(
+            `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
+          );
+        }
+
+        // TODO: post a comment to the issue
+        return core.info(
+          `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
+        );
+      } else {
+        // TODO: add a comment?
+        return core.info(`No valid user handle found after /assign command`);
+      }
+    }
   }
 
   private async _add_assignee() {
@@ -202,8 +311,8 @@ export default class Comment {
       INPUTS.ALREADY_ASSIGNED_COMMENT,
       {
         unassigned_date: daysUntilUnassign,
-        comment: this.comment as GhComment,
-        assignee: this.issue?.assignee,
+        handle: this.comment?.user?.login,
+        assignee: this.issue?.assignee?.login,
       },
     );
   }
