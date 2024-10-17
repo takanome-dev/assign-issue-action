@@ -117,18 +117,18 @@ var CommentHandler = class {
     core.info(`LOG: MAINTAINERS_ARRAY -> ${JSON.stringify(maintainers)}`);
     core.info(`----------------------------------------------------`);
     const body = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
-    if (body.includes(selfAssignCmd)) {
+    if (body === selfAssignCmd) {
       return this.$_handle_self_assignment();
     }
-    if (body.includes(selfUnassignCmd)) {
+    if (body === selfUnassignCmd) {
       return this.$_handle_self_unassignment();
     }
     if (maintainers.length > 0) {
       if (maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
-        if (body.includes(assignCommenterCmd)) {
+        if (body.startsWith(assignCommenterCmd)) {
           return this.$_handle_user_assignment(assignCommenterCmd);
         }
-        if (body.includes(unassignCommenterCmd)) {
+        if (body.startsWith(unassignCommenterCmd)) {
           return this.$_handle_user_unassignment(unassignCommenterCmd);
         }
       } else {
@@ -306,16 +306,27 @@ var CommentHandler = class {
   _add_assignee() {
     return __async(this, null, function* () {
       var _a, _b, _c;
-      yield Promise.all([
-        yield this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
+      try {
+        const resp = yield this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
           issue_number: (_a = this.issue) == null ? void 0 : _a.number,
           assignees: [(_b = this.comment) == null ? void 0 : _b.user.login]
-        })),
-        yield this.client.rest.issues.addLabels(__spreadProps(__spreadValues({}, this.context.repo), {
-          issue_number: (_c = this.issue) == null ? void 0 : _c.number,
-          labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)]
-        }))
-      ]);
+        }));
+        core.info(`=======================================================`);
+        core.info(`=======================================================`);
+        core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
+        core.info(`=======================================================`);
+        core.info(`=======================================================`);
+      } catch (err) {
+        core.info(`=======================================================`);
+        core.info(`=======================================================`);
+        core.info(`error from assigned promise: ${JSON.stringify(err)}`);
+        core.info(`=======================================================`);
+        core.info(`=======================================================`);
+      }
+      yield this.client.rest.issues.addLabels(__spreadProps(__spreadValues({}, this.context.repo), {
+        issue_number: (_c = this.issue) == null ? void 0 : _c.number,
+        labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)]
+      }));
     });
   }
   _remove_assignee() {
@@ -471,6 +482,7 @@ var ScheduleHandler = class {
 //! if the body contains /assign, when using self_assign or assign cmt,
 //! both of them will match. Find a way to tackle that
 //! also, maybe remove assignment cmds from action.yml to avoid users changing it
+//! not needed if we have list of allowed users who can use the command
 
 
 /***/ }),

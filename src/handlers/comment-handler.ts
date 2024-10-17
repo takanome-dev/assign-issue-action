@@ -74,21 +74,21 @@ export default class CommentHandler {
 
     //! also, maybe remove assignment cmds from action.yml to avoid users changing it
 
-    if (body.includes(selfAssignCmd)) {
+    if (body === selfAssignCmd) {
       return this.$_handle_self_assignment();
     }
 
-    if (body.includes(selfUnassignCmd)) {
+    if (body === selfUnassignCmd) {
       return this.$_handle_self_unassignment();
     }
 
     if (maintainers.length > 0) {
       if (maintainers.includes(this.comment?.user?.login)) {
-        if (body.includes(assignCommenterCmd)) {
+        if (body.startsWith(assignCommenterCmd)) {
           return this.$_handle_user_assignment(assignCommenterCmd);
         }
 
-        if (body.includes(unassignCommenterCmd)) {
+        if (body.startsWith(unassignCommenterCmd)) {
           return this.$_handle_user_unassignment(unassignCommenterCmd);
         }
       } else {
@@ -195,7 +195,7 @@ export default class CommentHandler {
         core.info(`LOG: COMMENTED USER LOGIN -> ${this.comment?.user.login}`);
         core.info(`----------------------------------------------------`);
 
-        // TODO: not needed if we have list of allowed users who can use the command
+        //! not needed if we have list of allowed users who can use the command
         // if (this.issue?.assignee) {
         //   const template = `
         //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
@@ -311,18 +311,42 @@ export default class CommentHandler {
   }
 
   private async _add_assignee() {
-    await Promise.all([
-      await this.client.rest.issues.addAssignees({
+    try {
+      const resp = await this.client.rest.issues.addAssignees({
         ...this.context.repo,
         issue_number: this.issue?.number!,
         assignees: [this.comment?.user.login],
-      }),
-      await this.client.rest.issues.addLabels({
-        ...this.context.repo,
-        issue_number: this.issue?.number!,
-        labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-      }),
-    ]);
+      });
+      core.info(`=======================================================`);
+      core.info(`=======================================================`);
+      core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
+      core.info(`=======================================================`);
+      core.info(`=======================================================`);
+    } catch (err) {
+      core.info(`=======================================================`);
+      core.info(`=======================================================`);
+      core.info(`error from assigned promise: ${JSON.stringify(err)}`);
+      core.info(`=======================================================`);
+      core.info(`=======================================================`);
+    }
+
+    // await Promise.all([
+    //   await this.client.rest.issues.addAssignees({
+    //     ...this.context.repo,
+    //     issue_number: this.issue?.number!,
+    //     assignees: [this.comment?.user.login],
+    //   }),
+    //   await this.client.rest.issues.addLabels({
+    //     ...this.context.repo,
+    //     issue_number: this.issue?.number!,
+    //     labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+    //   }),
+    // ]);
+    await this.client.rest.issues.addLabels({
+      ...this.context.repo,
+      issue_number: this.issue?.number!,
+      labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+    });
   }
 
   private async _remove_assignee() {
