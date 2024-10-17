@@ -3,20 +3,20 @@
   "version": "2.1.1",
   "description": "Comment /assign (or any trigger you want) to assign an issue yourself 🎉",
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": "20.x",
+    "npm": "10.x"
   },
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "tsc": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint . --ext .ts --report-unused-disable-directives",
     "build": "ncc build --license licenses.txt",
-    "tsc:build": "npm run tsc && npm run build",
+    "tsup": "tsup src/index.ts",
+    "bundle": "npm run tsup && npm run build",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "all": "npm run format && npm run lint && npm run test && npm run build",
+    "all": "npm run format && npm run lint && npm run test && npm run bundle",
     "prepare": "husky install"
   },
   "homepage": "https://github.com/takanome-dev/assign-to-me-action#readme",
@@ -62,6 +62,7 @@
     "lint-staged": "15.1.0",
     "prettier": "3.1.0",
     "ts-jest": "29.1.1",
+    "tsup": "^8.3.0",
     "typescript": "5.3.2"
   },
   "lint-staged": {

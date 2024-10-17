@@ -38,12 +38,41 @@ export default class CommentHandler {
       );
     }
 
+    const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
+
+    if (requiredLabel) {
+      const hasLabel = this.issue?.labels?.find(
+        (label: { name: string }) => label.name === requiredLabel,
+      );
+
+      if (!hasLabel) {
+        // TODO: post a comment
+        return core.setFailed(
+          `🚫 Missing required label: "${core.getInput(
+            'required_label',
+          )}" not found in issue #${this.issue?.number}.`,
+        );
+      }
+    }
+
     const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
+    core.info(
+      `-----------------------------------------------------------------------`,
+    );
+    core.info(`LOG: SELF_ASSIGN_CMD -> "${selfAssignCmd}"`);
+    core.info(
+      `-----------------------------------------------------------------------`,
+    );
     const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
     const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
     const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
 
     const body = this.context.payload.comment?.body as string;
+
+    //! if the body contains /assign, when using self_assign or assign cmt,
+    //! both of them will match. Find a way to tackle that
+
+    //! also, maybe remove assignment cmds from action.yml to avoid users changing it
 
     if (body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
@@ -74,24 +103,14 @@ export default class CommentHandler {
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     );
 
-    // TODO: maybe move this to "handle_issue_comment"
-    const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
-
-    if (requiredLabel) {
-      const hasLabel = this.issue?.labels?.find(
-        (label: { name: string }) => label.name === requiredLabel,
-      );
-
-      if (!hasLabel)
-        // TODO: post a comment
-        return core.setFailed(
-          `🚫 Missing required label: "${core.getInput(
-            'required_label',
-          )}" not found in issue #${this.issue?.number}.`,
-        );
-    }
-
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+    core.info(
+      `-----------------------------------------------------------------------`,
+    );
+    core.info(`LOG: DAYS_UNTIL_UNASSIGN -> "${daysUntilUnassign}"`);
+    core.info(
+      `-----------------------------------------------------------------------`,
+    );
 
     if (this.issue?.assignee) {
       await this._already_assigned_comment(daysUntilUnassign);
