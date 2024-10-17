@@ -170,7 +170,7 @@ var CommentHandler = class {
             total_days: daysUntilUnassign,
             unassigned_date: (0, import_date_fns.format)(
               (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-              "dd LLLL Y"
+              "dd LLLL y"
             ),
             handle: (_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login,
             pin_label: core.getInput("pin_label" /* PIN_LABEL */)
@@ -203,7 +203,7 @@ var CommentHandler = class {
   }
   $_handle_user_assignment(input) {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       core.info(`Starting issue assignment to user`);
       const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
       if (idx !== -1) {
@@ -224,36 +224,32 @@ var CommentHandler = class {
           core.info(`LOG: USER_HANDLE -> ${userHandle}`);
           core.info(`LOG: COMMENTED USER LOGIN -> ${(_d = this.comment) == null ? void 0 : _d.user.login}`);
           core.info(`----------------------------------------------------`);
-          if ((_e = this.issue) == null ? void 0 : _e.assignee) {
-            const template = `
-          \u{1F44B} Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
-          You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
-          `;
-            const body = import_mustache.default.render(template, {
-              user: (_f = this.comment) == null ? void 0 : _f.user.login,
-              assignee: (_g = this.issue.assignee) == null ? void 0 : _g.login
-            });
-            yield this.client.rest.issues.createComment(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_h = this.issue) == null ? void 0 : _h.number,
-              body
-            }));
-            return core.info(
-              `\u{1F916} Issue #${(_i = this.issue) == null ? void 0 : _i.number} is already assigned to @${(_k = (_j = this.issue) == null ? void 0 : _j.assignee) == null ? void 0 : _k.login}`
-            );
-          }
           core.info(
-            `\u{1F916} Assigning @${userHandle} to issue #${(_l = this.issue) == null ? void 0 : _l.number}`
+            `\u{1F916} Assigning @${userHandle} to issue #${(_e = this.issue) == null ? void 0 : _e.number}`
           );
           const daysUntilUnassign = Number(
             core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */)
           );
+          try {
+            const resp = yield this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
+              issue_number: (_f = this.issue) == null ? void 0 : _f.number,
+              assignees: [userHandle.trim()]
+            }));
+            core.info(`=======================================================`);
+            core.info(`=======================================================`);
+            core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
+            core.info(`=======================================================`);
+            core.info(`=======================================================`);
+          } catch (err) {
+            core.info(`=======================================================`);
+            core.info(`=======================================================`);
+            core.info(`error from assigned promise: ${JSON.stringify(err)}`);
+            core.info(`=======================================================`);
+            core.info(`=======================================================`);
+          }
           yield Promise.all([
-            yield this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_m = this.issue) == null ? void 0 : _m.number,
-              assignees: [userHandle]
-            })),
             yield this.client.rest.issues.addLabels(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_n = this.issue) == null ? void 0 : _n.number,
+              issue_number: (_g = this.issue) == null ? void 0 : _g.number,
               labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)]
             })),
             yield this._create_comment(
@@ -262,14 +258,14 @@ var CommentHandler = class {
                 total_days: daysUntilUnassign,
                 unassigned_date: (0, import_date_fns.format)(
                   (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-                  "dd LLLL Y"
+                  "dd LLLL y"
                 ),
                 handle: userHandle,
                 pin_label: core.getInput("pin_label" /* PIN_LABEL */)
               }
             )
           ]);
-          core.info(`\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} assigned!`);
+          core.info(`\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} assigned!`);
         } else {
           core.info(`No valid user handle found after /assign command`);
         }

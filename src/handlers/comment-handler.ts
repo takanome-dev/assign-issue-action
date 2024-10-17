@@ -134,7 +134,7 @@ export default class CommentHandler {
           total_days: daysUntilUnassign,
           unassigned_date: format(
             add(new Date(), { days: daysUntilUnassign }),
-            'dd LLLL Y',
+            'dd LLLL y',
           ),
           handle: this.comment?.user?.login,
           pin_label: core.getInput(INPUTS.PIN_LABEL),
@@ -186,7 +186,7 @@ export default class CommentHandler {
       core.info(`----------------------------------------------------`);
 
       if (userHandleMatch && userHandleMatch[1]) {
-        const userHandle = userHandleMatch[1];
+        const userHandle = userHandleMatch[1] as string;
         core.info(`----------------------------------------------------`);
         core.info(
           `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`,
@@ -196,26 +196,26 @@ export default class CommentHandler {
         core.info(`----------------------------------------------------`);
 
         // TODO: not needed if we have list of allowed users who can use the command
-        if (this.issue?.assignee) {
-          const template = `
-          👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
-          You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
-          `;
+        // if (this.issue?.assignee) {
+        //   const template = `
+        //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
+        //   You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
+        //   `;
 
-          const body = mustache.render(template, {
-            user: this.comment?.user.login,
-            assignee: this.issue.assignee?.login,
-          });
+        //   const body = mustache.render(template, {
+        //     user: this.comment?.user.login,
+        //     assignee: this.issue.assignee?.login,
+        //   });
 
-          await this.client.rest.issues.createComment({
-            ...this.context.repo,
-            issue_number: this.issue?.number as number,
-            body,
-          });
-          return core.info(
-            `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-          );
-        }
+        //   await this.client.rest.issues.createComment({
+        //     ...this.context.repo,
+        //     issue_number: this.issue?.number as number,
+        //     body,
+        //   });
+        //   return core.info(
+        //     `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+        //   );
+        // }
 
         core.info(
           `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
@@ -225,12 +225,26 @@ export default class CommentHandler {
           core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
         );
 
-        await Promise.all([
-          await this.client.rest.issues.addAssignees({
+        try {
+          const resp = await this.client.rest.issues.addAssignees({
             ...this.context.repo,
             issue_number: this.issue?.number!,
-            assignees: [userHandle],
-          }),
+            assignees: [userHandle.trim()],
+          });
+          core.info(`=======================================================`);
+          core.info(`=======================================================`);
+          core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
+          core.info(`=======================================================`);
+          core.info(`=======================================================`);
+        } catch (err) {
+          core.info(`=======================================================`);
+          core.info(`=======================================================`);
+          core.info(`error from assigned promise: ${JSON.stringify(err)}`);
+          core.info(`=======================================================`);
+          core.info(`=======================================================`);
+        }
+
+        await Promise.all([
           await this.client.rest.issues.addLabels({
             ...this.context.repo,
             issue_number: this.issue?.number!,
@@ -242,7 +256,7 @@ export default class CommentHandler {
               total_days: daysUntilUnassign,
               unassigned_date: format(
                 add(new Date(), { days: daysUntilUnassign }),
-                'dd LLLL Y',
+                'dd LLLL y',
               ),
               handle: userHandle,
               pin_label: core.getInput(INPUTS.PIN_LABEL),
