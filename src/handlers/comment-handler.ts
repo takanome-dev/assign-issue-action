@@ -168,6 +168,13 @@ export default class CommentHandler {
 
       if (userHandleMatch && userHandleMatch[1]) {
         const userHandle = userHandleMatch[1];
+        core.info(`----------------------------------------------------`);
+        core.info(
+          `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`,
+        );
+        core.info(`LOG: USER_HANDLE -> ${userHandle}`);
+        core.info(`LOG: TYPE OF USER_HANDLE -> ${typeof userHandle}`);
+        core.info(`----------------------------------------------------`);
 
         if (this.issue?.assignee) {
           const template = `
@@ -217,7 +224,7 @@ export default class CommentHandler {
                 add(new Date(), { days: daysUntilUnassign }),
                 'dd/MM/yyyy',
               ),
-              handle: this.comment?.user?.login,
+              handle: userHandle,
               pin_label: core.getInput(INPUTS.PIN_LABEL),
             },
           ),

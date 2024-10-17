@@ -185,7 +185,7 @@ var CommentHandler = class {
   }
   $_handle_user_assignment(input) {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n;
       core.info(`Starting issue assignment to user`);
       const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
       if (idx !== -1) {
@@ -199,6 +199,13 @@ var CommentHandler = class {
         core.info(`----------------------------------------------------`);
         if (userHandleMatch && userHandleMatch[1]) {
           const userHandle = userHandleMatch[1];
+          core.info(`----------------------------------------------------`);
+          core.info(
+            `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`
+          );
+          core.info(`LOG: USER_HANDLE -> ${userHandle}`);
+          core.info(`LOG: TYPE OF USER_HANDLE -> ${typeof userHandle}`);
+          core.info(`----------------------------------------------------`);
           if ((_d = this.issue) == null ? void 0 : _d.assignee) {
             const template = `
           \u{1F44B} Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
@@ -239,12 +246,12 @@ var CommentHandler = class {
                   (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
                   "dd/MM/yyyy"
                 ),
-                handle: (_o = (_n = this.comment) == null ? void 0 : _n.user) == null ? void 0 : _o.login,
+                handle: userHandle,
                 pin_label: core.getInput("pin_label" /* PIN_LABEL */)
               }
             )
           ]);
-          core.info(`\u{1F916} Issue #${(_p = this.issue) == null ? void 0 : _p.number} assigned!`);
+          core.info(`\u{1F916} Issue #${(_n = this.issue) == null ? void 0 : _n.number} assigned!`);
         } else {
           core.info(`No valid user handle found after /assign command`);
         }
