@@ -107,13 +107,6 @@ var CommentHandler = class {
       }
     }
     const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
-    core.info(
-      `-----------------------------------------------------------------------`
-    );
-    core.info(`LOG: SELF_ASSIGN_CMD -> "${selfAssignCmd}"`);
-    core.info(
-      `-----------------------------------------------------------------------`
-    );
     const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
     const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
     const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
@@ -141,13 +134,6 @@ var CommentHandler = class {
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
       const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      core.info(
-        `-----------------------------------------------------------------------`
-      );
-      core.info(`LOG: DAYS_UNTIL_UNASSIGN -> "${daysUntilUnassign}"`);
-      core.info(
-        `-----------------------------------------------------------------------`
-      );
       if ((_b = this.issue) == null ? void 0 : _b.assignee) {
         yield this._already_assigned_comment(daysUntilUnassign);
         return core.info(
@@ -164,7 +150,10 @@ var CommentHandler = class {
           "assigned_comment" /* ASSIGNED_COMMENT */,
           {
             total_days: daysUntilUnassign,
-            unassigned_date: (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
+            unassigned_date: (0, import_date_fns.format)(
+              (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
+              "dd/MM/yyyy"
+            ),
             handle: (_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login,
             pin_label: core.getInput("pin_label" /* PIN_LABEL */)
           }
@@ -201,7 +190,13 @@ var CommentHandler = class {
       const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
       if (idx !== -1) {
         const afterAssignCmd = (_c = (_b = this.comment) == null ? void 0 : _b.body) == null ? void 0 : _c.slice(idx + input.length).trim();
+        core.info(`----------------------------------------------------`);
+        core.info(`LOG: AFTER_ASSIGN_CMD -> ${afterAssignCmd}`);
+        core.info(`----------------------------------------------------`);
         const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+        core.info(`----------------------------------------------------`);
+        core.info(`LOG: USER_HANDLE_MATCH -> ${userHandleMatch}`);
+        core.info(`----------------------------------------------------`);
         if (userHandleMatch && userHandleMatch[1]) {
           const userHandle = userHandleMatch[1];
           if ((_d = this.issue) == null ? void 0 : _d.assignee) {
@@ -240,7 +235,10 @@ var CommentHandler = class {
               "assigned_comment" /* ASSIGNED_COMMENT */,
               {
                 total_days: daysUntilUnassign,
-                unassigned_date: (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
+                unassigned_date: (0, import_date_fns.format)(
+                  (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
+                  "dd/MM/yyyy"
+                ),
                 handle: (_o = (_n = this.comment) == null ? void 0 : _n.user) == null ? void 0 : _o.login,
                 pin_label: core.getInput("pin_label" /* PIN_LABEL */)
               }

@@ -46,25 +46,24 @@ inputs:
     default: |
       👋 Hey @{{ handle }}, thanks for your interest in this issue! 🎉
 
-      You will be unassigned if it isn't closed within **{{ total_days }} days** (**{{ unassigned_date }}**).
-
       > [!NOTE]
-      > A maintainer can also add the **{{ pin_label }}** label to prevent it from being unassigned automatically.
+      > ⏳ Please note, you will be automatically unassigned if the issue isn't closed within **{{ total_days }} days** (by **{{ unassigned_date }}**).
+      > A maintainer can also add the "**{{ pin_label }}**"" label to prevent automatic unassignment.
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
       👋 Hey @{{ handle }}, this issue is already assigned to @{{ assignee }}.
-      It will become unassigned if it isn't closed within **{{ unassigned_date }}**. 
 
       > [!NOTE]
+      > ⏳ If the issue isn't closed by **{{ unassigned_date }}**, it will be automatically unassigned.
       > A maintainer can also add you to the list of assignees or swap you with the current assignee.
   unassigned_comment:
     description: >
       The comment posted after a user is unassigned from an issue.
     default: |
-      👋 Hey @{{ handle }}, you've been unassigned from this issue.
-      If you'd like to get re-assigned, feel free to comment again or ask a maintainer to re-assign you.
+      👋 Hey @{{ handle }}, you've been automatically unassigned from this issue due to inactivity.
 
       > [!NOTE]
-      > Remember, if you are actively working on the issue, let us know by commenting and we can pin it for you.
+      > If you'd like to be re-assigned, just leave another comment or ask a maintainer to assign you again.
+      > If you're still actively working on the issue, let us know by commenting, and we can pin it to prevent automatic unassignment.

@@ -11,7 +11,7 @@ import type {
 } from '../types/comment';
 
 import { INPUTS } from '../utils/lib/inputs';
-import { add, formatDistanceStrict } from 'date-fns';
+import { add, format, formatDistanceStrict } from 'date-fns';
 
 export default class CommentHandler {
   private issue: WebhookPayload['issue'] | GhIssue;
@@ -56,13 +56,6 @@ export default class CommentHandler {
     }
 
     const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
-    core.info(
-      `-----------------------------------------------------------------------`,
-    );
-    core.info(`LOG: SELF_ASSIGN_CMD -> "${selfAssignCmd}"`);
-    core.info(
-      `-----------------------------------------------------------------------`,
-    );
     const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
     const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
     const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
@@ -90,9 +83,6 @@ export default class CommentHandler {
       return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
 
-    // TODO: have an input where I can determise if I should comment a info msg with the cmd available
-    // or just ignore it
-
     return core.info(
       `🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`,
     );
@@ -104,13 +94,6 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    core.info(
-      `-----------------------------------------------------------------------`,
-    );
-    core.info(`LOG: DAYS_UNTIL_UNASSIGN -> "${daysUntilUnassign}"`);
-    core.info(
-      `-----------------------------------------------------------------------`,
-    );
 
     if (this.issue?.assignee) {
       await this._already_assigned_comment(daysUntilUnassign);
@@ -130,7 +113,10 @@ export default class CommentHandler {
         INPUTS.ASSIGNED_COMMENT,
         {
           total_days: daysUntilUnassign,
-          unassigned_date: add(new Date(), { days: daysUntilUnassign }),
+          unassigned_date: format(
+            add(new Date(), { days: daysUntilUnassign }),
+            'dd/MM/yyyy',
+          ),
           handle: this.comment?.user?.login,
           pin_label: core.getInput(INPUTS.PIN_LABEL),
         },
@@ -171,7 +157,14 @@ export default class CommentHandler {
         ?.slice(idx + input.length)
         .trim();
 
+      core.info(`----------------------------------------------------`);
+      core.info(`LOG: AFTER_ASSIGN_CMD -> ${afterAssignCmd}`);
+      core.info(`----------------------------------------------------`);
+
       const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+      core.info(`----------------------------------------------------`);
+      core.info(`LOG: USER_HANDLE_MATCH -> ${userHandleMatch}`);
+      core.info(`----------------------------------------------------`);
 
       if (userHandleMatch && userHandleMatch[1]) {
         const userHandle = userHandleMatch[1];
@@ -220,7 +213,10 @@ export default class CommentHandler {
             INPUTS.ASSIGNED_COMMENT,
             {
               total_days: daysUntilUnassign,
-              unassigned_date: add(new Date(), { days: daysUntilUnassign }),
+              unassigned_date: format(
+                add(new Date(), { days: daysUntilUnassign }),
+                'dd/MM/yyyy',
+              ),
               handle: this.comment?.user?.login,
               pin_label: core.getInput(INPUTS.PIN_LABEL),
             },

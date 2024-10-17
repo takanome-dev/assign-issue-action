@@ -5,7 +5,7 @@ export interface AlreadyAssignedCommentArg {
 }
 
 export interface AssignUserCommentArg {
-  unassigned_date: Date;
+  unassigned_date: string;
   total_days: number;
   handle: string;
   pin_label: string;
