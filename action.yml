@@ -27,13 +27,19 @@ inputs:
   unassign_user_cmd:
     description: The command that unassigns the user from the issue, if they are assigned.
     default: /unassign
-  # TODO: input for list of persons authorized to use certain cmds
-  # TODO: comment a welcome msg with the list of commands that can be used
+  maintainers:
+    description: >
+      A list of maintainers authorized to use `/assign` and `/unassign` commands.
+      List the usernames with comma separated. If not set, the usage of those commands will be ignored.
+    default: '' # i.e: 'takanome-dev,octokit'
+    required: true
   assigned_label:
     description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
   required_label:
     description: If set, the issue must have this label in order for users to self-assign it.
+    required: false
+    default: ''
   days_until_unassign:
     description: The number of days after assignment before the user is automatically unassigned (if the issue remains open).
     default: '7'

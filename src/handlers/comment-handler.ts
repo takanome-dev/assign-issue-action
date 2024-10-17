@@ -59,6 +59,13 @@ export default class CommentHandler {
     const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
     const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
     const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+    const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
+    const maintainers = maintainersInput.split(',');
+
+    core.info(`----------------------------------------------------`);
+    core.info(`LOG: MAINTAINERS_INPUT -> ${maintainersInput}`);
+    core.info(`LOG: MAINTAINERS_ARRAY -> ${JSON.stringify(maintainers)}`);
+    core.info(`----------------------------------------------------`);
 
     const body = this.context.payload.comment?.body as string;
 
@@ -75,12 +82,24 @@ export default class CommentHandler {
       return this.$_handle_self_unassignment();
     }
 
-    if (body.includes(assignCommenterCmd)) {
-      return this.$_handle_user_assignment(assignCommenterCmd);
-    }
+    if (maintainers.length > 0) {
+      if (maintainers.includes(this.comment?.user?.login)) {
+        if (body.includes(assignCommenterCmd)) {
+          return this.$_handle_user_assignment(assignCommenterCmd);
+        }
 
-    if (body.includes(unassignCommenterCmd)) {
-      return this.$_handle_user_unassignment(unassignCommenterCmd);
+        if (body.includes(unassignCommenterCmd)) {
+          return this.$_handle_user_unassignment(unassignCommenterCmd);
+        }
+      } else {
+        return core.info(
+          `🤖 Ignoring comment because the commenter is not in the list of maintainers specified in the config file`,
+        );
+      }
+    } else {
+      return core.info(
+        `🤖 Ignoring comment because the "maintainers" input in the config file is empty`,
+      );
     }
 
     return core.info(
@@ -115,7 +134,7 @@ export default class CommentHandler {
           total_days: daysUntilUnassign,
           unassigned_date: format(
             add(new Date(), { days: daysUntilUnassign }),
-            'dd/MM/yyyy',
+            'dd LLLL Y',
           ),
           handle: this.comment?.user?.login,
           pin_label: core.getInput(INPUTS.PIN_LABEL),
@@ -173,9 +192,10 @@ export default class CommentHandler {
           `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`,
         );
         core.info(`LOG: USER_HANDLE -> ${userHandle}`);
-        core.info(`LOG: TYPE OF USER_HANDLE -> ${typeof userHandle}`);
+        core.info(`LOG: COMMENTED USER LOGIN -> ${this.comment?.user.login}`);
         core.info(`----------------------------------------------------`);
 
+        // TODO: not needed if we have list of allowed users who can use the command
         if (this.issue?.assignee) {
           const template = `
           👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
@@ -222,7 +242,7 @@ export default class CommentHandler {
               total_days: daysUntilUnassign,
               unassigned_date: format(
                 add(new Date(), { days: daysUntilUnassign }),
-                'dd/MM/yyyy',
+                'dd LLLL Y',
               ),
               handle: userHandle,
               pin_label: core.getInput(INPUTS.PIN_LABEL),

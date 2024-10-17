@@ -84,7 +84,7 @@ var CommentHandler = class {
     this.client = (0, import_github.getOctokit)(this.token);
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     core.info(
       `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
     );
@@ -110,6 +110,12 @@ var CommentHandler = class {
     const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
     const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
     const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
+    const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
+    const maintainers = maintainersInput.split(",");
+    core.info(`----------------------------------------------------`);
+    core.info(`LOG: MAINTAINERS_INPUT -> ${maintainersInput}`);
+    core.info(`LOG: MAINTAINERS_ARRAY -> ${JSON.stringify(maintainers)}`);
+    core.info(`----------------------------------------------------`);
     const body = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
     if (body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
@@ -117,14 +123,26 @@ var CommentHandler = class {
     if (body.includes(selfUnassignCmd)) {
       return this.$_handle_self_unassignment();
     }
-    if (body.includes(assignCommenterCmd)) {
-      return this.$_handle_user_assignment(assignCommenterCmd);
-    }
-    if (body.includes(unassignCommenterCmd)) {
-      return this.$_handle_user_unassignment(unassignCommenterCmd);
+    if (maintainers.length > 0) {
+      if (maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
+        if (body.includes(assignCommenterCmd)) {
+          return this.$_handle_user_assignment(assignCommenterCmd);
+        }
+        if (body.includes(unassignCommenterCmd)) {
+          return this.$_handle_user_unassignment(unassignCommenterCmd);
+        }
+      } else {
+        return core.info(
+          `\u{1F916} Ignoring comment because the commenter is not in the list of maintainers specified in the config file`
+        );
+      }
+    } else {
+      return core.info(
+        `\u{1F916} Ignoring comment because the "maintainers" input in the config file is empty`
+      );
     }
     return core.info(
-      `\u{1F916} Ignoring comment: ${(_f = this.context.payload.comment) == null ? void 0 : _f.id} because it does not contain a supported command.`
+      `\u{1F916} Ignoring comment: ${(_h = this.context.payload.comment) == null ? void 0 : _h.id} because it does not contain a supported command.`
     );
   }
   $_handle_self_assignment() {
@@ -152,7 +170,7 @@ var CommentHandler = class {
             total_days: daysUntilUnassign,
             unassigned_date: (0, import_date_fns.format)(
               (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-              "dd/MM/yyyy"
+              "dd LLLL Y"
             ),
             handle: (_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login,
             pin_label: core.getInput("pin_label" /* PIN_LABEL */)
@@ -185,7 +203,7 @@ var CommentHandler = class {
   }
   $_handle_user_assignment(input) {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
       core.info(`Starting issue assignment to user`);
       const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
       if (idx !== -1) {
@@ -204,38 +222,38 @@ var CommentHandler = class {
             `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`
           );
           core.info(`LOG: USER_HANDLE -> ${userHandle}`);
-          core.info(`LOG: TYPE OF USER_HANDLE -> ${typeof userHandle}`);
+          core.info(`LOG: COMMENTED USER LOGIN -> ${(_d = this.comment) == null ? void 0 : _d.user.login}`);
           core.info(`----------------------------------------------------`);
-          if ((_d = this.issue) == null ? void 0 : _d.assignee) {
+          if ((_e = this.issue) == null ? void 0 : _e.assignee) {
             const template = `
           \u{1F44B} Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
           You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
           `;
             const body = import_mustache.default.render(template, {
-              user: (_e = this.comment) == null ? void 0 : _e.user.login,
-              assignee: (_f = this.issue.assignee) == null ? void 0 : _f.login
+              user: (_f = this.comment) == null ? void 0 : _f.user.login,
+              assignee: (_g = this.issue.assignee) == null ? void 0 : _g.login
             });
             yield this.client.rest.issues.createComment(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_g = this.issue) == null ? void 0 : _g.number,
+              issue_number: (_h = this.issue) == null ? void 0 : _h.number,
               body
             }));
             return core.info(
-              `\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} is already assigned to @${(_j = (_i = this.issue) == null ? void 0 : _i.assignee) == null ? void 0 : _j.login}`
+              `\u{1F916} Issue #${(_i = this.issue) == null ? void 0 : _i.number} is already assigned to @${(_k = (_j = this.issue) == null ? void 0 : _j.assignee) == null ? void 0 : _k.login}`
             );
           }
           core.info(
-            `\u{1F916} Assigning @${userHandle} to issue #${(_k = this.issue) == null ? void 0 : _k.number}`
+            `\u{1F916} Assigning @${userHandle} to issue #${(_l = this.issue) == null ? void 0 : _l.number}`
           );
           const daysUntilUnassign = Number(
             core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */)
           );
           yield Promise.all([
             yield this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_l = this.issue) == null ? void 0 : _l.number,
+              issue_number: (_m = this.issue) == null ? void 0 : _m.number,
               assignees: [userHandle]
             })),
             yield this.client.rest.issues.addLabels(__spreadProps(__spreadValues({}, this.context.repo), {
-              issue_number: (_m = this.issue) == null ? void 0 : _m.number,
+              issue_number: (_n = this.issue) == null ? void 0 : _n.number,
               labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)]
             })),
             yield this._create_comment(
@@ -244,14 +262,14 @@ var CommentHandler = class {
                 total_days: daysUntilUnassign,
                 unassigned_date: (0, import_date_fns.format)(
                   (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-                  "dd/MM/yyyy"
+                  "dd LLLL Y"
                 ),
                 handle: userHandle,
                 pin_label: core.getInput("pin_label" /* PIN_LABEL */)
               }
             )
           ]);
-          core.info(`\u{1F916} Issue #${(_n = this.issue) == null ? void 0 : _n.number} assigned!`);
+          core.info(`\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} assigned!`);
         } else {
           core.info(`No valid user handle found after /assign command`);
         }
