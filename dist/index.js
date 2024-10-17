@@ -193,7 +193,7 @@ var CommentHandler = class {
           )
         ]);
         core.info(`\u{1F916} Done issue unassignment!`);
-        core.setOutput("unassigned", "yes");
+        return core.setOutput("unassigned", "yes");
       }
       core.setOutput("unassigned", "no");
       return core.info(
@@ -266,10 +266,10 @@ var CommentHandler = class {
             )
           ]);
           core.info(`\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} assigned!`);
-          core.setOutput("assigned", "yes");
+          return core.setOutput("assigned", "yes");
         } else {
           core.info(`No valid user handle found after /assign command`);
-          core.setOutput("assigned", "no");
+          return core.setOutput("assigned", "no");
         }
       }
     });

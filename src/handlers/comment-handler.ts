@@ -152,7 +152,7 @@ export default class CommentHandler {
       ]);
 
       core.info(`🤖 Done issue unassignment!`);
-      core.setOutput('unassigned', 'yes');
+      return core.setOutput('unassigned', 'yes');
     }
 
     core.setOutput('unassigned', 'no');
@@ -259,10 +259,10 @@ export default class CommentHandler {
         ]);
 
         core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-        core.setOutput('assigned', 'yes');
+        return core.setOutput('assigned', 'yes');
       } else {
         core.info(`No valid user handle found after /assign command`);
-        core.setOutput('assigned', 'no');
+        return core.setOutput('assigned', 'no');
         // TODO: add a comment?
       }
     }
