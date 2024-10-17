@@ -62,17 +62,7 @@ export default class CommentHandler {
     const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
     const maintainers = maintainersInput.split(',');
 
-    core.info(`----------------------------------------------------`);
-    core.info(`LOG: MAINTAINERS_INPUT -> ${maintainersInput}`);
-    core.info(`LOG: MAINTAINERS_ARRAY -> ${JSON.stringify(maintainers)}`);
-    core.info(`----------------------------------------------------`);
-
     const body = this.context.payload.comment?.body as string;
-
-    //! if the body contains /assign, when using self_assign or assign cmt,
-    //! both of them will match. Find a way to tackle that
-
-    //! also, maybe remove assignment cmds from action.yml to avoid users changing it
 
     if (body === selfAssignCmd) {
       return this.$_handle_self_assignment();
@@ -116,6 +106,7 @@ export default class CommentHandler {
 
     if (this.issue?.assignee) {
       await this._already_assigned_comment(daysUntilUnassign);
+      core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
       );
@@ -143,6 +134,7 @@ export default class CommentHandler {
     ]);
 
     core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+    core.setOutput('assigned', 'yes');
   }
 
   private async $_handle_self_unassignment() {
@@ -160,8 +152,10 @@ export default class CommentHandler {
       ]);
 
       core.info(`🤖 Done issue unassignment!`);
+      core.setOutput('unassigned', 'yes');
     }
 
+    core.setOutput('unassigned', 'no');
     return core.info(
       `🤖 Commenter is different from the assignee, ignoring...`,
     );
@@ -265,8 +259,10 @@ export default class CommentHandler {
         ]);
 
         core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+        core.setOutput('assigned', 'yes');
       } else {
         core.info(`No valid user handle found after /assign command`);
+        core.setOutput('assigned', 'no');
         // TODO: add a comment?
       }
     }
@@ -294,17 +290,21 @@ export default class CommentHandler {
               { handle: userHandle },
             ),
           ]);
+
+          core.setOutput('unassigned', 'yes');
           return core.info(
             `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
           );
         }
 
         // TODO: post a comment to the issue
+        core.setOutput('unassigned', 'no');
         return core.info(
           `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
         );
       } else {
         // TODO: add a comment?
+        core.setOutput('unassigned', 'no');
         return core.info(`No valid user handle found after /assign command`);
       }
     }

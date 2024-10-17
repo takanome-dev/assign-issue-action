@@ -112,10 +112,6 @@ var CommentHandler = class {
     const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
-    core.info(`----------------------------------------------------`);
-    core.info(`LOG: MAINTAINERS_INPUT -> ${maintainersInput}`);
-    core.info(`LOG: MAINTAINERS_ARRAY -> ${JSON.stringify(maintainers)}`);
-    core.info(`----------------------------------------------------`);
     const body = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
     if (body === selfAssignCmd) {
       return this.$_handle_self_assignment();
@@ -154,6 +150,7 @@ var CommentHandler = class {
       const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
       if ((_b = this.issue) == null ? void 0 : _b.assignee) {
         yield this._already_assigned_comment(daysUntilUnassign);
+        core.setOutput("assigned", "no");
         return core.info(
           `\u{1F916} Issue #${(_c = this.issue) == null ? void 0 : _c.number} is already assigned to @${(_e = (_d = this.issue) == null ? void 0 : _d.assignee) == null ? void 0 : _e.login}`
         );
@@ -178,6 +175,7 @@ var CommentHandler = class {
         )
       ]);
       core.info(`\u{1F916} Issue #${(_l = this.issue) == null ? void 0 : _l.number} assigned!`);
+      core.setOutput("assigned", "yes");
     });
   }
   $_handle_self_unassignment() {
@@ -195,7 +193,9 @@ var CommentHandler = class {
           )
         ]);
         core.info(`\u{1F916} Done issue unassignment!`);
+        core.setOutput("unassigned", "yes");
       }
+      core.setOutput("unassigned", "no");
       return core.info(
         `\u{1F916} Commenter is different from the assignee, ignoring...`
       );
@@ -266,8 +266,10 @@ var CommentHandler = class {
             )
           ]);
           core.info(`\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} assigned!`);
+          core.setOutput("assigned", "yes");
         } else {
           core.info(`No valid user handle found after /assign command`);
+          core.setOutput("assigned", "no");
         }
       }
     });
@@ -290,14 +292,17 @@ var CommentHandler = class {
                 { handle: userHandle }
               )
             ]);
+            core.setOutput("unassigned", "yes");
             return core.info(
               `\u{1F916} User @${userHandle} is unassigned from the issue #${(_f = this.issue) == null ? void 0 : _f.number}`
             );
           }
+          core.setOutput("unassigned", "no");
           return core.info(
             `\u{1F916} User @${userHandle} is not assigned to the issue #${(_g = this.issue) == null ? void 0 : _g.number}`
           );
         } else {
+          core.setOutput("unassigned", "no");
           return core.info(`No valid user handle found after /assign command`);
         }
       }
@@ -479,9 +484,6 @@ var ScheduleHandler = class {
     if (error instanceof Error) return (0, import_core.setFailed)(error.message);
   }
 }))();
-//! if the body contains /assign, when using self_assign or assign cmt,
-//! both of them will match. Find a way to tackle that
-//! also, maybe remove assignment cmds from action.yml to avoid users changing it
 //! not needed if we have list of allowed users who can use the command
 
 
