@@ -86,7 +86,7 @@ var CommentHandler = class {
     this.client = (0, import_github.getOctokit)(this.token);
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     core.info(
       `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
     );
@@ -110,14 +110,13 @@ var CommentHandler = class {
     }
     const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
     const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
+    const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
+    const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
     const enableAutoSuggestion = core.getBooleanInput(
       "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
     );
-    const maintainers = core.getMultilineInput("maintainers" /* MAINTAINERS */);
-    core.info(`==========================================================`);
-    core.info(` ENABLE_AUTO_SUGGESTION -> ${enableAutoSuggestion}`);
-    core.info(` MULTILINE_INPUT -> ${JSON.stringify(maintainers, null, 2)}`);
-    core.info(`==========================================================`);
+    const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
+    const maintainers = maintainersInput.split(",");
     const contributionPhrases = JSON.parse(
       import_fs.default.readFileSync(
         import_path.default.resolve(__dirname, "../utils/data/phrases.json"),
@@ -125,6 +124,7 @@ var CommentHandler = class {
       )
     ).contribution_phrases;
     core.info(`==========================================================`);
+    core.info(`ENABLE_AUTO_SUGG -> ${enableAutoSuggestion}`);
     core.info(
       ` CONTRIBUTION_PHRASES -> ${JSON.stringify(
         contributionPhrases,
@@ -144,8 +144,26 @@ var CommentHandler = class {
     if (body === selfUnassignCmd) {
       return this.$_handle_self_unassignment();
     }
+    if (maintainers.length > 0) {
+      if (maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
+        if (body.startsWith(assignCommenterCmd)) {
+          return this.$_handle_user_assignment(assignCommenterCmd);
+        }
+        if (body.startsWith(unassignCommenterCmd)) {
+          return this.$_handle_user_unassignment(unassignCommenterCmd);
+        }
+      } else {
+        return core.info(
+          `\u{1F916} Ignoring comment because the commenter is not in the list of maintainers specified in the config file`
+        );
+      }
+    } else {
+      return core.info(
+        `\u{1F916} Ignoring comment because the "maintainers" input in the config file is empty`
+      );
+    }
     return core.info(
-      `\u{1F916} Ignoring comment: ${(_f = this.context.payload.comment) == null ? void 0 : _f.id} because it does not contain a supported command.`
+      `\u{1F916} Ignoring comment: ${(_h = this.context.payload.comment) == null ? void 0 : _h.id} because it does not contain a supported command.`
     );
   }
   $_handle_assignment_interest() {
@@ -223,106 +241,84 @@ var CommentHandler = class {
       );
     });
   }
-  // private async $_handle_user_assignment(input: string) {
-  //   core.info(`Starting issue assignment to user`);
-  //   const idx = this.comment?.body.indexOf(input);
-  //   if (idx !== -1) {
-  //     const afterAssignCmd = this.comment?.body
-  //       ?.slice(idx + input.length)
-  //       .trim();
-  //     const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-  //     if (userHandleMatch && userHandleMatch[1]) {
-  //       const userHandle = userHandleMatch[1] as string;
-  //       //! not needed if we have list of allowed users who can use the command
-  //       // if (this.issue?.assignee) {
-  //       //   const template = `
-  //       //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
-  //       //   You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
-  //       //   `;
-  //       //   const body = mustache.render(template, {
-  //       //     user: this.comment?.user.login,
-  //       //     assignee: this.issue.assignee?.login,
-  //       //   });
-  //       //   await this.client.rest.issues.createComment({
-  //       //     ...this.context.repo,
-  //       //     issue_number: this.issue?.number as number,
-  //       //     body,
-  //       //   });
-  //       //   return core.info(
-  //       //     `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-  //       //   );
-  //       // }
-  //       core.info(
-  //         `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
-  //       );
-  //       const daysUntilUnassign = Number(
-  //         core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
-  //       );
-  //       await Promise.all([
-  //         this.client.rest.issues.addAssignees({
-  //           ...this.context.repo,
-  //           issue_number: this.issue?.number!,
-  //           assignees: [userHandle.trim()],
-  //         }),
-  //         this.client.rest.issues.addLabels({
-  //           ...this.context.repo,
-  //           issue_number: this.issue?.number!,
-  //           labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-  //         }),
-  //         this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
-  //           total_days: daysUntilUnassign,
-  //           unassigned_date: format(
-  //             add(new Date(), { days: daysUntilUnassign }),
-  //             'dd LLLL y',
-  //           ),
-  //           handle: userHandle,
-  //           pin_label: core.getInput(INPUTS.PIN_LABEL),
-  //         }),
-  //       ]);
-  //       core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-  //       return core.setOutput('assigned', 'yes');
-  //     } else {
-  //       core.info(`No valid user handle found after /assign command`);
-  //       return core.setOutput('assigned', 'no');
-  //       // TODO: add a comment?
-  //     }
-  //   }
-  // }
-  // private async $_handle_user_unassignment(input: string) {
-  //   core.info(`Starting issue unassignment to user`);
-  //   const idx = this.comment?.body.indexOf(input);
-  //   if (idx !== -1) {
-  //     const afterAssignCmd = this.comment?.body
-  //       ?.slice(idx + input.length)
-  //       .trim();
-  //     const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-  //     if (userHandleMatch && userHandleMatch[1]) {
-  //       const userHandle = userHandleMatch[1];
-  //       if (this.issue?.assignee?.login === userHandle) {
-  //         await Promise.all([
-  //           this._remove_assignee(),
-  //           this._create_comment<UnAssignUserCommentArg>(
-  //             INPUTS.UNASSIGNED_COMMENT,
-  //             { handle: userHandle },
-  //           ),
-  //         ]);
-  //         core.setOutput('unassigned', 'yes');
-  //         return core.info(
-  //           `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
-  //         );
-  //       }
-  //       // TODO: post a comment to the issue
-  //       core.setOutput('unassigned', 'no');
-  //       return core.info(
-  //         `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
-  //       );
-  //     } else {
-  //       // TODO: add a comment?
-  //       core.setOutput('unassigned', 'no');
-  //       return core.info(`No valid user handle found after /assign command`);
-  //     }
-  //   }
-  // }
+  $_handle_user_assignment(input) {
+    return __async(this, null, function* () {
+      var _a, _b, _c, _d, _e, _f, _g;
+      core.info(`Starting issue assignment to user`);
+      const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
+      if (idx !== -1) {
+        const afterAssignCmd = (_c = (_b = this.comment) == null ? void 0 : _b.body) == null ? void 0 : _c.slice(idx + input.length).trim();
+        const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+        if (userHandleMatch && userHandleMatch[1]) {
+          const userHandle = userHandleMatch[1];
+          core.info(
+            `\u{1F916} Assigning @${userHandle} to issue #${(_d = this.issue) == null ? void 0 : _d.number}`
+          );
+          const daysUntilUnassign = Number(
+            core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */)
+          );
+          yield Promise.all([
+            this.client.rest.issues.addAssignees(__spreadProps(__spreadValues({}, this.context.repo), {
+              issue_number: (_e = this.issue) == null ? void 0 : _e.number,
+              assignees: [userHandle.trim()]
+            })),
+            this.client.rest.issues.addLabels(__spreadProps(__spreadValues({}, this.context.repo), {
+              issue_number: (_f = this.issue) == null ? void 0 : _f.number,
+              labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)]
+            })),
+            this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
+              total_days: daysUntilUnassign,
+              unassigned_date: (0, import_date_fns.format)(
+                (0, import_date_fns.add)(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
+                "dd LLLL y"
+              ),
+              handle: userHandle,
+              pin_label: core.getInput("pin_label" /* PIN_LABEL */)
+            })
+          ]);
+          core.info(`\u{1F916} Issue #${(_g = this.issue) == null ? void 0 : _g.number} assigned!`);
+          return core.setOutput("assigned", "yes");
+        } else {
+          core.info(`No valid user handle found after /assign command`);
+          return core.setOutput("assigned", "no");
+        }
+      }
+    });
+  }
+  $_handle_user_unassignment(input) {
+    return __async(this, null, function* () {
+      var _a, _b, _c, _d, _e, _f, _g;
+      core.info(`Starting issue unassignment to user`);
+      const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
+      if (idx !== -1) {
+        const afterAssignCmd = (_c = (_b = this.comment) == null ? void 0 : _b.body) == null ? void 0 : _c.slice(idx + input.length).trim();
+        const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+        if (userHandleMatch && userHandleMatch[1]) {
+          const userHandle = userHandleMatch[1];
+          if (((_e = (_d = this.issue) == null ? void 0 : _d.assignee) == null ? void 0 : _e.login) === userHandle) {
+            yield Promise.all([
+              this._remove_assignee(),
+              this._create_comment(
+                "unassigned_comment" /* UNASSIGNED_COMMENT */,
+                { handle: userHandle }
+              )
+            ]);
+            core.setOutput("unassigned", "yes");
+            return core.info(
+              `\u{1F916} User @${userHandle} is unassigned from the issue #${(_f = this.issue) == null ? void 0 : _f.number}`
+            );
+          }
+          core.setOutput("unassigned", "no");
+          return core.info(
+            `\u{1F916} User @${userHandle} is not assigned to the issue #${(_g = this.issue) == null ? void 0 : _g.number}`
+          );
+        } else {
+          core.setOutput("unassigned", "no");
+          return core.info(`No valid user handle found after /assign command`);
+        }
+      }
+    });
+  }
   _add_assignee() {
     var _a, _b, _c;
     return Promise.all([
@@ -481,6 +477,7 @@ var ScheduleHandler = class {
     if (error instanceof Error) return (0, import_core.setFailed)(error.message);
   }
 }))();
+//! not needed if we have list of allowed users who can use the command
 
 
 /***/ }),
