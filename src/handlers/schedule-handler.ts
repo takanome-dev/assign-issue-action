@@ -58,7 +58,7 @@ export default class ScheduleHandler {
       'assigned:*',
       // Only find opened issues/PRs
       'is:open',
-      // Updated within the last 7 days (or whatever the user has set)
+      // Updated within the last 7 days (or whatever the user has set for "days_until_unassign")
       `updated:<${timestamp}`,
     ];
 

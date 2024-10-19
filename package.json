@@ -1,7 +1,7 @@
 {
   "name": "assign-issue-action",
   "version": "2.1.1",
-  "description": "Comment /assign (or any trigger you want) to assign an issue yourself 🎉",
+  "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
     "node": "20.x",
     "npm": "10.x"

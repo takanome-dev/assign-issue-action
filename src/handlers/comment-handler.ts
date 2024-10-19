@@ -1,17 +1,21 @@
+/* eslint-disable no-undef */
 import * as core from '@actions/core';
+import fs from 'fs';
+import path from 'path';
 import mustache from 'mustache';
 import { context, getOctokit } from '@actions/github';
+import { add, format } from 'date-fns';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 import type { GhIssue, GhComment } from '../types';
 import type {
   AlreadyAssignedCommentArg,
+  AssignmentInterestCommentArg,
   AssignUserCommentArg,
   UnAssignUserCommentArg,
 } from '../types/comment';
 
 import { INPUTS } from '../utils/lib/inputs';
-import { add, format, formatDistanceStrict } from 'date-fns';
 
 export default class CommentHandler {
   private issue: WebhookPayload['issue'] | GhIssue;
@@ -46,7 +50,7 @@ export default class CommentHandler {
       );
 
       if (!hasLabel) {
-        // TODO: post a comment
+        // TODO: post a comment?
         return core.setFailed(
           `🚫 Missing required label: "${core.getInput(
             'required_label',
@@ -57,12 +61,45 @@ export default class CommentHandler {
 
     const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
     const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
-    const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
-    const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
-    const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
-    const maintainers = maintainersInput.split(',');
+    // const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
+    // const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+    const enableAutoSuggestion = core.getBooleanInput(
+      INPUTS.ENABLE_AUTO_SUGGESTION,
+    );
+    const maintainers = core.getMultilineInput(INPUTS.MAINTAINERS);
+    core.info(`==========================================================`);
+    core.info(` ENABLE_AUTO_SUGGESTION -> ${enableAutoSuggestion}`);
+    core.info(` MULTILINE_INPUT -> ${JSON.stringify(maintainers, null, 2)}`);
+    core.info(`==========================================================`);
+    // const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
+    // const maintainers = maintainersInput.split(',');
 
-    const body = this.context.payload.comment?.body as string;
+    const contributionPhrases = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, '../utils/data/phrases.json'),
+        'utf-8',
+      ),
+    ).contribution_phrases as string[];
+
+    core.info(`==========================================================`);
+    core.info(
+      ` CONTRIBUTION_PHRASES -> ${JSON.stringify(
+        contributionPhrases,
+        null,
+        2,
+      )}`,
+    );
+    core.info(`==========================================================`);
+
+    const body = (this.context.payload.comment?.body as string).toLowerCase();
+
+    if (
+      enableAutoSuggestion &&
+      contributionPhrases.some((phrase) => body.includes(phrase.toLowerCase()))
+    ) {
+      core.info(`🤖 Comment indicates interest in contribution: ${body}`);
+      return this.$_handle_assignment_interest();
+    }
 
     if (body === selfAssignCmd) {
       return this.$_handle_self_assignment();
@@ -72,28 +109,37 @@ export default class CommentHandler {
       return this.$_handle_self_unassignment();
     }
 
-    if (maintainers.length > 0) {
-      if (maintainers.includes(this.comment?.user?.login)) {
-        if (body.startsWith(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
+    // if (maintainers.length > 0) {
+    //   if (maintainers.includes(this.comment?.user?.login)) {
+    //     if (body.startsWith(assignCommenterCmd)) {
+    //       return this.$_handle_user_assignment(assignCommenterCmd);
+    //     }
 
-        if (body.startsWith(unassignCommenterCmd)) {
-          return this.$_handle_user_unassignment(unassignCommenterCmd);
-        }
-      } else {
-        return core.info(
-          `🤖 Ignoring comment because the commenter is not in the list of maintainers specified in the config file`,
-        );
-      }
-    } else {
-      return core.info(
-        `🤖 Ignoring comment because the "maintainers" input in the config file is empty`,
-      );
-    }
+    //     if (body.startsWith(unassignCommenterCmd)) {
+    //       return this.$_handle_user_unassignment(unassignCommenterCmd);
+    //     }
+    //   } else {
+    //     return core.info(
+    //       `🤖 Ignoring comment because the commenter is not in the list of maintainers specified in the config file`,
+    //     );
+    //   }
+    // } else {
+    //   return core.info(
+    //     `🤖 Ignoring comment because the "maintainers" input in the config file is empty`,
+    //   );
+    // }
 
     return core.info(
       `🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`,
+    );
+  }
+
+  private async $_handle_assignment_interest() {
+    return await this._create_comment<AssignmentInterestCommentArg>(
+      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
+      {
+        handle: this.comment?.user?.login,
+      },
     );
   }
 
@@ -105,7 +151,15 @@ export default class CommentHandler {
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
 
     if (this.issue?.assignee) {
-      await this._already_assigned_comment(daysUntilUnassign);
+      // await this._already_assigned_comment(daysUntilUnassign);
+      await this._create_comment<AlreadyAssignedCommentArg>(
+        INPUTS.ALREADY_ASSIGNED_COMMENT,
+        {
+          unassigned_date: String(daysUntilUnassign),
+          handle: this.comment?.user?.login,
+          assignee: this.issue?.assignee?.login,
+        },
+      );
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
@@ -119,22 +173,19 @@ export default class CommentHandler {
 
     await Promise.all([
       this._add_assignee(),
-      await this._create_comment<AssignUserCommentArg>(
-        INPUTS.ASSIGNED_COMMENT,
-        {
-          total_days: daysUntilUnassign,
-          unassigned_date: format(
-            add(new Date(), { days: daysUntilUnassign }),
-            'dd LLLL y',
-          ),
-          handle: this.comment?.user?.login,
-          pin_label: core.getInput(INPUTS.PIN_LABEL),
-        },
-      ),
+      this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+        total_days: daysUntilUnassign,
+        unassigned_date: format(
+          add(new Date(), { days: daysUntilUnassign }),
+          'dd LLLL y',
+        ),
+        handle: this.comment?.user?.login,
+        pin_label: core.getInput(INPUTS.PIN_LABEL),
+      }),
     ]);
 
     core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-    core.setOutput('assigned', 'yes');
+    return core.setOutput('assigned', 'yes');
   }
 
   private async $_handle_self_unassignment() {
@@ -145,7 +196,7 @@ export default class CommentHandler {
     if (this.issue?.assignee?.login === this.comment?.user?.login) {
       await Promise.all([
         this._remove_assignee(),
-        await this._create_comment<UnAssignUserCommentArg>(
+        this._create_comment<UnAssignUserCommentArg>(
           INPUTS.UNASSIGNED_COMMENT,
           { handle: this.comment?.user?.login },
         ),
@@ -161,202 +212,146 @@ export default class CommentHandler {
     );
   }
 
-  private async $_handle_user_assignment(input: string) {
-    core.info(`Starting issue assignment to user`);
+  // private async $_handle_user_assignment(input: string) {
+  //   core.info(`Starting issue assignment to user`);
 
-    const idx = this.comment?.body.indexOf(input);
-    if (idx !== -1) {
-      const afterAssignCmd = this.comment?.body
-        ?.slice(idx + input.length)
-        .trim();
+  //   const idx = this.comment?.body.indexOf(input);
+  //   if (idx !== -1) {
+  //     const afterAssignCmd = this.comment?.body
+  //       ?.slice(idx + input.length)
+  //       .trim();
 
-      core.info(`----------------------------------------------------`);
-      core.info(`LOG: AFTER_ASSIGN_CMD -> ${afterAssignCmd}`);
-      core.info(`----------------------------------------------------`);
+  //     const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+  //     if (userHandleMatch && userHandleMatch[1]) {
+  //       const userHandle = userHandleMatch[1] as string;
 
-      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-      core.info(`----------------------------------------------------`);
-      core.info(`LOG: USER_HANDLE_MATCH -> ${userHandleMatch}`);
-      core.info(`----------------------------------------------------`);
+  //       //! not needed if we have list of allowed users who can use the command
+  //       // if (this.issue?.assignee) {
+  //       //   const template = `
+  //       //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
+  //       //   You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
+  //       //   `;
 
-      if (userHandleMatch && userHandleMatch[1]) {
-        const userHandle = userHandleMatch[1] as string;
-        core.info(`----------------------------------------------------`);
-        core.info(
-          `LOG: TYPE OF USER_HANDLE_MATCH -> ${typeof userHandleMatch}`,
-        );
-        core.info(`LOG: USER_HANDLE -> ${userHandle}`);
-        core.info(`LOG: COMMENTED USER LOGIN -> ${this.comment?.user.login}`);
-        core.info(`----------------------------------------------------`);
+  //       //   const body = mustache.render(template, {
+  //       //     user: this.comment?.user.login,
+  //       //     assignee: this.issue.assignee?.login,
+  //       //   });
 
-        //! not needed if we have list of allowed users who can use the command
-        // if (this.issue?.assignee) {
-        //   const template = `
-        //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
-        //   You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
-        //   `;
+  //       //   await this.client.rest.issues.createComment({
+  //       //     ...this.context.repo,
+  //       //     issue_number: this.issue?.number as number,
+  //       //     body,
+  //       //   });
+  //       //   return core.info(
+  //       //     `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+  //       //   );
+  //       // }
 
-        //   const body = mustache.render(template, {
-        //     user: this.comment?.user.login,
-        //     assignee: this.issue.assignee?.login,
-        //   });
+  //       core.info(
+  //         `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
+  //       );
 
-        //   await this.client.rest.issues.createComment({
-        //     ...this.context.repo,
-        //     issue_number: this.issue?.number as number,
-        //     body,
-        //   });
-        //   return core.info(
-        //     `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-        //   );
-        // }
+  //       const daysUntilUnassign = Number(
+  //         core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
+  //       );
 
-        core.info(
-          `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
-        );
+  //       await Promise.all([
+  //         this.client.rest.issues.addAssignees({
+  //           ...this.context.repo,
+  //           issue_number: this.issue?.number!,
+  //           assignees: [userHandle.trim()],
+  //         }),
+  //         this.client.rest.issues.addLabels({
+  //           ...this.context.repo,
+  //           issue_number: this.issue?.number!,
+  //           labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+  //         }),
+  //         this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+  //           total_days: daysUntilUnassign,
+  //           unassigned_date: format(
+  //             add(new Date(), { days: daysUntilUnassign }),
+  //             'dd LLLL y',
+  //           ),
+  //           handle: userHandle,
+  //           pin_label: core.getInput(INPUTS.PIN_LABEL),
+  //         }),
+  //       ]);
 
-        const daysUntilUnassign = Number(
-          core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
-        );
+  //       core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+  //       return core.setOutput('assigned', 'yes');
+  //     } else {
+  //       core.info(`No valid user handle found after /assign command`);
+  //       return core.setOutput('assigned', 'no');
+  //       // TODO: add a comment?
+  //     }
+  //   }
+  // }
 
-        try {
-          const resp = await this.client.rest.issues.addAssignees({
-            ...this.context.repo,
-            issue_number: this.issue?.number!,
-            assignees: [userHandle.trim()],
-          });
-          core.info(`=======================================================`);
-          core.info(`=======================================================`);
-          core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
-          core.info(`=======================================================`);
-          core.info(`=======================================================`);
-        } catch (err) {
-          core.info(`=======================================================`);
-          core.info(`=======================================================`);
-          core.info(`error from assigned promise: ${JSON.stringify(err)}`);
-          core.info(`=======================================================`);
-          core.info(`=======================================================`);
-        }
+  // private async $_handle_user_unassignment(input: string) {
+  //   core.info(`Starting issue unassignment to user`);
 
-        await Promise.all([
-          await this.client.rest.issues.addLabels({
-            ...this.context.repo,
-            issue_number: this.issue?.number!,
-            labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-          }),
-          await this._create_comment<AssignUserCommentArg>(
-            INPUTS.ASSIGNED_COMMENT,
-            {
-              total_days: daysUntilUnassign,
-              unassigned_date: format(
-                add(new Date(), { days: daysUntilUnassign }),
-                'dd LLLL y',
-              ),
-              handle: userHandle,
-              pin_label: core.getInput(INPUTS.PIN_LABEL),
-            },
-          ),
-        ]);
+  //   const idx = this.comment?.body.indexOf(input);
+  //   if (idx !== -1) {
+  //     const afterAssignCmd = this.comment?.body
+  //       ?.slice(idx + input.length)
+  //       .trim();
 
-        core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-        return core.setOutput('assigned', 'yes');
-      } else {
-        core.info(`No valid user handle found after /assign command`);
-        return core.setOutput('assigned', 'no');
-        // TODO: add a comment?
-      }
-    }
-  }
+  //     const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
 
-  private async $_handle_user_unassignment(input: string) {
-    core.info(`Starting issue unassignment to user`);
+  //     if (userHandleMatch && userHandleMatch[1]) {
+  //       const userHandle = userHandleMatch[1];
 
-    const idx = this.comment?.body.indexOf(input);
-    if (idx !== -1) {
-      const afterAssignCmd = this.comment?.body
-        ?.slice(idx + input.length)
-        .trim();
+  //       if (this.issue?.assignee?.login === userHandle) {
+  //         await Promise.all([
+  //           this._remove_assignee(),
+  //           this._create_comment<UnAssignUserCommentArg>(
+  //             INPUTS.UNASSIGNED_COMMENT,
+  //             { handle: userHandle },
+  //           ),
+  //         ]);
 
-      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+  //         core.setOutput('unassigned', 'yes');
+  //         return core.info(
+  //           `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
+  //         );
+  //       }
 
-      if (userHandleMatch && userHandleMatch[1]) {
-        const userHandle = userHandleMatch[1];
+  //       // TODO: post a comment to the issue
+  //       core.setOutput('unassigned', 'no');
+  //       return core.info(
+  //         `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
+  //       );
+  //     } else {
+  //       // TODO: add a comment?
+  //       core.setOutput('unassigned', 'no');
+  //       return core.info(`No valid user handle found after /assign command`);
+  //     }
+  //   }
+  // }
 
-        if (this.issue?.assignee?.login === userHandle) {
-          await Promise.all([
-            this._remove_assignee(),
-            this._create_comment<UnAssignUserCommentArg>(
-              INPUTS.UNASSIGNED_COMMENT,
-              { handle: userHandle },
-            ),
-          ]);
-
-          core.setOutput('unassigned', 'yes');
-          return core.info(
-            `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
-          );
-        }
-
-        // TODO: post a comment to the issue
-        core.setOutput('unassigned', 'no');
-        return core.info(
-          `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
-        );
-      } else {
-        // TODO: add a comment?
-        core.setOutput('unassigned', 'no');
-        return core.info(`No valid user handle found after /assign command`);
-      }
-    }
-  }
-
-  private async _add_assignee() {
-    try {
-      const resp = await this.client.rest.issues.addAssignees({
+  private _add_assignee() {
+    return Promise.all([
+      this.client.rest.issues.addAssignees({
         ...this.context.repo,
         issue_number: this.issue?.number!,
         assignees: [this.comment?.user.login],
-      });
-      core.info(`=======================================================`);
-      core.info(`=======================================================`);
-      core.info(`response from assigned promise: ${JSON.stringify(resp)}`);
-      core.info(`=======================================================`);
-      core.info(`=======================================================`);
-    } catch (err) {
-      core.info(`=======================================================`);
-      core.info(`=======================================================`);
-      core.info(`error from assigned promise: ${JSON.stringify(err)}`);
-      core.info(`=======================================================`);
-      core.info(`=======================================================`);
-    }
-
-    // await Promise.all([
-    //   await this.client.rest.issues.addAssignees({
-    //     ...this.context.repo,
-    //     issue_number: this.issue?.number!,
-    //     assignees: [this.comment?.user.login],
-    //   }),
-    //   await this.client.rest.issues.addLabels({
-    //     ...this.context.repo,
-    //     issue_number: this.issue?.number!,
-    //     labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-    //   }),
-    // ]);
-    await this.client.rest.issues.addLabels({
-      ...this.context.repo,
-      issue_number: this.issue?.number!,
-      labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-    });
+      }),
+      this.client.rest.issues.addLabels({
+        ...this.context.repo,
+        issue_number: this.issue?.number!,
+        labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+      }),
+    ]);
   }
 
-  private async _remove_assignee() {
+  private _remove_assignee() {
     return Promise.all([
-      await this.client.rest.issues.removeAssignees({
+      this.client.rest.issues.removeAssignees({
         ...this.context.repo,
         issue_number: this.issue?.number!,
         assignees: [this.issue?.assignee!.login],
       }),
-      await this.client.rest.issues.removeLabel({
+      this.client.rest.issues.removeLabel({
         ...this.context.repo,
         issue_number: this.issue?.number!,
         name: core.getInput(INPUTS.ASSIGNED_LABEL),
@@ -364,43 +359,45 @@ export default class CommentHandler {
     ]);
   }
 
-  private async _already_assigned_comment(totalDays: number) {
-    const comments = await this.client.rest.issues.listComments({
-      ...this.context.repo,
-      issue_number: this.issue?.number!,
-    });
+  //! this should calculate how many times is left before the current
+  //! assign get unassign by the action
+  // private async _already_assigned_comment(totalDays: number) {
+  //   const comments = await this.client.rest.issues.listComments({
+  //     ...this.context.repo,
+  //     issue_number: this.issue?.number!,
+  //   });
 
-    // TODO: should return the comments made by the assigned user to search which one contains the cmd
-    const assignedComment = comments.data.find(
-      (comment) => comment.user!.login === this.issue?.assignee?.login,
-    );
+  //   // TODO: should return the comments made by the assigned user to search which one contains the cmd
+  //   const assignedComment = comments.data.find(
+  //     (comment) => comment.user!.login === this.issue?.assignee?.login,
+  //   );
 
-    if (!assignedComment) {
-      // TODO: maybe post a comment here?
-      return core.info(
-        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-      );
-    }
+  //   if (!assignedComment) {
+  //     // TODO: maybe post a comment here?
+  //     return core.info(
+  //       `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+  //     );
+  //   }
 
-    const daysUntilUnassign = formatDistanceStrict(
-      new Date(assignedComment?.created_at),
-      add(new Date(assignedComment.created_at), { days: totalDays }),
-    );
+  //   const daysUntilUnassign = formatDistanceStrict(
+  //     new Date(assignedComment?.created_at),
+  //     add(new Date(assignedComment.created_at), { days: totalDays }),
+  //   );
 
-    await this._create_comment<AlreadyAssignedCommentArg>(
-      INPUTS.ALREADY_ASSIGNED_COMMENT,
-      {
-        unassigned_date: daysUntilUnassign,
-        handle: this.comment?.user?.login,
-        assignee: this.issue?.assignee?.login,
-      },
-    );
-  }
+  //   await this._create_comment<AlreadyAssignedCommentArg>(
+  //     INPUTS.ALREADY_ASSIGNED_COMMENT,
+  //     {
+  //       unassigned_date: daysUntilUnassign,
+  //       handle: this.comment?.user?.login,
+  //       assignee: this.issue?.assignee?.login,
+  //     },
+  //   );
+  // }
 
-  private async _create_comment<T>(input: INPUTS, options: T) {
+  private _create_comment<T>(input: INPUTS, options: T) {
     const body = mustache.render(core.getInput(input), options);
 
-    await this.client.rest.issues.createComment({
+    return this.client.rest.issues.createComment({
       ...this.context.repo,
       issue_number: this.issue?.number as number,
       body,

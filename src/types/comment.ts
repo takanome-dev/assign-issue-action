@@ -4,6 +4,10 @@ export interface AlreadyAssignedCommentArg {
   assignee: string;
 }
 
+export interface AssignmentInterestCommentArg {
+  handle: string;
+}
+
 export interface AssignUserCommentArg {
   unassigned_date: string;
   total_days: number;
