@@ -1,7 +1,4 @@
-/* eslint-disable no-undef */
 import * as core from '@actions/core';
-import fs from 'fs';
-import path from 'path';
 import mustache from 'mustache';
 import { context, getOctokit } from '@actions/github';
 import { add, format } from 'date-fns';
@@ -69,29 +66,17 @@ export default class CommentHandler {
     const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
     const maintainers = maintainersInput.split(',');
 
-    const contributionPhrases = JSON.parse(
-      fs.readFileSync(
-        path.resolve(__dirname, '../utils/data/phrases.json'),
-        'utf-8',
-      ),
-    ).contribution_phrases as string[];
-
     core.info(`==========================================================`);
     core.info(`ENABLE_AUTO_SUGG -> ${enableAutoSuggestion}`);
-    core.info(
-      ` CONTRIBUTION_PHRASES -> ${JSON.stringify(
-        contributionPhrases,
-        null,
-        2,
-      )}`,
-    );
     core.info(`==========================================================`);
 
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
     if (
       enableAutoSuggestion &&
-      contributionPhrases.some((phrase) => body.includes(phrase.toLowerCase()))
+      this._contribution_phrases().some((phrase) =>
+        body.includes(phrase.toLowerCase()),
+      )
     ) {
       core.info(`🤖 Comment indicates interest in contribution: ${body}`);
       return this.$_handle_assignment_interest();
@@ -398,5 +383,27 @@ export default class CommentHandler {
       issue_number: this.issue?.number as number,
       body,
     });
+  }
+
+  private _contribution_phrases() {
+    return [
+      'assign this issue to me',
+      'I would like to work on this issue',
+      'can I take on this issue',
+      'may I work on this issue',
+      "I'm keen to have a go",
+      'I am here to do a university assignment',
+      'I hope to contribute to this issue',
+      'can I be assigned to this issue',
+      'is this issue available to work on',
+      'I would be happy to pick this up',
+      'I want to take this issue',
+      'I have read through this issue and want to contribute',
+      'is this issue still open for contribution',
+      'Hi, can I take this issue',
+      'I would love to work on this issue',
+      "Hey, I'd like to be assigned to this issue",
+      'Please assign me to this issue',
+    ];
   }
 }

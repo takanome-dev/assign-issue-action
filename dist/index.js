@@ -72,8 +72,6 @@ var import_github3 = __nccwpck_require__(5438);
 
 // src/handlers/comment-handler.ts
 var core = __toESM(__nccwpck_require__(2186));
-var import_fs = __toESM(__nccwpck_require__(7147));
-var import_path = __toESM(__nccwpck_require__(1017));
 var import_mustache = __toESM(__nccwpck_require__(8272));
 var import_github = __nccwpck_require__(5438);
 var import_date_fns = __nccwpck_require__(5468);
@@ -117,24 +115,13 @@ var CommentHandler = class {
     );
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
-    const contributionPhrases = JSON.parse(
-      import_fs.default.readFileSync(
-        import_path.default.resolve(__dirname, "../utils/data/phrases.json"),
-        "utf-8"
-      )
-    ).contribution_phrases;
     core.info(`==========================================================`);
     core.info(`ENABLE_AUTO_SUGG -> ${enableAutoSuggestion}`);
-    core.info(
-      ` CONTRIBUTION_PHRASES -> ${JSON.stringify(
-        contributionPhrases,
-        null,
-        2
-      )}`
-    );
     core.info(`==========================================================`);
     const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
-    if (enableAutoSuggestion && contributionPhrases.some((phrase) => body.includes(phrase.toLowerCase()))) {
+    if (enableAutoSuggestion && this._contribution_phrases().some(
+      (phrase) => body.includes(phrase.toLowerCase())
+    )) {
       core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
       return this.$_handle_assignment_interest();
     }
@@ -382,6 +369,27 @@ var CommentHandler = class {
       issue_number: (_a = this.issue) == null ? void 0 : _a.number,
       body
     }));
+  }
+  _contribution_phrases() {
+    return [
+      "assign this issue to me",
+      "I would like to work on this issue",
+      "can I take on this issue",
+      "may I work on this issue",
+      "I'm keen to have a go",
+      "I am here to do a university assignment",
+      "I hope to contribute to this issue",
+      "can I be assigned to this issue",
+      "is this issue available to work on",
+      "I would be happy to pick this up",
+      "I want to take this issue",
+      "I have read through this issue and want to contribute",
+      "is this issue still open for contribution",
+      "Hi, can I take this issue",
+      "I would love to work on this issue",
+      "Hey, I'd like to be assigned to this issue",
+      "Please assign me to this issue"
+    ];
   }
 };
 
