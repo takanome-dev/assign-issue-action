@@ -19,11 +19,11 @@
     "all": "npm run format && npm run lint && npm run test && npm run bundle",
     "prepare": "husky install"
   },
-  "homepage": "https://github.com/takanome-dev/assign-to-me-action#readme",
-  "bugs": "https://github.com/takanome-dev/assign-to-me-action/issues",
+  "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
+  "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/takanome-dev/assign-to-me-action.git"
+    "url": "git+https://github.com/takanome-dev/assign-issue-action.git"
   },
   "keywords": [
     "github",

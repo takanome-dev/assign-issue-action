@@ -74,12 +74,12 @@ export default class ScheduleHandler {
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
     return Promise.all([
-      await this.client.rest.issues.removeAssignees({
+      this.client.rest.issues.removeAssignees({
         ...context.repo,
         issue_number: issue?.number!,
         assignees: [issue?.assignee!.login],
       }),
-      await this.client.rest.issues.removeLabel({
+      this.client.rest.issues.removeLabel({
         ...context.repo,
         issue_number: issue?.number!,
         name: this.assignedLabel,

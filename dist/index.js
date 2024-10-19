@@ -115,9 +115,6 @@ var CommentHandler = class {
     );
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
-    core.info(`==========================================================`);
-    core.info(`ENABLE_AUTO_SUGG -> ${enableAutoSuggestion}`);
-    core.info(`==========================================================`);
     const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
     if (enableAutoSuggestion && this._contribution_phrases().some(
       (phrase) => body.includes(phrase.toLowerCase())
@@ -450,11 +447,11 @@ var ScheduleHandler = class {
   unassignIssue(issue) {
     return __async(this, null, function* () {
       return Promise.all([
-        yield this.client.rest.issues.removeAssignees(__spreadProps(__spreadValues({}, import_github2.context.repo), {
+        this.client.rest.issues.removeAssignees(__spreadProps(__spreadValues({}, import_github2.context.repo), {
           issue_number: issue == null ? void 0 : issue.number,
           assignees: [issue == null ? void 0 : issue.assignee.login]
         })),
-        yield this.client.rest.issues.removeLabel(__spreadProps(__spreadValues({}, import_github2.context.repo), {
+        this.client.rest.issues.removeLabel(__spreadProps(__spreadValues({}, import_github2.context.repo), {
           issue_number: issue == null ? void 0 : issue.number,
           name: this.assignedLabel
         }))

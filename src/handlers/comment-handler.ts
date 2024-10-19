@@ -66,10 +66,6 @@ export default class CommentHandler {
     const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
     const maintainers = maintainersInput.split(',');
 
-    core.info(`==========================================================`);
-    core.info(`ENABLE_AUTO_SUGG -> ${enableAutoSuggestion}`);
-    core.info(`==========================================================`);
-
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
     if (
