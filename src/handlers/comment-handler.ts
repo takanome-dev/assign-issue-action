@@ -13,6 +13,7 @@ import type {
 } from '../types/comment';
 
 import { INPUTS } from '../utils/lib/inputs';
+import { retryWithDelay } from '../utils/lib/retry-with-delay';
 
 export default class CommentHandler {
   private issue: WebhookPayload['issue'] | GhIssue;
@@ -112,12 +113,21 @@ export default class CommentHandler {
   }
 
   private async $_handle_assignment_interest() {
-    return await this._create_comment<AssignmentInterestCommentArg>(
-      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
-      {
-        handle: this.comment?.user?.login,
-      },
-    );
+    // return await this._create_comment<AssignmentInterestCommentArg>(
+    //   INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
+    //   {
+    //     handle: this.comment?.user?.login,
+    //   },
+    // );
+
+    await retryWithDelay(async () => {
+      await this._create_comment<AssignmentInterestCommentArg>(
+        INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
+        {
+          handle: this.comment?.user?.login,
+        },
+      );
+    });
   }
 
   private async $_handle_self_assignment() {
@@ -129,14 +139,16 @@ export default class CommentHandler {
 
     if (this.issue?.assignee) {
       // await this._already_assigned_comment(daysUntilUnassign);
-      await this._create_comment<AlreadyAssignedCommentArg>(
-        INPUTS.ALREADY_ASSIGNED_COMMENT,
-        {
-          unassigned_date: String(daysUntilUnassign),
-          handle: this.comment?.user?.login,
-          assignee: this.issue?.assignee?.login,
-        },
-      );
+      retryWithDelay(async () => {
+        await this._create_comment<AlreadyAssignedCommentArg>(
+          INPUTS.ALREADY_ASSIGNED_COMMENT,
+          {
+            unassigned_date: String(daysUntilUnassign),
+            handle: this.comment?.user?.login,
+            assignee: this.issue?.assignee?.login,
+          },
+        );
+      });
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
@@ -148,18 +160,20 @@ export default class CommentHandler {
     );
     core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
 
-    await Promise.all([
-      this._add_assignee(),
-      this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
-        total_days: daysUntilUnassign,
-        unassigned_date: format(
-          add(new Date(), { days: daysUntilUnassign }),
-          'dd LLLL y',
-        ),
-        handle: this.comment?.user?.login,
-        pin_label: core.getInput(INPUTS.PIN_LABEL),
-      }),
-    ]);
+    retryWithDelay(async () => {
+      await Promise.all([
+        this._add_assignee(),
+        this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+          total_days: daysUntilUnassign,
+          unassigned_date: format(
+            add(new Date(), { days: daysUntilUnassign }),
+            'dd LLLL y',
+          ),
+          handle: this.comment?.user?.login,
+          pin_label: core.getInput(INPUTS.PIN_LABEL),
+        }),
+      ]);
+    });
 
     core.info(`🤖 Issue #${this.issue?.number} assigned!`);
     return core.setOutput('assigned', 'yes');
@@ -171,13 +185,15 @@ export default class CommentHandler {
     );
 
     if (this.issue?.assignee?.login === this.comment?.user?.login) {
-      await Promise.all([
-        this._remove_assignee(),
-        this._create_comment<UnAssignUserCommentArg>(
-          INPUTS.UNASSIGNED_COMMENT,
-          { handle: this.comment?.user?.login },
-        ),
-      ]);
+      retryWithDelay(async () => {
+        await Promise.all([
+          this._remove_assignee(),
+          this._create_comment<UnAssignUserCommentArg>(
+            INPUTS.UNASSIGNED_COMMENT,
+            { handle: this.comment?.user?.login },
+          ),
+        ]);
+      });
 
       core.info(`🤖 Done issue unassignment!`);
       return core.setOutput('unassigned', 'yes');
@@ -232,27 +248,32 @@ export default class CommentHandler {
           core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
         );
 
-        await Promise.all([
-          this.client.rest.issues.addAssignees({
-            ...this.context.repo,
-            issue_number: this.issue?.number!,
-            assignees: [userHandle.trim()],
-          }),
-          this.client.rest.issues.addLabels({
-            ...this.context.repo,
-            issue_number: this.issue?.number!,
-            labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-          }),
-          this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
-            total_days: daysUntilUnassign,
-            unassigned_date: format(
-              add(new Date(), { days: daysUntilUnassign }),
-              'dd LLLL y',
+        retryWithDelay(async () => {
+          await Promise.all([
+            this.client.rest.issues.addAssignees({
+              ...this.context.repo,
+              issue_number: this.issue?.number!,
+              assignees: [userHandle.trim()],
+            }),
+            this.client.rest.issues.addLabels({
+              ...this.context.repo,
+              issue_number: this.issue?.number!,
+              labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+            }),
+            this._create_comment<AssignUserCommentArg>(
+              INPUTS.ASSIGNED_COMMENT,
+              {
+                total_days: daysUntilUnassign,
+                unassigned_date: format(
+                  add(new Date(), { days: daysUntilUnassign }),
+                  'dd LLLL y',
+                ),
+                handle: userHandle,
+                pin_label: core.getInput(INPUTS.PIN_LABEL),
+              },
             ),
-            handle: userHandle,
-            pin_label: core.getInput(INPUTS.PIN_LABEL),
-          }),
-        ]);
+          ]);
+        });
 
         core.info(`🤖 Issue #${this.issue?.number} assigned!`);
         return core.setOutput('assigned', 'yes');
@@ -279,13 +300,15 @@ export default class CommentHandler {
         const userHandle = userHandleMatch[1];
 
         if (this.issue?.assignee?.login === userHandle) {
-          await Promise.all([
-            this._remove_assignee(),
-            this._create_comment<UnAssignUserCommentArg>(
-              INPUTS.UNASSIGNED_COMMENT,
-              { handle: userHandle },
-            ),
-          ]);
+          retryWithDelay(async () => {
+            await Promise.all([
+              this._remove_assignee(),
+              this._create_comment<UnAssignUserCommentArg>(
+                INPUTS.UNASSIGNED_COMMENT,
+                { handle: userHandle },
+              ),
+            ]);
+          });
 
           core.setOutput('unassigned', 'yes');
           return core.info(
@@ -383,19 +406,19 @@ export default class CommentHandler {
 
   private _contribution_phrases() {
     return [
-      'assign this issue to me',
+      'Assign this issue to me',
       'I would like to work on this issue',
-      'can I take on this issue',
-      'may I work on this issue',
+      'Can I take on this issue',
+      'May I work on this issue',
       "I'm keen to have a go",
       'I am here to do a university assignment',
       'I hope to contribute to this issue',
-      'can I be assigned to this issue',
-      'is this issue available to work on',
+      'Can I be assigned to this issue',
+      'Is this issue available to work on',
       'I would be happy to pick this up',
       'I want to take this issue',
       'I have read through this issue and want to contribute',
-      'is this issue still open for contribution',
+      'Is this issue still open for contribution',
       'Hi, can I take this issue',
       'I would love to work on this issue',
       "Hey, I'd like to be assigned to this issue",

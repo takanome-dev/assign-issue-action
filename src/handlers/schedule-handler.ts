@@ -4,6 +4,7 @@ import { context, getOctokit } from '@actions/github';
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 import { GhIssue } from '../types';
 import { INPUTS } from '../utils/lib/inputs';
+import { retryWithDelay } from '../utils/lib/retry-with-delay';
 
 export default class ScheduleHandler {
   private client: ReturnType<typeof getOctokit>;
@@ -20,7 +21,7 @@ export default class ScheduleHandler {
 
   async handle_unassignments() {
     // Find all open issues with the assigned_label
-    const issues = await this.getIssues();
+    const issues = await retryWithDelay(async () => await this.getIssues());
 
     core.info(`⚙ Processing ${issues.length} issues:`);
 
@@ -33,7 +34,9 @@ export default class ScheduleHandler {
         `🔗 UnAssigning @${issue.assignee.login} from issue #${issue.number}`,
       );
 
-      await this.unassignIssue(issue);
+      retryWithDelay(async () => {
+        await this.unassignIssue(issue);
+      });
 
       core.info(`✅ Done processing issue #${issue.number}`);
     }
