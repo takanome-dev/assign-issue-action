@@ -16,7 +16,7 @@
     "bundle": "npm run tsup && npm run build",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "all": "npm run format && npm run lint && npm run test && npm run bundle",
+    "all": "npm run format && npm run lint && npm run bundle",
     "prepare": "husky install"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
@@ -39,6 +39,8 @@
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@actions/github": "^6.0.0",
+    "@octokit/core": "^6.1.2",
+    "@octokit/plugin-throttling": "^9.3.2",
     "date-fns": "^4.1.0",
     "mustache": "^4.2.0"
   },

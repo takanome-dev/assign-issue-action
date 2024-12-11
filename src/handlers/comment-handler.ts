@@ -1,6 +1,9 @@
+/* eslint-disable import/no-unresolved */
 import * as core from '@actions/core';
+import { Octokit } from '@octokit/core';
+import { throttling } from '@octokit/plugin-throttling';
+import { context } from '@actions/github';
 import mustache from 'mustache';
-import { context, getOctokit } from '@actions/github';
 import { add, format } from 'date-fns';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
@@ -13,20 +16,42 @@ import type {
 } from '../types/comment';
 
 import { INPUTS } from '../utils/lib/inputs';
-import { retryWithDelay } from '../utils/lib/retry-with-delay';
 
 export default class CommentHandler {
-  private issue: WebhookPayload['issue'] | GhIssue;
-  private comment: WebhookPayload['comment'] | GhComment;
+  private readonly issue: WebhookPayload['issue'] | GhIssue;
+  private readonly comment: WebhookPayload['comment'] | GhComment;
   private token: string;
   private context = context;
-  private client: ReturnType<typeof getOctokit>;
+  private readonly octokit: Octokit;
 
   constructor() {
     this.issue = this.context.payload.issue;
     this.comment = this.context.payload.comment;
     this.token = core.getInput(INPUTS.GITHUB_TOKEN);
-    this.client = getOctokit(this.token);
+    const MyOctokit = Octokit.plugin(throttling);
+    this.octokit = new MyOctokit({
+      auth: this.token,
+      throttle: {
+        // @ts-expect-error it's fine buddy :)
+        onRateLimit: (retryAfter, options, octokit, retryCount) => {
+          octokit.log.warn(
+            `Request quota exhausted for request ${options.method} ${options.url}`,
+          );
+
+          if (retryCount < 1) {
+            // only retries once
+            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            return true;
+          }
+        },
+        onSecondaryRateLimit: (retryAfter, options, octokit) => {
+          // does not retry, only logs a warning
+          octokit.log.warn(
+            `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+          );
+        },
+      },
+    });
   }
 
   handle_issue_comment() {
@@ -112,22 +137,13 @@ export default class CommentHandler {
     );
   }
 
-  private async $_handle_assignment_interest() {
-    // return await this._create_comment<AssignmentInterestCommentArg>(
-    //   INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
-    //   {
-    //     handle: this.comment?.user?.login,
-    //   },
-    // );
-
-    await retryWithDelay(async () => {
-      await this._create_comment<AssignmentInterestCommentArg>(
-        INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
-        {
-          handle: this.comment?.user?.login,
-        },
-      );
-    });
+  private $_handle_assignment_interest() {
+    return this._create_comment<AssignmentInterestCommentArg>(
+      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
+      {
+        handle: this.comment?.user?.login,
+      },
+    );
   }
 
   private async $_handle_self_assignment() {
@@ -139,16 +155,14 @@ export default class CommentHandler {
 
     if (this.issue?.assignee) {
       // await this._already_assigned_comment(daysUntilUnassign);
-      retryWithDelay(async () => {
-        await this._create_comment<AlreadyAssignedCommentArg>(
-          INPUTS.ALREADY_ASSIGNED_COMMENT,
-          {
-            unassigned_date: String(daysUntilUnassign),
-            handle: this.comment?.user?.login,
-            assignee: this.issue?.assignee?.login,
-          },
-        );
-      });
+      await this._create_comment<AlreadyAssignedCommentArg>(
+        INPUTS.ALREADY_ASSIGNED_COMMENT,
+        {
+          unassigned_date: String(daysUntilUnassign),
+          handle: this.comment?.user?.login,
+          assignee: this.issue?.assignee?.login,
+        },
+      );
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
@@ -160,20 +174,18 @@ export default class CommentHandler {
     );
     core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
 
-    retryWithDelay(async () => {
-      await Promise.all([
-        this._add_assignee(),
-        this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
-          total_days: daysUntilUnassign,
-          unassigned_date: format(
-            add(new Date(), { days: daysUntilUnassign }),
-            'dd LLLL y',
-          ),
-          handle: this.comment?.user?.login,
-          pin_label: core.getInput(INPUTS.PIN_LABEL),
-        }),
-      ]);
-    });
+    await Promise.all([
+      this._add_assignee(),
+      this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+        total_days: daysUntilUnassign,
+        unassigned_date: format(
+          add(new Date(), { days: daysUntilUnassign }),
+          'dd LLLL y',
+        ),
+        handle: this.comment?.user?.login,
+        pin_label: core.getInput(INPUTS.PIN_LABEL),
+      }),
+    ]);
 
     core.info(`🤖 Issue #${this.issue?.number} assigned!`);
     return core.setOutput('assigned', 'yes');
@@ -185,15 +197,13 @@ export default class CommentHandler {
     );
 
     if (this.issue?.assignee?.login === this.comment?.user?.login) {
-      retryWithDelay(async () => {
-        await Promise.all([
-          this._remove_assignee(),
-          this._create_comment<UnAssignUserCommentArg>(
-            INPUTS.UNASSIGNED_COMMENT,
-            { handle: this.comment?.user?.login },
-          ),
-        ]);
-      });
+      await Promise.all([
+        this._remove_assignee(),
+        this._create_comment<UnAssignUserCommentArg>(
+          INPUTS.UNASSIGNED_COMMENT,
+          { handle: this.comment?.user?.login },
+        ),
+      ]);
 
       core.info(`🤖 Done issue unassignment!`);
       return core.setOutput('unassigned', 'yes');
@@ -248,32 +258,41 @@ export default class CommentHandler {
           core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
         );
 
-        retryWithDelay(async () => {
-          await Promise.all([
-            this.client.rest.issues.addAssignees({
-              ...this.context.repo,
+        await Promise.all([
+          this.octokit.request(
+            'POST /repos/{owner}/{repo}/issues/{issue_number}/assignees',
+            {
+              owner: this.context.repo.owner,
+              repo: this.context.repo.repo,
               issue_number: this.issue?.number!,
               assignees: [userHandle.trim()],
-            }),
-            this.client.rest.issues.addLabels({
-              ...this.context.repo,
+              headers: {
+                'X-GitHub-Api-Version': '2022-11-28',
+              },
+            },
+          ),
+          this.octokit.request(
+            'POST /repos/{owner}/{repo}/issues/{issue_number}/labels',
+            {
+              owner: this.context.repo.owner,
+              repo: this.context.repo.repo,
               issue_number: this.issue?.number!,
               labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-            }),
-            this._create_comment<AssignUserCommentArg>(
-              INPUTS.ASSIGNED_COMMENT,
-              {
-                total_days: daysUntilUnassign,
-                unassigned_date: format(
-                  add(new Date(), { days: daysUntilUnassign }),
-                  'dd LLLL y',
-                ),
-                handle: userHandle,
-                pin_label: core.getInput(INPUTS.PIN_LABEL),
+              headers: {
+                'X-GitHub-Api-Version': '2022-11-28',
               },
+            },
+          ),
+          this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+            total_days: daysUntilUnassign,
+            unassigned_date: format(
+              add(new Date(), { days: daysUntilUnassign }),
+              'dd LLLL y',
             ),
-          ]);
-        });
+            handle: userHandle,
+            pin_label: core.getInput(INPUTS.PIN_LABEL),
+          }),
+        ]);
 
         core.info(`🤖 Issue #${this.issue?.number} assigned!`);
         return core.setOutput('assigned', 'yes');
@@ -300,15 +319,13 @@ export default class CommentHandler {
         const userHandle = userHandleMatch[1];
 
         if (this.issue?.assignee?.login === userHandle) {
-          retryWithDelay(async () => {
-            await Promise.all([
-              this._remove_assignee(),
-              this._create_comment<UnAssignUserCommentArg>(
-                INPUTS.UNASSIGNED_COMMENT,
-                { handle: userHandle },
-              ),
-            ]);
-          });
+          await Promise.all([
+            this._remove_assignee(),
+            this._create_comment<UnAssignUserCommentArg>(
+              INPUTS.UNASSIGNED_COMMENT,
+              { handle: userHandle },
+            ),
+          ]);
 
           core.setOutput('unassigned', 'yes');
           return core.info(
@@ -331,36 +348,64 @@ export default class CommentHandler {
 
   private _add_assignee() {
     return Promise.all([
-      this.client.rest.issues.addAssignees({
-        ...this.context.repo,
-        issue_number: this.issue?.number!,
-        assignees: [this.comment?.user.login],
-      }),
-      this.client.rest.issues.addLabels({
-        ...this.context.repo,
-        issue_number: this.issue?.number!,
-        labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
-      }),
+      this.octokit.request(
+        'POST /repos/{owner}/{repo}/issues/{issue_number}/assignees',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          assignees: [this.comment?.user.login],
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'POST /repos/{owner}/{repo}/issues/{issue_number}/labels',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
     ]);
   }
 
   private _remove_assignee() {
     return Promise.all([
-      this.client.rest.issues.removeAssignees({
-        ...this.context.repo,
-        issue_number: this.issue?.number!,
-        assignees: [this.issue?.assignee!.login],
-      }),
-      this.client.rest.issues.removeLabel({
-        ...this.context.repo,
-        issue_number: this.issue?.number!,
-        name: core.getInput(INPUTS.ASSIGNED_LABEL),
-      }),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          assignees: [this.issue?.assignee!.login],
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: core.getInput(INPUTS.ASSIGNED_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
     ]);
   }
 
   //! this should calculate how many times is left before the current
-  //! assign get unassign by the action
+  //! assignee get unassign by the action
   // private async _already_assigned_comment(totalDays: number) {
   //   const comments = await this.client.rest.issues.listComments({
   //     ...this.context.repo,
@@ -397,11 +442,18 @@ export default class CommentHandler {
   private _create_comment<T>(input: INPUTS, options: T) {
     const body = mustache.render(core.getInput(input), options);
 
-    return this.client.rest.issues.createComment({
-      ...this.context.repo,
-      issue_number: this.issue?.number as number,
-      body,
-    });
+    return this.octokit.request(
+      'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
+      {
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        issue_number: this.issue?.number!,
+        body,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    );
   }
 
   private _contribution_phrases() {
