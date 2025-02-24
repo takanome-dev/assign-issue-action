@@ -60,6 +60,8 @@ export default class ScheduleHandler {
       await this.unassignIssue(issue);
       core.info(`✅ Done processing issue #${issue.number}`);
     }
+
+    core.info(`✅ Done processing cron job`);
   }
 
   private async getIssues(): Promise<GhIssue[]> {
@@ -77,8 +79,9 @@ export default class ScheduleHandler {
       `repo:${owner}/${repo}`,
       'assignee:*',
       'is:open',
-      `updated:<${timestamp}`,
+      `updated:>=${timestamp}`,
     ];
+    // `updated:<${timestamp}`,
 
     const issues = await this.octokit.request(
       `GET /search/issues?q=${encodeURIComponent(q.join(' '))}`,

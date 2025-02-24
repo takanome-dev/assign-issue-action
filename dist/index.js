@@ -494,6 +494,7 @@ var ScheduleHandler = class {
         yield this.unassignIssue(issue);
         core2.info(`\u2705 Done processing issue #${issue.number}`);
       }
+      core2.info(`\u2705 Done processing cron job`);
     });
   }
   getIssues() {
@@ -509,7 +510,7 @@ var ScheduleHandler = class {
         `repo:${owner}/${repo}`,
         "assignee:*",
         "is:open",
-        `updated:<${timestamp}`
+        `updated:>=${timestamp}`
       ];
       const issues = yield this.octokit.request(
         `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
