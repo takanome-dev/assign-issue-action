@@ -526,12 +526,8 @@ var ScheduleHandler = class {
   unassignIssue(issue) {
     return __async(this, null, function* () {
       var _a;
-      core2.info(
-        `issue: #${issue == null ? void 0 : issue.number} 
-assignees: ${JSON.stringify(
-          this.context.payload.issue
-        )}`
-      );
+      core2.info(`issue: #${issue == null ? void 0 : issue.number} 
+assignees: ${JSON.stringify(issue)}`);
       return Promise.all([
         this.octokit.request(
           "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",

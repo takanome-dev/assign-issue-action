@@ -96,11 +96,7 @@ export default class ScheduleHandler {
   }
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
-    core.info(
-      `issue: #${issue?.number} \nassignees: ${JSON.stringify(
-        this.context.payload.issue,
-      )}`,
-    );
+    core.info(`issue: #${issue?.number} \nassignees: ${JSON.stringify(issue)}`);
     return Promise.all([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
