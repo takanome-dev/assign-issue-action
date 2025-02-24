@@ -524,10 +524,12 @@ var ScheduleHandler = class {
   }
   unassignIssue(issue) {
     return __async(this, null, function* () {
-      var _a, _b;
+      var _a;
       core2.info(
         `issue: #${issue == null ? void 0 : issue.number} 
-assignees: ${(_a = this.context.payload.issue) == null ? void 0 : _a.assignee.login}`
+assignees: ${JSON.stringify(
+          this.context.payload.issue
+        )}`
       );
       return Promise.all([
         this.octokit.request(
@@ -536,7 +538,7 @@ assignees: ${(_a = this.context.payload.issue) == null ? void 0 : _a.assignee.lo
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
             issue_number: issue == null ? void 0 : issue.number,
-            assignees: [(_b = this.context.payload.issue) == null ? void 0 : _b.assignee.login],
+            assignees: [(_a = this.context.payload.issue) == null ? void 0 : _a.assignee.login],
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }

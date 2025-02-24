@@ -94,8 +94,9 @@ export default class ScheduleHandler {
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
     core.info(
-      `issue: #${issue?.number} \nassignees: ${this.context.payload.issue
-        ?.assignee!.login}`,
+      `issue: #${issue?.number} \nassignees: ${JSON.stringify(
+        this.context.payload.issue,
+      )}`,
     );
     return Promise.all([
       this.octokit.request(
