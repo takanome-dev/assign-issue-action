@@ -75,7 +75,7 @@ export default class ScheduleHandler {
       `-label:"${this.exemptLabel}"`,
       'is:issue',
       `repo:${owner}/${repo}`,
-      'assigned:*',
+      'assignee:*',
       'is:open',
       `updated:>=${timestamp}`,
     ];
