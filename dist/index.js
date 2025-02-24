@@ -509,7 +509,7 @@ var ScheduleHandler = class {
         `repo:${owner}/${repo}`,
         "assignee:*",
         "is:open",
-        `updated:>=${timestamp}`
+        `updated:<${timestamp}`
       ];
       const issues = yield this.octokit.request(
         `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
@@ -524,7 +524,11 @@ var ScheduleHandler = class {
   }
   unassignIssue(issue) {
     return __async(this, null, function* () {
-      var _a;
+      var _a, _b;
+      core2.info(
+        `issue: #${issue == null ? void 0 : issue.number} 
+assignees: ${(_a = this.context.payload.issue) == null ? void 0 : _a.assignee.login}`
+      );
       return Promise.all([
         this.octokit.request(
           "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
@@ -532,7 +536,7 @@ var ScheduleHandler = class {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
             issue_number: issue == null ? void 0 : issue.number,
-            assignees: [(_a = this.context.payload.issue) == null ? void 0 : _a.assignee.login],
+            assignees: [(_b = this.context.payload.issue) == null ? void 0 : _b.assignee.login],
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }

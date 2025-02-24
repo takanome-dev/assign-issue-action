@@ -77,7 +77,7 @@ export default class ScheduleHandler {
       `repo:${owner}/${repo}`,
       'assignee:*',
       'is:open',
-      `updated:>=${timestamp}`,
+      `updated:<${timestamp}`,
     ];
 
     const issues = await this.octokit.request(
@@ -93,6 +93,10 @@ export default class ScheduleHandler {
   }
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
+    core.info(
+      `issue: #${issue?.number} \nassignees: ${this.context.payload.issue
+        ?.assignee!.login}`,
+    );
     return Promise.all([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
