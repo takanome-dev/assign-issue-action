@@ -79,9 +79,8 @@ export default class ScheduleHandler {
       `repo:${owner}/${repo}`,
       'assignee:*',
       'is:open',
-      `updated:>=${timestamp}`,
+      `updated:<${timestamp}`,
     ];
-    // `updated:<${timestamp}`,
 
     const issues = await this.octokit.request(
       `GET /search/issues?q=${encodeURIComponent(q.join(' '))}`,
@@ -96,7 +95,6 @@ export default class ScheduleHandler {
   }
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
-    core.info(`issue: #${issue?.number} \nassignees: ${JSON.stringify(issue)}`);
     return Promise.all([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
@@ -104,7 +102,7 @@ export default class ScheduleHandler {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: issue?.number!,
-          assignees: [this.context.payload.issue?.assignee!.login],
+          assignees: [issue?.assignees.map((ass: any) => ass.login).join(',')],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
