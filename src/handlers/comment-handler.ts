@@ -17,6 +17,8 @@ import type {
 
 import { INPUTS } from '../utils/lib/inputs';
 
+const MyOctokit = Octokit.plugin(throttling);
+
 export default class CommentHandler {
   private readonly issue: WebhookPayload['issue'] | GhIssue;
   private readonly comment: WebhookPayload['comment'] | GhComment;
@@ -28,25 +30,24 @@ export default class CommentHandler {
     this.issue = this.context.payload.issue;
     this.comment = this.context.payload.comment;
     this.token = core.getInput(INPUTS.GITHUB_TOKEN);
-    const MyOctokit = Octokit.plugin(throttling);
     this.octokit = new MyOctokit({
       auth: this.token,
       throttle: {
         // @ts-expect-error it's fine buddy :)
         onRateLimit: (retryAfter, options, octokit, retryCount) => {
-          octokit.log.warn(
+          core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`,
           );
 
           if (retryCount < 1) {
             // only retries once
-            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            core.warning(`Retrying after ${retryAfter} seconds!`);
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options, octokit) => {
+        onSecondaryRateLimit: (retryAfter, options) => {
           // does not retry, only logs a warning
-          octokit.log.warn(
+          core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
           );
         },

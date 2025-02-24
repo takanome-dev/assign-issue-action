@@ -60,28 +60,28 @@ var import_plugin_throttling = __nccwpck_require__(3432);
 var import_github = __nccwpck_require__(5438);
 var import_mustache = __toESM(__nccwpck_require__(8272));
 var import_date_fns = __nccwpck_require__(5468);
+var MyOctokit = import_core.Octokit.plugin(import_plugin_throttling.throttling);
 var CommentHandler = class {
   constructor() {
     this.context = import_github.context;
     this.issue = this.context.payload.issue;
     this.comment = this.context.payload.comment;
     this.token = core.getInput("github_token" /* GITHUB_TOKEN */);
-    const MyOctokit = import_core.Octokit.plugin(import_plugin_throttling.throttling);
     this.octokit = new MyOctokit({
       auth: this.token,
       throttle: {
         // @ts-expect-error it's fine buddy :)
         onRateLimit: (retryAfter, options, octokit, retryCount) => {
-          octokit.log.warn(
+          core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`
           );
           if (retryCount < 1) {
-            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            core.warning(`Retrying after ${retryAfter} seconds!`);
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options, octokit) => {
-          octokit.log.warn(
+        onSecondaryRateLimit: (retryAfter, options) => {
+          core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`
           );
         }
@@ -454,29 +454,29 @@ var core2 = __toESM(__nccwpck_require__(2186));
 var import_github2 = __nccwpck_require__(5438);
 var import_core2 = __nccwpck_require__(8570);
 var import_plugin_throttling2 = __nccwpck_require__(3432);
+var MyOctokit2 = import_core2.Octokit.plugin(import_plugin_throttling2.throttling);
 var ScheduleHandler = class {
   constructor() {
     this.context = import_github2.context;
     this.token = core2.getInput("github_token" /* GITHUB_TOKEN */, { required: true });
     this.assignedLabel = core2.getInput("assigned_label" /* ASSIGNED_LABEL */);
     this.exemptLabel = core2.getInput("pin_label" /* PIN_LABEL */);
-    const MyOctokit = import_core2.Octokit.plugin(import_plugin_throttling2.throttling);
-    this.octokit = new MyOctokit({
+    this.octokit = new MyOctokit2({
       auth: this.token,
       throttle: {
         // @ts-expect-error it's fine buddy :)
         onRateLimit: (retryAfter, options, octokit, retryCount) => {
-          octokit.log.warn(
-            `Request quota exhausted for request ${options.method} ${options.url}`
+          core2.warning(
+            `\u26A0\uFE0F Request quota exhausted for request ${options.method} ${options.url} \u26A0\uFE0F`
           );
           if (retryCount < 1) {
-            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            core2.warning(`\u26A0\uFE0F Retrying after ${retryAfter} seconds! \u26A0\uFE0F`);
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options, octokit) => {
-          octokit.log.warn(
-            `SecondaryRateLimit detected for request ${options.method} ${options.url}`
+        onSecondaryRateLimit: (retryAfter, options) => {
+          core2.warning(
+            `\u26A0\uFE0F SecondaryRateLimit detected for request ${options.method} ${options.url} \u26A0\uFE0F`
           );
         }
       }
@@ -489,7 +489,7 @@ var ScheduleHandler = class {
       for (const issue of issues) {
         if (!issue.assignee) continue;
         core2.info(
-          `\u{1F517} UnAssigning @${issue.assignee.login} from issue #${issue.number}`
+          `\u{1F517} UnAssigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
         );
         yield this.unassignIssue(issue);
         core2.info(`\u2705 Done processing issue #${issue.number}`);
@@ -501,26 +501,18 @@ var ScheduleHandler = class {
       const { owner, repo } = this.context.repo;
       const totalDays = Number(core2.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
       const timestamp = this.since(totalDays);
+      core2.info(`\u{1F916} Searching issues updated since ${timestamp}`);
       const q = [
-        // Only get issues with the label that shows they've been assigned
         `label:"${this.assignedLabel}"`,
-        // Don't include include pinned issues
         `-label:"${this.exemptLabel}"`,
-        // Only include issues, not PRs
         "is:issue",
-        // Only search within this repository
         `repo:${owner}/${repo}`,
-        // Only find issues/PRs with an assignee.
         "assigned:*",
-        // Only find opened issues/PRs
         "is:open",
-        // Updated within the last 7 days (or whatever the user has set for "days_until_unassign")
-        `updated:<${timestamp}`
+        `updated:>=${timestamp}`
       ];
       const issues = yield this.octokit.request(
-        `GET /search/issues?q=${q.join(
-          " "
-        )}&sort=updated&order=desc&per_page=100`,
+        `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
         {
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
