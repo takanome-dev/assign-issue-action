@@ -160,7 +160,8 @@ var CommentHandler = class {
     return this._create_comment(
       "assignment_suggestion_comment" /* ASSIGNMENT_SUGGESTION_COMMENT */,
       {
-        handle: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login
+        handle: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login,
+        trigger: core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */)
       }
     );
   }
@@ -454,6 +455,7 @@ var core2 = __toESM(__nccwpck_require__(2186));
 var import_github2 = __nccwpck_require__(5438);
 var import_core2 = __nccwpck_require__(8570);
 var import_plugin_throttling2 = __nccwpck_require__(3432);
+var import_mustache2 = __toESM(__nccwpck_require__(8272));
 var MyOctokit2 = import_core2.Octokit.plugin(import_plugin_throttling2.throttling);
 var ScheduleHandler = class {
   constructor() {
@@ -525,6 +527,10 @@ var ScheduleHandler = class {
   }
   unassignIssue(issue) {
     return __async(this, null, function* () {
+      var _a;
+      const body = import_mustache2.default.render(core2.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */), {
+        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login
+      });
       return Promise.all([
         this.octokit.request(
           "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
@@ -545,6 +551,18 @@ var ScheduleHandler = class {
             repo: this.context.repo.repo,
             issue_number: issue == null ? void 0 : issue.number,
             name: this.assignedLabel,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        ),
+        this.octokit.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            body,
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }

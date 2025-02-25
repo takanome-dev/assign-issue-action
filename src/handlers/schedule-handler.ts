@@ -3,6 +3,7 @@ import * as core from '@actions/core';
 import { context } from '@actions/github';
 import { Octokit } from '@octokit/core';
 import { throttling } from '@octokit/plugin-throttling';
+import mustache from 'mustache';
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 import { GhIssue } from '../types';
@@ -95,6 +96,10 @@ export default class ScheduleHandler {
   }
 
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
+    const body = mustache.render(core.getInput(INPUTS.UNASSIGNED_COMMENT), {
+      handle: issue?.assignee?.login,
+    });
+
     return Promise.all([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
@@ -115,6 +120,18 @@ export default class ScheduleHandler {
           repo: this.context.repo.repo,
           issue_number: issue?.number!,
           name: this.assignedLabel,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: issue?.number!,
+          body,
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },

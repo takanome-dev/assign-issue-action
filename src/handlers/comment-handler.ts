@@ -143,6 +143,7 @@ export default class CommentHandler {
       INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
       {
         handle: this.comment?.user?.login,
+        trigger: core.getInput(INPUTS.SELF_ASSIGN_CMD),
       },
     );
   }
