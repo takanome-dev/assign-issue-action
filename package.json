@@ -17,7 +17,7 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "all": "npm run format && npm run lint && npm run test && npm run bundle",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
@@ -56,7 +56,7 @@
     "eslint-plugin-github": "4.10.2",
     "eslint-plugin-jest": "27.9.0",
     "eslint-plugin-prettier": "^5.0.0",
-    "husky": "8.0.3",
+    "husky": "9.1.7",
     "jest": "29.7.0",
     "js-yaml": "4.1.0",
     "lint-staged": "15.1.0",
