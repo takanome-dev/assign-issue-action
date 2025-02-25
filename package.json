@@ -17,7 +17,7 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "all": "npm run format && npm run lint && npm run test && npm run bundle",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
