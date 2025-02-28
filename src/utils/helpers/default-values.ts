@@ -8,7 +8,6 @@ import path from 'path';
  */
 export function getDefaultValues() {
   const yaml = fs.readFileSync(
-    // eslint-disable-next-line no-undef
     path.join(__dirname, '../../../action.yml'),
     'utf8',
   );
