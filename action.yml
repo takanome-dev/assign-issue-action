@@ -90,4 +90,4 @@ inputs:
     default: |
       👋 Hey @{{ handle }}, it looks like you're interested in working on this issue! 🎉
 
-      If you'd like to take on this issue, please use the command `/assign-me` to assign yourself.
+      If you'd like to take on this issue, please use the command `{{ trigger }}` to assign yourself.

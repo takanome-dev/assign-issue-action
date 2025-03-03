@@ -6,6 +6,7 @@ export interface AlreadyAssignedCommentArg {
 
 export interface AssignmentInterestCommentArg {
   handle: string;
+  trigger: string;
 }
 
 export interface AssignUserCommentArg {
