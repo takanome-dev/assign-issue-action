@@ -38872,7 +38872,7 @@ var CommentHandler = class {
     const maintainers = maintainersInput.split(",");
     const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
     if (enableAutoSuggestion && this._contribution_phrases().some(
-      (phrase) => body.includes(phrase.toLowerCase())
+      (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
     )) {
       core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
       return this.$_handle_assignment_interest();
@@ -39053,13 +39053,7 @@ var CommentHandler = class {
         if (userHandleMatch && userHandleMatch[1]) {
           const userHandle = userHandleMatch[1];
           if (((_e = (_d = this.issue) == null ? void 0 : _d.assignee) == null ? void 0 : _e.login) === userHandle) {
-            yield Promise.all([
-              this._remove_assignee(),
-              this._create_comment(
-                "unassigned_comment" /* UNASSIGNED_COMMENT */,
-                { handle: userHandle }
-              )
-            ]);
+            yield this._remove_assignee();
             core.setOutput("unassigned", "yes");
             core.setOutput("unassigned_issues", [(_f = this.issue) == null ? void 0 : _f.number]);
             return core.info(
@@ -39187,8 +39181,11 @@ var CommentHandler = class {
     return [
       "Assign this issue to me",
       "I would like to work on this issue",
+      "I would like to contribute",
       "Can I take on this issue",
+      "Can I take up this issue",
       "May I work on this issue",
+      "May I do this feature",
       "I'm keen to have a go",
       "I am here to do a university assignment",
       "I hope to contribute to this issue",
@@ -39197,11 +39194,17 @@ var CommentHandler = class {
       "I would be happy to pick this up",
       "I want to take this issue",
       "I have read through this issue and want to contribute",
+      "Is this issue still open",
       "Is this issue still open for contribution",
       "Hi, can I take this issue",
       "I would love to work on this issue",
+      "I would like to work on this",
       "Hey, I'd like to be assigned to this issue",
-      "Please assign me to this issue"
+      "Please assign me to this issue",
+      "Please assign it to me",
+      "Please assign to me",
+      "Please assign me",
+      "Assign me this issue"
     ];
   }
 };
