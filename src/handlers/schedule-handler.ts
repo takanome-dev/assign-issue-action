@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import * as core from '@actions/core';
 import { context } from '@actions/github';
 import { Octokit } from '@octokit/core';
@@ -62,6 +61,9 @@ export default class ScheduleHandler {
       core.info(`✅ Done processing issue #${issue.number}`);
     }
 
+    core.setOutput('unassigned_issues', [
+      ...issues.map((issue) => issue.number),
+    ]);
     core.info(`✅ Done processing cron job`);
   }
 

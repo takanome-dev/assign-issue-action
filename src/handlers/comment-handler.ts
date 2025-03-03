@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
 import { throttling } from '@octokit/plugin-throttling';
@@ -208,10 +207,13 @@ export default class CommentHandler {
       ]);
 
       core.info(`🤖 Done issue unassignment!`);
-      return core.setOutput('unassigned', 'yes');
+      core.setOutput('unassigned', 'yes');
+      core.setOutput('unassigned_issues', [this.issue?.number]);
+      return;
     }
 
     core.setOutput('unassigned', 'no');
+    core.setOutput('unassigned_issues', []);
     return core.info(
       `🤖 Commenter is different from the assignee, ignoring...`,
     );
@@ -330,6 +332,7 @@ export default class CommentHandler {
           ]);
 
           core.setOutput('unassigned', 'yes');
+          core.setOutput('unassigned_issues', [this.issue?.number]);
           return core.info(
             `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
           );
@@ -337,12 +340,14 @@ export default class CommentHandler {
 
         // TODO: post a comment to the issue
         core.setOutput('unassigned', 'no');
+        core.setOutput('unassigned_issues', []);
         return core.info(
           `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
         );
       } else {
         // TODO: add a comment?
         core.setOutput('unassigned', 'no');
+        core.setOutput('unassigned_issues', []);
         return core.info(`No valid user handle found after /assign command`);
       }
     }
