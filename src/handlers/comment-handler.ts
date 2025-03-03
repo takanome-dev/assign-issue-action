@@ -97,7 +97,7 @@ export default class CommentHandler {
     if (
       enableAutoSuggestion &&
       this._contribution_phrases().some((phrase) =>
-        body.includes(phrase.toLowerCase()),
+        body.toLowerCase().includes(phrase.toLowerCase()),
       )
     ) {
       core.info(`🤖 Comment indicates interest in contribution: ${body}`);
@@ -467,6 +467,7 @@ export default class CommentHandler {
     return [
       'Assign this issue to me',
       'I would like to work on this issue',
+      'I would like to contribute',
       'Can I take on this issue',
       'May I work on this issue',
       "I'm keen to have a go",
@@ -477,11 +478,13 @@ export default class CommentHandler {
       'I would be happy to pick this up',
       'I want to take this issue',
       'I have read through this issue and want to contribute',
+      'Is this issue still open',
       'Is this issue still open for contribution',
       'Hi, can I take this issue',
       'I would love to work on this issue',
       "Hey, I'd like to be assigned to this issue",
       'Please assign me to this issue',
+      'Please assign it to me',
     ];
   }
 }
