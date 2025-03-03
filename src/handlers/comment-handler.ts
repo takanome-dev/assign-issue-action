@@ -323,14 +323,7 @@ export default class CommentHandler {
         const userHandle = userHandleMatch[1];
 
         if (this.issue?.assignee?.login === userHandle) {
-          await Promise.all([
-            this._remove_assignee(),
-            this._create_comment<UnAssignUserCommentArg>(
-              INPUTS.UNASSIGNED_COMMENT,
-              { handle: userHandle },
-            ),
-          ]);
-
+          await this._remove_assignee();
           core.setOutput('unassigned', 'yes');
           core.setOutput('unassigned_issues', [this.issue?.number]);
           return core.info(
@@ -469,7 +462,9 @@ export default class CommentHandler {
       'I would like to work on this issue',
       'I would like to contribute',
       'Can I take on this issue',
+      'Can I take up this issue',
       'May I work on this issue',
+      'May I do this feature',
       "I'm keen to have a go",
       'I am here to do a university assignment',
       'I hope to contribute to this issue',
@@ -482,9 +477,13 @@ export default class CommentHandler {
       'Is this issue still open for contribution',
       'Hi, can I take this issue',
       'I would love to work on this issue',
+      'I would like to work on this',
       "Hey, I'd like to be assigned to this issue",
       'Please assign me to this issue',
       'Please assign it to me',
+      'Please assign to me',
+      'Please assign me',
+      'Assign me this issue',
     ];
   }
 }
