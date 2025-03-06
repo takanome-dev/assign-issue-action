@@ -14,7 +14,7 @@ Enable commands that streamline issue assignments:
 
 It can also unassign issues that have been assigned for a configured amount of time.
 
-## 🚀 Usage
+## 💻 Usage
 
 Create a workflow (eg: `.github/workflows/assign.yml` learn more about [Creating a Workflow file](https://docs.github.com/en/actions/using-workflows#creating-a-workflow-file)):
 
@@ -63,6 +63,16 @@ Various inputs are defined in action.yml to let you configure the action:
 | `already_assigned_comment`      | The comment posted when a user tries to assign themselves to an issue that is already assigned                                                                                                              | `👋 Hey @{{ handle }}, this issue is already assigned to @{{ assignee }}. [!NOTE] ⏳ If the issue isn't closed within **{{ total_days }} days**, it will be automatically unassigned. A maintainer can also add you to the list of assignees or swap you with the current assignee.`                                                       |
 | `unassigned_comment`            | The comment posted after a user is unassigned from an issue.                                                                                                                                                | `👋 Hey @{{ handle }}, you've been automatically unassigned from this issue due to inactivity.[!NOTE] If you'd like to be re-assigned, just leave another comment or ask a maintainer to assign you again. If you're still actively working on the issue, let us know by commenting, and we can pin it to prevent automatic unassignment.` |
 | `assignment_suggestion_comment` | The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.                                                                                         | `👋 Hey @{{ handle }}, it looks like you're interested in working on this issue! 🎉 If you'd like to take on this issue, please use the command /assign-me to assign yourself.`                                                                                                                                                            |
+
+## Outputs
+
+The action provides the following outputs that can be used in subsequent workflow steps:
+
+| Name                | Description                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `assigned`          | Returns 'yes' if an issue was successfully assigned, 'no' otherwise              |
+| `unassigned`        | Returns 'yes' if an issue was successfully unassigned, 'no' otherwise            |
+| `unassigned_issues` | An array containing the issue numbers that were unassigned during the action run |
 
 ## ✏️ Contributing
 
