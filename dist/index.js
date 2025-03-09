@@ -38877,10 +38877,10 @@ var CommentHandler = class {
       core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
       return this.$_handle_assignment_interest();
     }
-    if (body === selfAssignCmd) {
+    if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
     }
-    if (body === selfUnassignCmd) {
+    if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
       return this.$_handle_self_unassignment();
     }
     if (maintainers.length > 0) {
@@ -39180,8 +39180,11 @@ var CommentHandler = class {
   _contribution_phrases() {
     return [
       "Assign this issue to me",
-      "I would like to work on this issue",
-      "I would like to contribute",
+      "Assign it to me",
+      "Assign to me",
+      "Assign me",
+      "Assign me this issue",
+      "Assign this for me",
       "Can I take on this issue",
       "Can I take up this issue",
       "May I work on this issue",
@@ -39190,21 +39193,16 @@ var CommentHandler = class {
       "I am here to do a university assignment",
       "I hope to contribute to this issue",
       "Can I be assigned to this issue",
-      "Is this issue available to work on",
-      "I would be happy to pick this up",
-      "I want to take this issue",
-      "I have read through this issue and want to contribute",
-      "Is this issue still open",
-      "Is this issue still open for contribution",
-      "Hi, can I take this issue",
-      "I would love to work on this issue",
-      "I would like to work on this",
-      "Hey, I'd like to be assigned to this issue",
-      "Please assign me to this issue",
-      "Please assign it to me",
-      "Please assign to me",
-      "Please assign me",
-      "Assign me this issue"
+      "Available to work on",
+      "Still open for contribution",
+      "Can I take this issue",
+      "Would love to work on this issue",
+      "Would be happy to pick this up",
+      "Want to take this issue",
+      "Want to contribute",
+      "Would like to work on this",
+      "I'd like to be assigned to",
+      "Would like to contribute"
     ];
   }
 };
@@ -39357,5 +39355,4 @@ var ScheduleHandler = class {
     if (error instanceof Error) return (0,core.setFailed)(error.message);
   }
 }))();
-//! not needed if we have list of allowed users who can use the command
 
