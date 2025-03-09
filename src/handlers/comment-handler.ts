@@ -104,11 +104,11 @@ export default class CommentHandler {
       return this.$_handle_assignment_interest();
     }
 
-    if (body === selfAssignCmd) {
+    if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
     }
 
-    if (body === selfUnassignCmd) {
+    if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
       return this.$_handle_self_unassignment();
     }
 
@@ -231,28 +231,6 @@ export default class CommentHandler {
       const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
       if (userHandleMatch && userHandleMatch[1]) {
         const userHandle = userHandleMatch[1] as string;
-
-        //! not needed if we have list of allowed users who can use the command
-        // if (this.issue?.assignee) {
-        //   const template = `
-        //   👋 Hey @{{ user }}, this issue is already assigned to @{{ assignee }}.
-        //   You can contact a maintainer so that they can add you to the list of assignees or swap you with the current assignee.
-        //   `;
-
-        //   const body = mustache.render(template, {
-        //     user: this.comment?.user.login,
-        //     assignee: this.issue.assignee?.login,
-        //   });
-
-        //   await this.client.rest.issues.createComment({
-        //     ...this.context.repo,
-        //     issue_number: this.issue?.number as number,
-        //     body,
-        //   });
-        //   return core.info(
-        //     `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-        //   );
-        // }
 
         core.info(
           `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
@@ -459,8 +437,11 @@ export default class CommentHandler {
   private _contribution_phrases() {
     return [
       'Assign this issue to me',
-      'I would like to work on this issue',
-      'I would like to contribute',
+      'Assign it to me',
+      'Assign to me',
+      'Assign me',
+      'Assign me this issue',
+      'Assign this for me',
       'Can I take on this issue',
       'Can I take up this issue',
       'May I work on this issue',
@@ -469,21 +450,16 @@ export default class CommentHandler {
       'I am here to do a university assignment',
       'I hope to contribute to this issue',
       'Can I be assigned to this issue',
-      'Is this issue available to work on',
-      'I would be happy to pick this up',
-      'I want to take this issue',
-      'I have read through this issue and want to contribute',
-      'Is this issue still open',
-      'Is this issue still open for contribution',
-      'Hi, can I take this issue',
-      'I would love to work on this issue',
-      'I would like to work on this',
-      "Hey, I'd like to be assigned to this issue",
-      'Please assign me to this issue',
-      'Please assign it to me',
-      'Please assign to me',
-      'Please assign me',
-      'Assign me this issue',
+      'Available to work on',
+      'Still open for contribution',
+      'Can I take this issue',
+      'Would love to work on this issue',
+      'Would be happy to pick this up',
+      'Want to take this issue',
+      'Want to contribute',
+      'Would like to work on this',
+      "I'd like to be assigned to",
+      'Would like to contribute',
     ];
   }
 }
