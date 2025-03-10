@@ -65,7 +65,7 @@ inputs:
 
       > [!NOTE]
       > ⏳ Please note, you will be automatically unassigned if the issue isn't closed within **{{ total_days }} days** (by **{{ unassigned_date }}**).
-      > A maintainer can also add the "**{{{ pin_label }}}**"" label to prevent automatic unassignment.
+      > A maintainer can also add the "**{{{ pin_label }}}**" label to prevent automatic unassignment.
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
