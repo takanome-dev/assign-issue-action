@@ -91,6 +91,12 @@ inputs:
       👋 Hey @{{ handle }}, it looks like you're interested in working on this issue! 🎉
 
       If you'd like to take on this issue, please use the command `{{{ trigger }}}` to assign yourself.
+  block_assignment:
+    description: Whether to block self-assignment after unassignment
+    default: 'true'
+  block_assignment_comment:
+    description: Message shown when blocked from self-assignment
+    default: 'You cannot assign yourself to this issue again. Please ask a maintainer to do it.'
 
 outputs:
   assigned:

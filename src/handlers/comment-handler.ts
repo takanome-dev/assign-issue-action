@@ -153,9 +153,46 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+    const blockAssignment = core.getBooleanInput('block_assignment');
+
+    // Check if user was previously unassigned
+    const comments = await this.octokit.request(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/comments',
+      {
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        issue_number: this.issue?.number!,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    );
+
+    const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+    const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
+    const userHandle = this.comment?.user?.login;
+
+    const wasUnassigned = comments.data.some((comment) => {
+      const hasManualUnassign = comment.body?.includes(
+        `${unassignCmd} @${userHandle}`,
+      );
+      const hasAutoUnassign = comment.body?.includes(
+        mustache.render(unassignedComment, { handle: userHandle }),
+      );
+      return hasManualUnassign || hasAutoUnassign;
+    });
+
+    if (blockAssignment && wasUnassigned) {
+      await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
+        handle: this.comment?.user?.login,
+      });
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`,
+      );
+    }
 
     if (this.issue?.assignee) {
-      // await this._already_assigned_comment(daysUntilUnassign);
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
