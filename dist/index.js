@@ -38839,7 +38839,7 @@ var CommentHandler = class {
     });
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     core.info(
       `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
     );
@@ -38883,26 +38883,24 @@ var CommentHandler = class {
     if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
       return this.$_handle_self_unassignment();
     }
-    if (maintainers.length > 0) {
-      if (maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
-        if (body.startsWith(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
-        if (body.startsWith(unassignCommenterCmd)) {
-          return this.$_handle_user_unassignment(unassignCommenterCmd);
-        }
-      } else {
+    if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+      if (!maintainersInput) {
         return core.info(
-          `\u{1F916} Ignoring comment because the commenter is not in the list of maintainers specified in the config file`
+          `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
         );
       }
-    } else {
-      return core.info(
-        `\u{1F916} Ignoring comment because the "maintainers" input in the config file is empty`
-      );
+      if (!maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
+        return core.info(
+          `\u{1F916} Ignoring maintainer command because user @${(_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login} is not in the maintainers list`
+        );
+      }
+      if (body.includes(assignCommenterCmd)) {
+        return this.$_handle_user_assignment(assignCommenterCmd);
+      }
+      return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
     return core.info(
-      `\u{1F916} Ignoring comment: ${(_h = this.context.payload.comment) == null ? void 0 : _h.id} because it does not contain a supported command.`
+      `\u{1F916} Ignoring comment: ${(_j = this.context.payload.comment) == null ? void 0 : _j.id} because it does not contain a supported command.`
     );
   }
   $_handle_assignment_interest() {
