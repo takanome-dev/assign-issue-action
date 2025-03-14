@@ -61,42 +61,80 @@ inputs:
     description: >
       The comment posted after a user has assigned themselves to an issue.
     default: |
-      👋 Hey @{{ handle }}, thanks for your interest in this issue! 🎉
+      ### 🎉 Issue Assignment Confirmation
 
-      > [!NOTE]
-      > ⏳ Please note, you will be automatically unassigned if the issue isn't closed within **{{ total_days }} days** (by **{{ unassigned_date }}**).
-      > A maintainer can also add the "**{{{ pin_label }}}**"" label to prevent automatic unassignment.
+      Hey @{{ handle }}, thanks for taking on this issue!
+
+      > [!IMPORTANT]
+      > This issue will be automatically unassigned if not closed within **{{ total_days }} days** (by **{{ unassigned_date }})**.
+
+      <details>
+      <summary>ℹ️ Important information</summary>
+
+      - To prevent automatic unassignment, a maintainer can add the **{{{ pin_label }}}** label
+      - You can unassign yourself at any time by commenting with `/unassign-me`
+      - Updates and status reports are encouraged to show progress
+      </details>
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
-      👋 Hey @{{ handle }}, this issue is already assigned to @{{ assignee }}.
+      ### ⚠️ Issue Already Assigned
+
+      Hi @{{ handle }}, this issue is currently assigned to @{{ assignee }}.
 
       > [!NOTE]
-      > ⏳ If the issue isn't closed within **{{ total_days }} days**, it will be automatically unassigned.
-      > A maintainer can also add you to the list of assignees or swap you with the current assignee.
+      > If no progress is made within **{{ total_days }} days**, the issue will be automatically unassigned.
+
+      <details>
+      <summary>Options for contributors</summary>
+
+      - **Wait for availability**: The issue may become available if auto-unassigned
+      - **Collaborate**: You can ask @{{ assignee }} if they want help
+      - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
+      </details>
   unassigned_comment:
     description: >
       The comment posted after a user is unassigned from an issue.
     default: |
-      👋 Hey @{{ handle }}, you've been automatically unassigned from this issue due to inactivity.
+      ### 📋 Assignment Update
 
-      > [!NOTE]
-      > If you'd like to be re-assigned, just leave another comment or ask a maintainer to assign you again.
-      > If you're still actively working on the issue, let us know by commenting, and we can pin it to prevent automatic unassignment.
+      Hi @{{ handle }}, you are no longer assigned to this issue.
+
+      <details open>
+      <summary>Next steps</summary>
+
+      **If you still want to work on this:**
+      - Comment with `/assign-me` to request reassignment
+      - Ask a maintainer to assign you again
+      - If you're making progress, a maintainer can add the pin label to prevent future automatic unassignment
+      </details>
   assignment_suggestion_comment:
     description: >
       The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.
     default: |
-      👋 Hey @{{ handle }}, it looks like you're interested in working on this issue! 🎉
+      ### 👋 Interested in Contributing?
 
-      If you'd like to take on this issue, please use the command `{{{ trigger }}}` to assign yourself.
+      Hi @{{ handle }}, it looks like you're interested in working on this issue!
+
+      > [!TIP]
+      > Use the command `{{{ trigger }}}` to assign yourself to this issue.
+
+      Once assigned, you can start working on it right away. We appreciate your contribution!
   block_assignment:
     description: Whether to block self-assignment after unassignment
     default: 'true'
   block_assignment_comment:
     description: Message shown when blocked from self-assignment
-    default: 'You cannot assign yourself to this issue again. Please ask a maintainer to do it.'
+    default: |
+      ### ⚠️ Reassignment Blocked
+
+      Hi @{{ handle }}, you cannot assign yourself to this issue again.
+
+      > [!NOTE]
+      > Since you were previously unassigned from this issue, a maintainer needs to approve your reassignment.
+
+      Please ask a maintainer to assign you if you'd like to continue working on this issue.
 
 outputs:
   assigned:
