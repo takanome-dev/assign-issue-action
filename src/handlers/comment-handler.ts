@@ -143,7 +143,24 @@ export default class CommentHandler {
     );
   }
 
-  private $_handle_assignment_interest() {
+  private async $_handle_assignment_interest() {
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+
+    if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+      await this._create_comment<AlreadyAssignedCommentArg>(
+        INPUTS.ALREADY_ASSIGNED_COMMENT,
+        {
+          unassigned_date: String(daysUntilUnassign),
+          handle: this.comment?.user?.login,
+          assignee: this.issue?.assignee?.login,
+        },
+      );
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+      );
+    }
+
     return this._create_comment<AssignmentInterestCommentArg>(
       INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
       {
@@ -485,6 +502,7 @@ export default class CommentHandler {
       'Assign me',
       'Assign me this issue',
       'Assign this for me',
+      'Please assign',
       'Can I take on this issue',
       'Can I take up this issue',
       'May I work on this issue',
