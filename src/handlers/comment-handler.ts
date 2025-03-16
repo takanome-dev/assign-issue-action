@@ -496,6 +496,7 @@ export default class CommentHandler {
 
   private _contribution_phrases() {
     return [
+      'asssign-me',
       'Assign this issue to me',
       'Assign it to me',
       'Assign to me',
@@ -511,6 +512,7 @@ export default class CommentHandler {
       "I'm keen to have a go",
       'I am here to do a university assignment',
       'I hope to contribute to this issue',
+      'I would like to work on this issue',
       'Interested to work',
       'May I work on this issue',
       'May I do this feature',
