@@ -94,6 +94,7 @@ export default class CommentHandler {
 
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
+    // Handle auto-suggestion first
     if (
       enableAutoSuggestion &&
       this._contribution_phrases().some((phrase) =>
@@ -104,6 +105,7 @@ export default class CommentHandler {
       return this.$_handle_assignment_interest();
     }
 
+    // Handle self-assignment commands (available to all users)
     if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
     }
@@ -112,24 +114,28 @@ export default class CommentHandler {
       return this.$_handle_self_unassignment();
     }
 
-    if (maintainers.length > 0) {
-      if (maintainers.includes(this.comment?.user?.login)) {
-        if (body.startsWith(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
-
-        if (body.startsWith(unassignCommenterCmd)) {
-          return this.$_handle_user_unassignment(unassignCommenterCmd);
-        }
-      } else {
+    // Handle maintainer-only commands
+    if (
+      body.includes(assignCommenterCmd) ||
+      body.includes(unassignCommenterCmd)
+    ) {
+      if (!maintainersInput) {
         return core.info(
-          `🤖 Ignoring comment because the commenter is not in the list of maintainers specified in the config file`,
+          `🤖 Ignoring maintainer command because the "maintainers" input is empty`,
         );
       }
-    } else {
-      return core.info(
-        `🤖 Ignoring comment because the "maintainers" input in the config file is empty`,
-      );
+
+      if (!maintainers.includes(this.comment?.user?.login)) {
+        return core.info(
+          `🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`,
+        );
+      }
+
+      if (body.includes(assignCommenterCmd)) {
+        return this.$_handle_user_assignment(assignCommenterCmd);
+      }
+
+      return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
 
     return core.info(
@@ -137,7 +143,24 @@ export default class CommentHandler {
     );
   }
 
-  private $_handle_assignment_interest() {
+  private async $_handle_assignment_interest() {
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+
+    if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+      await this._create_comment<AlreadyAssignedCommentArg>(
+        INPUTS.ALREADY_ASSIGNED_COMMENT,
+        {
+          unassigned_date: String(daysUntilUnassign),
+          handle: this.comment?.user?.login,
+          assignee: this.issue?.assignee?.login,
+        },
+      );
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+      );
+    }
+
     return this._create_comment<AssignmentInterestCommentArg>(
       INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
       {
