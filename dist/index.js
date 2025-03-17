@@ -39228,31 +39228,34 @@ var CommentHandler = class {
   }
   _contribution_phrases() {
     return [
+      "asssign-me",
       "Assign this issue to me",
       "Assign it to me",
       "Assign to me",
       "Assign me",
       "Assign me this issue",
       "Assign this for me",
-      "Please assign",
+      "Available to work on",
+      "Can I be assigned to this issue",
       "Can I take on this issue",
+      "Can I take this issue",
       "Can I take up this issue",
-      "May I work on this issue",
-      "May I do this feature",
+      "I'd like to be assigned to",
       "I'm keen to have a go",
       "I am here to do a university assignment",
       "I hope to contribute to this issue",
-      "Can I be assigned to this issue",
-      "Available to work on",
+      "I would like to work on this issue",
+      "Interested to work",
+      "May I work on this issue",
+      "May I do this feature",
+      "Please assign",
       "Still open for contribution",
-      "Can I take this issue",
-      "Would love to work on this issue",
-      "Would be happy to pick this up",
       "Want to take this issue",
       "Want to contribute",
+      "Would be happy to pick this up",
       "Would like to work on this",
-      "I'd like to be assigned to",
-      "Would like to contribute"
+      "Would like to contribute",
+      "Would love to work on this issue"
     ];
   }
 };
