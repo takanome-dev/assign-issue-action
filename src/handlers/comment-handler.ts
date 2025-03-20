@@ -511,6 +511,8 @@ export default class CommentHandler {
       "I'd like to be assigned to",
       "I'm keen to have a go",
       'I am here to do a university assignment',
+      'I am interested in taking on this issue',
+      'I am interested in the issue',
       'I hope to contribute to this issue',
       'I would like to work on this issue',
       'Interested to work',
