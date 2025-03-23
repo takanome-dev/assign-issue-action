@@ -505,6 +505,7 @@ export default class CommentHandler {
       'Assign this for me',
       'Available to work on',
       'Can I be assigned to this issue',
+      'can I kindly work on this issue',
       'Can I take on this issue',
       'Can I take this issue',
       'Can I take up this issue',
