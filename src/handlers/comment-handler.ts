@@ -510,6 +510,7 @@ export default class CommentHandler {
       'Can I take this issue',
       'Can I take up this issue',
       'Can I work on it',
+      'Could I get reassigned',
       "I'd like to be assigned to",
       "I'm keen to have a go",
       'I am here to do a university assignment',
