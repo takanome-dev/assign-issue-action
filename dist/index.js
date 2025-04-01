@@ -33389,10 +33389,10 @@ __webpack_unused_export__ = defaultContentType
 /************************************************************************/
 var __webpack_exports__ = {};
 
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(7484);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(3228);
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(7484);
 ;// CONCATENATED MODULE: ./node_modules/universal-user-agent/index.js
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
@@ -39306,19 +39306,37 @@ var ScheduleHandler = class {
   handle_unassignments() {
     return __async(this, null, function* () {
       const issues = yield this.getIssues();
-      core.info(`\u2699 Processing ${issues.length} issues:`);
+      core.info(`\u2699 Processing ${issues.length} issues for unassignment:`);
+      const unassignedIssues = [];
       for (const issue of issues) {
         if (!issue.assignee) continue;
         core.info(
-          `\u{1F517} UnAssigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
+          `\u{1F517} Unassigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
         );
         yield this.unassignIssue(issue);
+        unassignedIssues.push(issue.number);
         core.info(`\u2705 Done processing issue #${issue.number}`);
       }
-      core.setOutput("unassigned_issues", [
-        ...issues.map((issue) => issue.number)
-      ]);
+      const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
+      if (enableReminder === "true") {
+        yield this.send_reminders();
+      }
+      core.setOutput("unassigned_issues", unassignedIssues);
       core.info(`\u2705 Done processing cron job`);
+    });
+  }
+  send_reminders() {
+    return __async(this, null, function* () {
+      const reminderIssues = yield this.get_issues_for_reminder();
+      core.info(`\u2699 Processing ${reminderIssues.length} issues for reminders:`);
+      for (const issue of reminderIssues) {
+        if (!issue.assignee) continue;
+        core.info(
+          `\u{1F4EC} Sending reminder to @${issue.assignee.login} for issue #${issue.number}`
+        );
+        yield this.send_reminder_notification(issue);
+        core.info(`\u2705 Done sending reminder for issue #${issue.number}`);
+      }
     });
   }
   getIssues() {
@@ -39399,6 +39417,86 @@ var ScheduleHandler = class {
     const date = new Date(+/* @__PURE__ */ new Date() - totalDaysInMilliseconds);
     return new Date(date).toISOString().substring(0, 10);
   }
+  get_issues_for_reminder() {
+    return __async(this, null, function* () {
+      const { owner, repo } = this.context.repo;
+      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
+      let reminderDays = core.getInput("reminder_days" /* REMINDER_DAYS */);
+      let daysBeforeReminder;
+      if (reminderDays === "auto") {
+        daysBeforeReminder = Math.floor(totalDays / 2);
+      } else {
+        daysBeforeReminder = totalDays - Number(reminderDays);
+      }
+      daysBeforeReminder = Math.max(1, daysBeforeReminder);
+      const timestamp = this.since(daysBeforeReminder);
+      core.info(`\u{1F916} Searching issues for reminder - updated since ${timestamp}`);
+      const q = [
+        `label:"${this.assignedLabel}"`,
+        `-label:"${this.exemptLabel}"`,
+        '-label:"\u{1F514} reminder-sent"',
+        "is:issue",
+        `repo:${owner}/${repo}`,
+        "assignee:*",
+        "is:open",
+        `updated:<${timestamp}`
+      ];
+      const issues = yield this.octokit.request(
+        `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
+        {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      );
+      return issues.data.items;
+    });
+  }
+  send_reminder_notification(issue) {
+    return __async(this, null, function* () {
+      var _a;
+      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
+      let reminderDays = core.getInput("reminder_days" /* REMINDER_DAYS */);
+      let daysRemaining;
+      if (reminderDays === "auto") {
+        daysRemaining = Math.ceil(totalDays / 2);
+      } else {
+        daysRemaining = Number(reminderDays);
+      }
+      const body = mustache_mustache.render(core.getInput("reminder_comment" /* REMINDER_COMMENT */), {
+        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        days_remaining: daysRemaining,
+        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
+      });
+      return Promise.all([
+        this.octokit.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            labels: ["\u{1F514} reminder-sent"],
+            // Add a "reminder sent" label to avoid sending multiple reminders
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        ),
+        this.octokit.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            body,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        )
+      ]);
+    });
+  }
 };
 
 // src/index.ts
@@ -39410,12 +39508,25 @@ var ScheduleHandler = class {
       yield cmtHandler.handle_issue_comment();
     } else if (event === "workflow_dispatch" || event === "schedule") {
       const scheduleHandler = new ScheduleHandler();
-      yield scheduleHandler.handle_unassignments();
+      if (event === "schedule") {
+        yield scheduleHandler.handle_unassignments();
+      } else if (event === "workflow_dispatch") {
+        const action = core.getInput("workflow_dispatch_action" /* WORKFLOW_DISPATCH_ACTION */) || "all";
+        if (action === "all" || action === "unassign") {
+          yield scheduleHandler.handle_unassignments();
+        }
+        if (action === "all" || action === "remind") {
+          const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
+          if (enableReminder === "true") {
+            yield scheduleHandler.send_reminders();
+          }
+        }
+      }
     } else {
       return;
     }
   } catch (error) {
-    if (error instanceof Error) return (0,core.setFailed)(error.message);
+    if (error instanceof Error) return core.setFailed(error.message);
   }
 }))();
 
