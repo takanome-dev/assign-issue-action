@@ -100,6 +100,7 @@ export default class ScheduleHandler {
   private async unassignIssue(issue: GhIssue | WebhookPayload['issue']) {
     const body = mustache.render(core.getInput(INPUTS.UNASSIGNED_COMMENT), {
       handle: issue?.assignee?.login,
+      pin_label: core.getInput(INPUTS.PIN_LABEL),
     });
 
     return Promise.all([

@@ -262,7 +262,10 @@ export default class CommentHandler {
         this._remove_assignee(),
         this._create_comment<UnAssignUserCommentArg>(
           INPUTS.UNASSIGNED_COMMENT,
-          { handle: this.comment?.user?.login },
+          {
+            handle: this.comment?.user?.login,
+            pin_label: core.getInput(INPUTS.PIN_LABEL),
+          },
         ),
       ]);
 
