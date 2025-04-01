@@ -33389,10 +33389,10 @@ __webpack_unused_export__ = defaultContentType
 /************************************************************************/
 var __webpack_exports__ = {};
 
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(7484);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(3228);
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(7484);
 ;// CONCATENATED MODULE: ./node_modules/universal-user-agent/index.js
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
@@ -38839,7 +38839,7 @@ var CommentHandler = class {
     });
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     core.info(
       `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
     );
@@ -38871,6 +38871,12 @@ var CommentHandler = class {
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
     const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
+    if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+      core.info(
+        `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
+      );
+      return;
+    }
     if (enableAutoSuggestion && this._contribution_phrases().some(
       (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
     )) {
@@ -38889,9 +38895,9 @@ var CommentHandler = class {
           `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
         );
       }
-      if (!maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
+      if (!maintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
         return core.info(
-          `\u{1F916} Ignoring maintainer command because user @${(_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login} is not in the maintainers list`
+          `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
         );
       }
       if (body.includes(assignCommenterCmd)) {
@@ -38900,7 +38906,7 @@ var CommentHandler = class {
       return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
     return core.info(
-      `\u{1F916} Ignoring comment: ${(_j = this.context.payload.comment) == null ? void 0 : _j.id} because it does not contain a supported command.`
+      `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
     );
   }
   $_handle_assignment_interest() {
@@ -38932,7 +38938,7 @@ var CommentHandler = class {
   }
   $_handle_self_assignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B;
       core.info(
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
@@ -38985,10 +38991,24 @@ var CommentHandler = class {
           `\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} is already assigned to @${(_q = (_p = this.issue) == null ? void 0 : _p.assignee) == null ? void 0 : _q.login}`
         );
       }
-      core.info(
-        `\u{1F916} Assigning @${(_s = (_r = this.comment) == null ? void 0 : _r.user) == null ? void 0 : _s.login} to issue #${(_t = this.issue) == null ? void 0 : _t.number}`
+      const maxAssignments = parseInt(
+        core.getInput("max_assignments" /* MAX_ASSIGNMENTS */) || "3"
       );
-      core.info(`\u{1F916} Adding comment to issue #${(_u = this.issue) == null ? void 0 : _u.number}`);
+      const assignmentCount = yield this._get_assignment_count();
+      if (assignmentCount >= maxAssignments) {
+        yield this._create_comment("max_assignments_message" /* MAX_ASSIGNMENTS_MESSAGE */, {
+          handle: (_s = (_r = this.comment) == null ? void 0 : _r.user) == null ? void 0 : _s.login,
+          max_assignments: maxAssignments.toString()
+        });
+        core.setOutput("assigned", "no");
+        return core.info(
+          `\u{1F916} User @${(_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login} has reached the maximum number of assignments (${maxAssignments})`
+        );
+      }
+      core.info(
+        `\u{1F916} Assigning @${(_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login} to issue #${(_x = this.issue) == null ? void 0 : _x.number}`
+      );
+      core.info(`\u{1F916} Adding comment to issue #${(_y = this.issue) == null ? void 0 : _y.number}`);
       yield Promise.all([
         this._add_assignee(),
         this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
@@ -38997,11 +39017,11 @@ var CommentHandler = class {
             add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
             "dd LLLL y"
           ),
-          handle: (_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login,
+          handle: (_A = (_z = this.comment) == null ? void 0 : _z.user) == null ? void 0 : _A.login,
           pin_label: core.getInput("pin_label" /* PIN_LABEL */)
         })
       ]);
-      core.info(`\u{1F916} Issue #${(_x = this.issue) == null ? void 0 : _x.number} assigned!`);
+      core.info(`\u{1F916} Issue #${(_B = this.issue) == null ? void 0 : _B.number} assigned!`);
       return core.setOutput("assigned", "yes");
     });
   }
@@ -39016,7 +39036,10 @@ var CommentHandler = class {
           this._remove_assignee(),
           this._create_comment(
             "unassigned_comment" /* UNASSIGNED_COMMENT */,
-            { handle: (_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login }
+            {
+              handle: (_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login,
+              pin_label: core.getInput("pin_label" /* PIN_LABEL */)
+            }
           )
         ]);
         core.info(`\u{1F916} Done issue unassignment!`);
@@ -39226,6 +39249,27 @@ var CommentHandler = class {
       }
     );
   }
+  _get_assignment_count() {
+    return __async(this, null, function* () {
+      var _a, _b;
+      const { owner, repo } = this.context.repo;
+      const query = [
+        `repo:${owner}/${repo}`,
+        "is:issue",
+        "is:open",
+        `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
+      ];
+      const issues = yield this.octokit.request(
+        `GET /search/issues?q=${encodeURIComponent(query.join(" "))}`,
+        {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      );
+      return issues.data.items.length;
+    });
+  }
   _contribution_phrases() {
     return [
       "asssign-me",
@@ -39297,19 +39341,37 @@ var ScheduleHandler = class {
   handle_unassignments() {
     return __async(this, null, function* () {
       const issues = yield this.getIssues();
-      core.info(`\u2699 Processing ${issues.length} issues:`);
+      core.info(`\u2699 Processing ${issues.length} issues for unassignment:`);
+      const unassignedIssues = [];
       for (const issue of issues) {
         if (!issue.assignee) continue;
         core.info(
-          `\u{1F517} UnAssigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
+          `\u{1F517} Unassigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
         );
         yield this.unassignIssue(issue);
+        unassignedIssues.push(issue.number);
         core.info(`\u2705 Done processing issue #${issue.number}`);
       }
-      core.setOutput("unassigned_issues", [
-        ...issues.map((issue) => issue.number)
-      ]);
+      const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
+      if (enableReminder === "true") {
+        yield this.send_reminders();
+      }
+      core.setOutput("unassigned_issues", unassignedIssues);
       core.info(`\u2705 Done processing cron job`);
+    });
+  }
+  send_reminders() {
+    return __async(this, null, function* () {
+      const reminderIssues = yield this.get_issues_for_reminder();
+      core.info(`\u2699 Processing ${reminderIssues.length} issues for reminders:`);
+      for (const issue of reminderIssues) {
+        if (!issue.assignee) continue;
+        core.info(
+          `\u{1F4EC} Sending reminder to @${issue.assignee.login} for issue #${issue.number}`
+        );
+        yield this.send_reminder_notification(issue);
+        core.info(`\u2705 Done sending reminder for issue #${issue.number}`);
+      }
     });
   }
   getIssues() {
@@ -39342,7 +39404,8 @@ var ScheduleHandler = class {
     return __async(this, null, function* () {
       var _a;
       const body = mustache_mustache.render(core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */), {
-        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login
+        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
       });
       return Promise.all([
         this.octokit.request(
@@ -39389,6 +39452,86 @@ var ScheduleHandler = class {
     const date = new Date(+/* @__PURE__ */ new Date() - totalDaysInMilliseconds);
     return new Date(date).toISOString().substring(0, 10);
   }
+  get_issues_for_reminder() {
+    return __async(this, null, function* () {
+      const { owner, repo } = this.context.repo;
+      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
+      let reminderDays = core.getInput("reminder_days" /* REMINDER_DAYS */);
+      let daysBeforeReminder;
+      if (reminderDays === "auto") {
+        daysBeforeReminder = Math.floor(totalDays / 2);
+      } else {
+        daysBeforeReminder = totalDays - Number(reminderDays);
+      }
+      daysBeforeReminder = Math.max(1, daysBeforeReminder);
+      const timestamp = this.since(daysBeforeReminder);
+      core.info(`\u{1F916} Searching issues for reminder - updated since ${timestamp}`);
+      const q = [
+        `label:"${this.assignedLabel}"`,
+        `-label:"${this.exemptLabel}"`,
+        '-label:"\u{1F514} reminder-sent"',
+        "is:issue",
+        `repo:${owner}/${repo}`,
+        "assignee:*",
+        "is:open",
+        `updated:<${timestamp}`
+      ];
+      const issues = yield this.octokit.request(
+        `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
+        {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      );
+      return issues.data.items;
+    });
+  }
+  send_reminder_notification(issue) {
+    return __async(this, null, function* () {
+      var _a;
+      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
+      let reminderDays = core.getInput("reminder_days" /* REMINDER_DAYS */);
+      let daysRemaining;
+      if (reminderDays === "auto") {
+        daysRemaining = Math.ceil(totalDays / 2);
+      } else {
+        daysRemaining = Number(reminderDays);
+      }
+      const body = mustache_mustache.render(core.getInput("reminder_comment" /* REMINDER_COMMENT */), {
+        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        days_remaining: daysRemaining,
+        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
+      });
+      return Promise.all([
+        this.octokit.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            labels: ["\u{1F514} reminder-sent"],
+            // Add a "reminder sent" label to avoid sending multiple reminders
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        ),
+        this.octokit.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            body,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        )
+      ]);
+    });
+  }
 };
 
 // src/index.ts
@@ -39400,12 +39543,25 @@ var ScheduleHandler = class {
       yield cmtHandler.handle_issue_comment();
     } else if (event === "workflow_dispatch" || event === "schedule") {
       const scheduleHandler = new ScheduleHandler();
-      yield scheduleHandler.handle_unassignments();
+      if (event === "schedule") {
+        yield scheduleHandler.handle_unassignments();
+      } else if (event === "workflow_dispatch") {
+        const action = core.getInput("workflow_dispatch_action" /* WORKFLOW_DISPATCH_ACTION */) || "all";
+        if (action === "all" || action === "unassign") {
+          yield scheduleHandler.handle_unassignments();
+        }
+        if (action === "all" || action === "remind") {
+          const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
+          if (enableReminder === "true") {
+            yield scheduleHandler.send_reminders();
+          }
+        }
+      }
     } else {
       return;
     }
   } catch (error) {
-    if (error instanceof Error) return (0,core.setFailed)(error.message);
+    if (error instanceof Error) return core.setFailed(error.message);
   }
 }))();
 
