@@ -36,11 +36,19 @@ export default class ScheduleHandler {
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options) => {
-          // does not retry, only logs a warning
+        onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
+          // Add retry logic for secondary rate limit
           core.warning(
             `⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url} ⚠️`,
           );
+
+          // Retry up to twice for secondary rate limits
+          if (retryCount < 2) {
+            core.warning(
+              `⚠️ Secondary rate limit hit. Retrying after ${retryAfter} seconds! ⚠️`,
+            );
+            return true;
+          }
         },
       },
     });
@@ -49,6 +57,11 @@ export default class ScheduleHandler {
   async handle_unassignments() {
     const issues = await this.getIssues();
     core.info(`⚙ Processing ${issues.length} issues for unassignment:`);
+
+    if (issues.length === 0) {
+      core.info('🔔 No issues found for unassignment');
+      return;
+    }
 
     const unassignedIssues = [];
     for (const issue of issues) {
@@ -76,6 +89,11 @@ export default class ScheduleHandler {
   async send_reminders() {
     const reminderIssues = await this.get_issues_for_reminder();
     core.info(`⚙ Processing ${reminderIssues.length} issues for reminders:`);
+
+    if (reminderIssues.length === 0) {
+      core.info('🔔 No issues found for reminders');
+      return;
+    }
 
     for (const issue of reminderIssues) {
       if (!issue.assignee) continue;
