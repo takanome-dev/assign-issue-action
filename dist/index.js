@@ -38839,7 +38839,7 @@ var CommentHandler = class {
     });
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     core.info(
       `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
     );
@@ -38871,6 +38871,12 @@ var CommentHandler = class {
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
     const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
+    if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+      core.info(
+        `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
+      );
+      return;
+    }
     if (enableAutoSuggestion && this._contribution_phrases().some(
       (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
     )) {
@@ -38889,9 +38895,9 @@ var CommentHandler = class {
           `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
         );
       }
-      if (!maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login)) {
+      if (!maintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
         return core.info(
-          `\u{1F916} Ignoring maintainer command because user @${(_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login} is not in the maintainers list`
+          `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
         );
       }
       if (body.includes(assignCommenterCmd)) {
@@ -38900,7 +38906,7 @@ var CommentHandler = class {
       return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
     return core.info(
-      `\u{1F916} Ignoring comment: ${(_j = this.context.payload.comment) == null ? void 0 : _j.id} because it does not contain a supported command.`
+      `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
     );
   }
   $_handle_assignment_interest() {
@@ -39016,7 +39022,10 @@ var CommentHandler = class {
           this._remove_assignee(),
           this._create_comment(
             "unassigned_comment" /* UNASSIGNED_COMMENT */,
-            { handle: (_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login }
+            {
+              handle: (_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login,
+              pin_label: core.getInput("pin_label" /* PIN_LABEL */)
+            }
           )
         ]);
         core.info(`\u{1F916} Done issue unassignment!`);
@@ -39342,7 +39351,8 @@ var ScheduleHandler = class {
     return __async(this, null, function* () {
       var _a;
       const body = mustache_mustache.render(core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */), {
-        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login
+        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
       });
       return Promise.all([
         this.octokit.request(

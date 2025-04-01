@@ -94,6 +94,18 @@ export default class CommentHandler {
 
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
+    // Ignore quoted replies or maintainers using self-assignment commands
+    if (
+      body.trim().startsWith('>') ||
+      (maintainers.includes(this.comment?.user?.login) &&
+        (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd)))
+    ) {
+      core.info(
+        `🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`,
+      );
+      return;
+    }
+
     // Handle auto-suggestion first
     if (
       enableAutoSuggestion &&
