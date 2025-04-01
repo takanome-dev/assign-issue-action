@@ -520,6 +520,7 @@ export default class CommentHandler {
       'I hope to contribute to this issue',
       'I would like to work on this issue',
       'Interested to work',
+      'is this free to take',
       'May I work on this issue',
       'May I do this feature',
       'Please assign',
