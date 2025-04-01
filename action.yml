@@ -171,6 +171,29 @@ inputs:
       The action to perform when the workflow is triggered manually (all, unassign, remind)
     default: 'all'
 
+  max_assignments:
+    description: 'Maximum number of issues a user can be assigned to at once'
+    required: false
+    default: '3'
+  max_assignments_message:
+    description: 'Message to display when a user has reached their maximum assignments'
+    required: false
+    default: |
+      ### ⚠️ Assignment Limit Reached
+
+      Hi @{{ handle }}, you've reached the maximum number of **{{ max_assignments }}** concurrent assignments.
+
+      > [!NOTE]
+      > Please complete or unassign from your current issues before taking on new ones.
+
+      <details>
+      <summary>Current options</summary>
+
+      - Complete one of your assigned issues and close it
+      - Use `/unassign-me` on an issue you're no longer working on
+      - Ask a maintainer for an exception if this is a special case
+      </details>
+
 outputs:
   assigned:
     description: Boolean indicating if the issue was assigned (yes/no)

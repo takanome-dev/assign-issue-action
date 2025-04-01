@@ -24,4 +24,7 @@ export enum INPUTS {
   REMINDER_DAYS = 'reminder_days',
   REMINDER_COMMENT = 'reminder_comment',
   WORKFLOW_DISPATCH_ACTION = 'workflow_dispatch_action',
+
+  MAX_ASSIGNMENTS = 'max_assignments',
+  MAX_ASSIGNMENTS_MESSAGE = 'max_assignments_message',
 }

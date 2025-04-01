@@ -38938,7 +38938,7 @@ var CommentHandler = class {
   }
   $_handle_self_assignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B;
       core.info(
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
@@ -38991,10 +38991,24 @@ var CommentHandler = class {
           `\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} is already assigned to @${(_q = (_p = this.issue) == null ? void 0 : _p.assignee) == null ? void 0 : _q.login}`
         );
       }
-      core.info(
-        `\u{1F916} Assigning @${(_s = (_r = this.comment) == null ? void 0 : _r.user) == null ? void 0 : _s.login} to issue #${(_t = this.issue) == null ? void 0 : _t.number}`
+      const maxAssignments = parseInt(
+        core.getInput("max_assignments" /* MAX_ASSIGNMENTS */) || "3"
       );
-      core.info(`\u{1F916} Adding comment to issue #${(_u = this.issue) == null ? void 0 : _u.number}`);
+      const assignmentCount = yield this._get_assignment_count();
+      if (assignmentCount >= maxAssignments) {
+        yield this._create_comment("max_assignments_message" /* MAX_ASSIGNMENTS_MESSAGE */, {
+          handle: (_s = (_r = this.comment) == null ? void 0 : _r.user) == null ? void 0 : _s.login,
+          max_assignments: maxAssignments.toString()
+        });
+        core.setOutput("assigned", "no");
+        return core.info(
+          `\u{1F916} User @${(_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login} has reached the maximum number of assignments (${maxAssignments})`
+        );
+      }
+      core.info(
+        `\u{1F916} Assigning @${(_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login} to issue #${(_x = this.issue) == null ? void 0 : _x.number}`
+      );
+      core.info(`\u{1F916} Adding comment to issue #${(_y = this.issue) == null ? void 0 : _y.number}`);
       yield Promise.all([
         this._add_assignee(),
         this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
@@ -39003,11 +39017,11 @@ var CommentHandler = class {
             add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
             "dd LLLL y"
           ),
-          handle: (_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login,
+          handle: (_A = (_z = this.comment) == null ? void 0 : _z.user) == null ? void 0 : _A.login,
           pin_label: core.getInput("pin_label" /* PIN_LABEL */)
         })
       ]);
-      core.info(`\u{1F916} Issue #${(_x = this.issue) == null ? void 0 : _x.number} assigned!`);
+      core.info(`\u{1F916} Issue #${(_B = this.issue) == null ? void 0 : _B.number} assigned!`);
       return core.setOutput("assigned", "yes");
     });
   }
@@ -39234,6 +39248,27 @@ var CommentHandler = class {
         }
       }
     );
+  }
+  _get_assignment_count() {
+    return __async(this, null, function* () {
+      var _a, _b;
+      const { owner, repo } = this.context.repo;
+      const query = [
+        `repo:${owner}/${repo}`,
+        "is:issue",
+        "is:open",
+        `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
+      ];
+      const issues = yield this.octokit.request(
+        `GET /search/issues?q=${encodeURIComponent(query.join(" "))}`,
+        {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      );
+      return issues.data.items.length;
+    });
   }
   _contribution_phrases() {
     return [
