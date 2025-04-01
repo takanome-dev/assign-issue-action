@@ -166,11 +166,6 @@ inputs:
 
       We appreciate your contribution and are here to help if needed!
 
-  workflow_dispatch_action:
-    description: >
-      The action to perform when the workflow is triggered manually (all, unassign, remind)
-    default: 'all'
-
   max_assignments:
     description: 'Maximum number of issues a user can be assigned to at once'
     required: false

@@ -39337,10 +39337,16 @@ var ScheduleHandler = class {
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options) => {
+        onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
           core.warning(
             `\u26A0\uFE0F SecondaryRateLimit detected for request ${options.method} ${options.url} \u26A0\uFE0F`
           );
+          if (retryCount < 2) {
+            core.warning(
+              `\u26A0\uFE0F Secondary rate limit hit. Retrying after ${retryAfter} seconds! \u26A0\uFE0F`
+            );
+            return true;
+          }
         }
       }
     });
@@ -39349,6 +39355,10 @@ var ScheduleHandler = class {
     return __async(this, null, function* () {
       const issues = yield this.getIssues();
       core.info(`\u2699 Processing ${issues.length} issues for unassignment:`);
+      if (issues.length === 0) {
+        core.info("\u{1F514} No issues found for unassignment");
+        return;
+      }
       const unassignedIssues = [];
       for (const issue of issues) {
         if (!issue.assignee) continue;
@@ -39371,6 +39381,10 @@ var ScheduleHandler = class {
     return __async(this, null, function* () {
       const reminderIssues = yield this.get_issues_for_reminder();
       core.info(`\u2699 Processing ${reminderIssues.length} issues for reminders:`);
+      if (reminderIssues.length === 0) {
+        core.info("\u{1F514} No issues found for reminders");
+        return;
+      }
       for (const issue of reminderIssues) {
         if (!issue.assignee) continue;
         core.info(
@@ -39550,20 +39564,7 @@ var ScheduleHandler = class {
       yield cmtHandler.handle_issue_comment();
     } else if (event === "workflow_dispatch" || event === "schedule") {
       const scheduleHandler = new ScheduleHandler();
-      if (event === "schedule") {
-        yield scheduleHandler.handle_unassignments();
-      } else if (event === "workflow_dispatch") {
-        const action = core.getInput("workflow_dispatch_action" /* WORKFLOW_DISPATCH_ACTION */) || "all";
-        if (action === "all" || action === "unassign") {
-          yield scheduleHandler.handle_unassignments();
-        }
-        if (action === "all" || action === "remind") {
-          const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
-          if (enableReminder === "true") {
-            yield scheduleHandler.send_reminders();
-          }
-        }
-      }
+      yield scheduleHandler.handle_unassignments();
     } else {
       return;
     }
