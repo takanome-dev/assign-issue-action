@@ -94,6 +94,18 @@ export default class CommentHandler {
 
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
+    // Ignore quoted replies or maintainers using self-assignment commands
+    if (
+      body.trim().startsWith('>') ||
+      (maintainers.includes(this.comment?.user?.login) &&
+        (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd)))
+    ) {
+      core.info(
+        `🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`,
+      );
+      return;
+    }
+
     // Handle auto-suggestion first
     if (
       enableAutoSuggestion &&
@@ -230,6 +242,24 @@ export default class CommentHandler {
       );
     }
 
+    // Check assignment count limit before assigning
+    const maxAssignments = parseInt(
+      core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3',
+    );
+    const assignmentCount = await this._get_assignment_count();
+
+    if (assignmentCount >= maxAssignments) {
+      await this._create_comment(INPUTS.MAX_ASSIGNMENTS_MESSAGE, {
+        handle: this.comment?.user?.login,
+        max_assignments: maxAssignments.toString(),
+      });
+
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} has reached the maximum number of assignments (${maxAssignments})`,
+      );
+    }
+
     core.info(
       `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`,
     );
@@ -262,7 +292,10 @@ export default class CommentHandler {
         this._remove_assignee(),
         this._create_comment<UnAssignUserCommentArg>(
           INPUTS.UNASSIGNED_COMMENT,
-          { handle: this.comment?.user?.login },
+          {
+            handle: this.comment?.user?.login,
+            pin_label: core.getInput(INPUTS.PIN_LABEL),
+          },
         ),
       ]);
 
@@ -492,6 +525,28 @@ export default class CommentHandler {
         },
       },
     );
+  }
+
+  private async _get_assignment_count(): Promise<number> {
+    const { owner, repo } = this.context.repo;
+
+    const query = [
+      `repo:${owner}/${repo}`,
+      'is:issue',
+      'is:open',
+      `assignee:${this.comment?.user?.login}`,
+    ];
+
+    const issues = await this.octokit.request(
+      `GET /search/issues?q=${encodeURIComponent(query.join(' '))}`,
+      {
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    );
+
+    return issues.data.items.length;
   }
 
   private _contribution_phrases() {

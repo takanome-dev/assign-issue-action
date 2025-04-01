@@ -18,4 +18,5 @@ export interface AssignUserCommentArg {
 
 export interface UnAssignUserCommentArg {
   handle: string;
+  pin_label: string;
 }
