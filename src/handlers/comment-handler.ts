@@ -8,7 +8,7 @@ import { add, format } from 'date-fns';
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 import type { GhIssue, GhComment } from '../types';
 import type {
-  AlreadyAssignedCommentArg,
+  AlreadyAssignedCommentArg,m
   AssignmentInterestCommentArg,
   AssignUserCommentArg,
   UnAssignUserCommentArg,
@@ -576,8 +576,9 @@ export default class CommentHandler {
       'I would like to work on this issue',
       'Interested to work',
       'is this free to take',
-      'May I work on this issue',
       'May I do this feature',
+      'May I take it',
+      'May I work on this issue',
       'Please assign',
       'Still open for contribution',
       'Want to take this issue',
