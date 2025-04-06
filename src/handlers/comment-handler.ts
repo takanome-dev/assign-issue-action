@@ -8,7 +8,7 @@ import { add, format } from 'date-fns';
 import type { WebhookPayload } from '@actions/github/lib/interfaces';
 import type { GhIssue, GhComment } from '../types';
 import type {
-  AlreadyAssignedCommentArg,m
+  AlreadyAssignedCommentArg,
   AssignmentInterestCommentArg,
   AssignUserCommentArg,
   UnAssignUserCommentArg,
