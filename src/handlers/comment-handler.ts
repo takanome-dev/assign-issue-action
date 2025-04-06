@@ -162,7 +162,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -231,7 +231,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
