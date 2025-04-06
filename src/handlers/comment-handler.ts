@@ -188,7 +188,7 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    const blockAssignment = core.getBooleanInput('block_assignment');
+    const blockAssignment = core.getInput('block_assignment');
 
     // Check if user was previously unassigned
     const comments = await this.octokit.request(
@@ -217,7 +217,7 @@ export default class CommentHandler {
       return hasManualUnassign || hasAutoUnassign;
     });
 
-    if (blockAssignment && wasUnassigned) {
+    if (blockAssignment === 'true' && wasUnassigned) {
       await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
         handle: this.comment?.user?.login,
       });
