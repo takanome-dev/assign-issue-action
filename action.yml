@@ -75,6 +75,7 @@ inputs:
       - You can unassign yourself at any time by commenting with `/unassign-me`
       - Updates and status reports are encouraged to show progress
       </details>
+
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
