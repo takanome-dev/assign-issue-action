@@ -162,7 +162,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -188,7 +188,7 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    const blockAssignment = core.getBooleanInput('block_assignment');
+    const blockAssignment = core.getInput('block_assignment');
 
     // Check if user was previously unassigned
     const comments = await this.octokit.request(
@@ -217,7 +217,7 @@ export default class CommentHandler {
       return hasManualUnassign || hasAutoUnassign;
     });
 
-    if (blockAssignment && wasUnassigned) {
+    if (blockAssignment === 'true' && wasUnassigned) {
       await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
         handle: this.comment?.user?.login,
       });
@@ -231,7 +231,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -447,7 +447,7 @@ export default class CommentHandler {
   }
 
   private _remove_assignee() {
-    return Promise.all([
+    return Promise.allSettled([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
         {
@@ -467,6 +467,30 @@ export default class CommentHandler {
           repo: this.context.repo.repo,
           issue_number: this.issue?.number!,
           name: core.getInput(INPUTS.ASSIGNED_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: core.getInput(INPUTS.PIN_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },

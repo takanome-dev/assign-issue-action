@@ -90,7 +90,7 @@ inputs:
       <summary>Options for contributors</summary>
 
       - **Wait for availability**: The issue may become available if auto-unassigned
-      - **Collaborate**: You can ask @{{ assignee }} if they want help
+      - **Collaborate**: You can ask the assignee if they want help
       - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
       </details>
   unassigned_comment:
