@@ -1,5 +1,5 @@
-import { setFailed } from '@actions/core';
 import { context } from '@actions/github';
+import * as core from '@actions/core';
 
 import CommentHandler from './handlers/comment-handler';
 import ScheduleHandler from './handlers/schedule-handler';
@@ -18,6 +18,6 @@ import ScheduleHandler from './handlers/schedule-handler';
       return;
     }
   } catch (error) {
-    if (error instanceof Error) return setFailed(error.message);
+    if (error instanceof Error) return core.setFailed(error.message);
   }
 })();

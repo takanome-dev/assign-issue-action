@@ -94,6 +94,19 @@ export default class CommentHandler {
 
     const body = (this.context.payload.comment?.body as string).toLowerCase();
 
+    // Ignore quoted replies or maintainers using self-assignment commands
+    if (
+      body.trim().startsWith('>') ||
+      (maintainers.includes(this.comment?.user?.login) &&
+        (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd)))
+    ) {
+      core.info(
+        `🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`,
+      );
+      return;
+    }
+
+    // Handle auto-suggestion first
     if (
       enableAutoSuggestion &&
       this._contribution_phrases().some((phrase) =>
@@ -104,6 +117,7 @@ export default class CommentHandler {
       return this.$_handle_assignment_interest();
     }
 
+    // Handle self-assignment commands (available to all users)
     if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
       return this.$_handle_self_assignment();
     }
@@ -112,24 +126,28 @@ export default class CommentHandler {
       return this.$_handle_self_unassignment();
     }
 
-    if (maintainers.length > 0) {
-      if (maintainers.includes(this.comment?.user?.login)) {
-        if (body.startsWith(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
-
-        if (body.startsWith(unassignCommenterCmd)) {
-          return this.$_handle_user_unassignment(unassignCommenterCmd);
-        }
-      } else {
+    // Handle maintainer-only commands
+    if (
+      body.includes(assignCommenterCmd) ||
+      body.includes(unassignCommenterCmd)
+    ) {
+      if (!maintainersInput) {
         return core.info(
-          `🤖 Ignoring comment because the commenter is not in the list of maintainers specified in the config file`,
+          `🤖 Ignoring maintainer command because the "maintainers" input is empty`,
         );
       }
-    } else {
-      return core.info(
-        `🤖 Ignoring comment because the "maintainers" input in the config file is empty`,
-      );
+
+      if (!maintainers.includes(this.comment?.user?.login)) {
+        return core.info(
+          `🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`,
+        );
+      }
+
+      if (body.includes(assignCommenterCmd)) {
+        return this.$_handle_user_assignment(assignCommenterCmd);
+      }
+
+      return this.$_handle_user_unassignment(unassignCommenterCmd);
     }
 
     return core.info(
@@ -137,7 +155,24 @@ export default class CommentHandler {
     );
   }
 
-  private $_handle_assignment_interest() {
+  private async $_handle_assignment_interest() {
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+
+    if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+      await this._create_comment<AlreadyAssignedCommentArg>(
+        INPUTS.ALREADY_ASSIGNED_COMMENT,
+        {
+          total_days: String(daysUntilUnassign),
+          handle: this.comment?.user?.login,
+          assignee: this.issue?.assignee?.login,
+        },
+      );
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+      );
+    }
+
     return this._create_comment<AssignmentInterestCommentArg>(
       INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
       {
@@ -153,13 +188,50 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+    const blockAssignment = core.getInput('block_assignment');
+
+    // Check if user was previously unassigned
+    const comments = await this.octokit.request(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/comments',
+      {
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        issue_number: this.issue?.number!,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    );
+
+    const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+    const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
+    const userHandle = this.comment?.user?.login;
+
+    const wasUnassigned = comments.data.some((comment) => {
+      const hasManualUnassign = comment.body?.includes(
+        `${unassignCmd} @${userHandle}`,
+      );
+      const hasAutoUnassign = comment.body?.includes(
+        mustache.render(unassignedComment, { handle: userHandle }),
+      );
+      return hasManualUnassign || hasAutoUnassign;
+    });
+
+    if (blockAssignment === 'true' && wasUnassigned) {
+      await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
+        handle: this.comment?.user?.login,
+      });
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`,
+      );
+    }
 
     if (this.issue?.assignee) {
-      // await this._already_assigned_comment(daysUntilUnassign);
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -167,6 +239,24 @@ export default class CommentHandler {
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
+      );
+    }
+
+    // Check assignment count limit before assigning
+    const maxAssignments = parseInt(
+      core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3',
+    );
+    const assignmentCount = await this._get_assignment_count();
+
+    if (assignmentCount >= maxAssignments) {
+      await this._create_comment(INPUTS.MAX_ASSIGNMENTS_MESSAGE, {
+        handle: this.comment?.user?.login,
+        max_assignments: maxAssignments.toString(),
+      });
+
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} has reached the maximum number of assignments (${maxAssignments})`,
       );
     }
 
@@ -202,7 +292,10 @@ export default class CommentHandler {
         this._remove_assignee(),
         this._create_comment<UnAssignUserCommentArg>(
           INPUTS.UNASSIGNED_COMMENT,
-          { handle: this.comment?.user?.login },
+          {
+            handle: this.comment?.user?.login,
+            pin_label: core.getInput(INPUTS.PIN_LABEL),
+          },
         ),
       ]);
 
@@ -354,7 +447,7 @@ export default class CommentHandler {
   }
 
   private _remove_assignee() {
-    return Promise.all([
+    return Promise.allSettled([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
         {
@@ -374,6 +467,30 @@ export default class CommentHandler {
           repo: this.context.repo.repo,
           issue_number: this.issue?.number!,
           name: core.getInput(INPUTS.ASSIGNED_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: core.getInput(INPUTS.PIN_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
@@ -434,32 +551,66 @@ export default class CommentHandler {
     );
   }
 
+  private async _get_assignment_count(): Promise<number> {
+    const { owner, repo } = this.context.repo;
+
+    const query = [
+      `repo:${owner}/${repo}`,
+      'is:issue',
+      'is:open',
+      `assignee:${this.comment?.user?.login}`,
+    ];
+
+    const issues = await this.octokit.request(
+      `GET /search/issues?q=${encodeURIComponent(query.join(' '))}`,
+      {
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    );
+
+    return issues.data.items.length;
+  }
+
   private _contribution_phrases() {
     return [
+      'asssign-me',
       'Assign this issue to me',
       'Assign it to me',
       'Assign to me',
       'Assign me',
       'Assign me this issue',
       'Assign this for me',
+      'Available to work on',
+      'Can I be assigned to this issue',
+      'can I kindly work on this issue',
       'Can I take on this issue',
+      'Can I take this issue',
       'Can I take up this issue',
-      'May I work on this issue',
-      'May I do this feature',
+      'Can I work on it',
+      'Could I get assigned',
+      "I'd like to be assigned to",
       "I'm keen to have a go",
       'I am here to do a university assignment',
+      'I am interested in taking on this issue',
+      'I am interested in the issue',
+      'I am very interested in this issue',
       'I hope to contribute to this issue',
-      'Can I be assigned to this issue',
-      'Available to work on',
+      'I would like to work on this issue',
+      'Interested to work',
+      'is this free to take',
+      'May I do this feature',
+      'May I take it',
+      'May I work on this issue',
+      'Please assign',
       'Still open for contribution',
-      'Can I take this issue',
-      'Would love to work on this issue',
-      'Would be happy to pick this up',
       'Want to take this issue',
       'Want to contribute',
+      'Would be happy to pick this up',
       'Would like to work on this',
-      "I'd like to be assigned to",
       'Would like to contribute',
+      'Would love to work on this issue',
     ];
   }
 }
