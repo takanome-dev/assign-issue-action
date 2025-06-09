@@ -75,6 +75,7 @@ inputs:
       - You can unassign yourself at any time by commenting with `/unassign-me`
       - Updates and status reports are encouraged to show progress
       </details>
+
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
@@ -90,7 +91,7 @@ inputs:
       <summary>Options for contributors</summary>
 
       - **Wait for availability**: The issue may become available if auto-unassigned
-      - **Collaborate**: You can ask @{{ assignee }} if they want help
+      - **Collaborate**: You can ask the assignee if they want help
       - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
       </details>
   unassigned_comment:

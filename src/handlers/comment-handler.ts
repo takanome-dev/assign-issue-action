@@ -162,7 +162,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -188,7 +188,7 @@ export default class CommentHandler {
     );
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    const blockAssignment = core.getBooleanInput('block_assignment');
+    const blockAssignment = core.getInput('block_assignment');
 
     // Check if user was previously unassigned
     const comments = await this.octokit.request(
@@ -217,7 +217,7 @@ export default class CommentHandler {
       return hasManualUnassign || hasAutoUnassign;
     });
 
-    if (blockAssignment && wasUnassigned) {
+    if (blockAssignment === 'true' && wasUnassigned) {
       await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
         handle: this.comment?.user?.login,
       });
@@ -231,7 +231,7 @@ export default class CommentHandler {
       await this._create_comment<AlreadyAssignedCommentArg>(
         INPUTS.ALREADY_ASSIGNED_COMMENT,
         {
-          unassigned_date: String(daysUntilUnassign),
+          total_days: String(daysUntilUnassign),
           handle: this.comment?.user?.login,
           assignee: this.issue?.assignee?.login,
         },
@@ -447,7 +447,7 @@ export default class CommentHandler {
   }
 
   private _remove_assignee() {
-    return Promise.all([
+    return Promise.allSettled([
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
         {
@@ -467,6 +467,30 @@ export default class CommentHandler {
           repo: this.context.repo.repo,
           issue_number: this.issue?.number!,
           name: core.getInput(INPUTS.ASSIGNED_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: core.getInput(INPUTS.PIN_LABEL),
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+      this.octokit.request(
+        'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: this.issue?.number!,
+          name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
@@ -560,17 +584,25 @@ export default class CommentHandler {
       'Assign this for me',
       'Available to work on',
       'Can I be assigned to this issue',
+      'can I kindly work on this issue',
       'Can I take on this issue',
       'Can I take this issue',
       'Can I take up this issue',
+      'Can I work on it',
+      'Could I get assigned',
       "I'd like to be assigned to",
       "I'm keen to have a go",
       'I am here to do a university assignment',
+      'I am interested in taking on this issue',
+      'I am interested in the issue',
+      'I am very interested in this issue',
       'I hope to contribute to this issue',
       'I would like to work on this issue',
       'Interested to work',
-      'May I work on this issue',
+      'is this free to take',
       'May I do this feature',
+      'May I take it',
+      'May I work on this issue',
       'Please assign',
       'Still open for contribution',
       'Want to take this issue',

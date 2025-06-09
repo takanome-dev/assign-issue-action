@@ -38917,7 +38917,7 @@ var CommentHandler = class {
         yield this._create_comment(
           "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */,
           {
-            unassigned_date: String(daysUntilUnassign),
+            total_days: String(daysUntilUnassign),
             handle: (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login,
             assignee: (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login
           }
@@ -38943,7 +38943,7 @@ var CommentHandler = class {
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
       const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      const blockAssignment = core.getBooleanInput("block_assignment");
+      const blockAssignment = core.getInput("block_assignment");
       const comments = yield this.octokit.request(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
@@ -38968,7 +38968,7 @@ var CommentHandler = class {
         );
         return hasManualUnassign || hasAutoUnassign;
       });
-      if (blockAssignment && wasUnassigned) {
+      if (blockAssignment === "true" && wasUnassigned) {
         yield this._create_comment("block_assignment_comment" /* BLOCK_ASSIGNMENT_COMMENT */, {
           handle: (_f = (_e = this.comment) == null ? void 0 : _e.user) == null ? void 0 : _f.login
         });
@@ -38981,7 +38981,7 @@ var CommentHandler = class {
         yield this._create_comment(
           "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */,
           {
-            unassigned_date: String(daysUntilUnassign),
+            total_days: String(daysUntilUnassign),
             handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
             assignee: (_n = (_m = this.issue) == null ? void 0 : _m.assignee) == null ? void 0 : _n.login
           }
@@ -39175,8 +39175,8 @@ var CommentHandler = class {
     ]);
   }
   _remove_assignee() {
-    var _a, _b, _c;
-    return Promise.all([
+    var _a, _b, _c, _d, _e;
+    return Promise.allSettled([
       this.octokit.request(
         "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
         {
@@ -39196,6 +39196,30 @@ var CommentHandler = class {
           repo: this.context.repo.repo,
           issue_number: (_c = this.issue) == null ? void 0 : _c.number,
           name: core.getInput("assigned_label" /* ASSIGNED_LABEL */),
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      ),
+      this.octokit.request(
+        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: (_d = this.issue) == null ? void 0 : _d.number,
+          name: core.getInput("pin_label" /* PIN_LABEL */),
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        }
+      ),
+      this.octokit.request(
+        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: (_e = this.issue) == null ? void 0 : _e.number,
+          name: "\u{1F514} reminder-sent",
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
           }
@@ -39281,17 +39305,25 @@ var CommentHandler = class {
       "Assign this for me",
       "Available to work on",
       "Can I be assigned to this issue",
+      "can I kindly work on this issue",
       "Can I take on this issue",
       "Can I take this issue",
       "Can I take up this issue",
+      "Can I work on it",
+      "Could I get assigned",
       "I'd like to be assigned to",
       "I'm keen to have a go",
       "I am here to do a university assignment",
+      "I am interested in taking on this issue",
+      "I am interested in the issue",
+      "I am very interested in this issue",
       "I hope to contribute to this issue",
       "I would like to work on this issue",
       "Interested to work",
-      "May I work on this issue",
+      "is this free to take",
       "May I do this feature",
+      "May I take it",
+      "May I work on this issue",
       "Please assign",
       "Still open for contribution",
       "Want to take this issue",
@@ -39567,7 +39599,7 @@ var ScheduleHandler = class {
         handle: issue.assignee.login,
         pin_label: core.getInput("pin_label" /* PIN_LABEL */)
       });
-      return Promise.all([
+      return Promise.allSettled([
         this.octokit.request(
           "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
           {
@@ -39587,6 +39619,30 @@ var ScheduleHandler = class {
             repo: this.context.repo.repo,
             issue_number: issue.number,
             name: this.assignedLabel,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        ),
+        this.octokit.request(
+          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            name: core.getInput("pin_label" /* PIN_LABEL */),
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        ),
+        this.octokit.request(
+          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue == null ? void 0 : issue.number,
+            name: "\u{1F514} reminder-sent",
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }

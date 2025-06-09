@@ -1,5 +1,5 @@
 export interface AlreadyAssignedCommentArg {
-  unassigned_date: string;
+  total_days: string;
   handle: string;
   assignee: string;
 }
