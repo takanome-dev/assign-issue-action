@@ -39310,6 +39310,26 @@ var CommentHandler = class {
 
 
 
+
+// src/utils/helpers/common.ts
+function since(days) {
+  const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1e3;
+  const date = new Date(+/* @__PURE__ */ new Date() - totalDaysInMilliseconds);
+  return new Date(date).toISOString().substring(0, 10);
+}
+function chunkArray(array, chunkSize) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+function getDaysBetween(start, end) {
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  return Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
+}
+
+// src/handlers/schedule-handler.ts
 var MyOctokit2 = Octokit.plugin(throttling);
 var ScheduleHandler = class {
   constructor() {
@@ -39330,81 +39350,221 @@ var ScheduleHandler = class {
             return true;
           }
         },
-        onSecondaryRateLimit: (retryAfter, options) => {
+        onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
           core.warning(
             `\u26A0\uFE0F SecondaryRateLimit detected for request ${options.method} ${options.url} \u26A0\uFE0F`
           );
+          if (retryCount < 2) {
+            core.warning(
+              `\u26A0\uFE0F Secondary rate limit hit. Retrying after ${retryAfter} seconds! \u26A0\uFE0F`
+            );
+            return true;
+          }
         }
       }
     });
   }
   handle_unassignments() {
     return __async(this, null, function* () {
-      const issues = yield this.getIssues();
-      core.info(`\u2699 Processing ${issues.length} issues for unassignment:`);
-      const unassignedIssues = [];
-      for (const issue of issues) {
-        if (!issue.assignee) continue;
-        core.info(
-          `\u{1F517} Unassigning @${issue.assignee.login} from issue #${issue.number} due to inactivity`
-        );
-        yield this.unassignIssue(issue);
-        unassignedIssues.push(issue.number);
-        core.info(`\u2705 Done processing issue #${issue.number}`);
+      const { unassignIssues, reminderIssues } = yield this._get_assigned_issues();
+      if (unassignIssues.length > 0) {
+        yield this._process_unassignments(unassignIssues);
+      } else {
+        core.info("\u{1F50D} No issues to unassign, skipping...");
       }
       const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
-      if (enableReminder === "true") {
-        yield this.send_reminders();
-      }
-      core.setOutput("unassigned_issues", unassignedIssues);
-      core.info(`\u2705 Done processing cron job`);
-    });
-  }
-  send_reminders() {
-    return __async(this, null, function* () {
-      const reminderIssues = yield this.get_issues_for_reminder();
-      core.info(`\u2699 Processing ${reminderIssues.length} issues for reminders:`);
-      for (const issue of reminderIssues) {
-        if (!issue.assignee) continue;
-        core.info(
-          `\u{1F4EC} Sending reminder to @${issue.assignee.login} for issue #${issue.number}`
-        );
-        yield this.send_reminder_notification(issue);
-        core.info(`\u2705 Done sending reminder for issue #${issue.number}`);
+      if (enableReminder !== "true") return;
+      if (reminderIssues.length > 0) {
+        yield this._process_reminders(reminderIssues);
+      } else {
+        core.info("\u{1F50D} No issues need reminders at this time, skipping...");
       }
     });
   }
-  getIssues() {
+  _get_assigned_issues() {
     return __async(this, null, function* () {
       const { owner, repo } = this.context.repo;
-      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      const timestamp = this.since(totalDays);
-      core.info(`\u{1F916} Searching issues updated since ${timestamp}`);
-      const q = [
-        `label:"${this.assignedLabel}"`,
-        `-label:"${this.exemptLabel}"`,
-        "is:issue",
-        `repo:${owner}/${repo}`,
-        "assignee:*",
-        "is:open",
-        `updated:<${timestamp}`
-      ];
-      const issues = yield this.octokit.request(
-        `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
-        {
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
+      const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
+      let reminderDays;
+      const reminderDaysInput = core.getInput("reminder_days" /* REMINDER_DAYS */);
+      if (reminderDaysInput === "auto") {
+        reminderDays = Math.floor(daysUntilUnassign / 2);
+      } else {
+        reminderDays = parseInt(reminderDaysInput);
+        if (isNaN(reminderDays)) {
+          reminderDays = Math.floor(daysUntilUnassign / 2);
+        }
+      }
+      core.info(`\u{1F50D} Fetching assigned issues from ${owner}/${repo}`);
+      core.info(
+        `\u23F1\uFE0F Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`
+      );
+      const timestamp = since(reminderDays);
+      const {
+        data: { items: issues }
+      } = yield this.octokit.request("GET /search/issues", {
+        q: `repo:${owner}/${repo} is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" -label:"\u{1F514} reminder-sent" assignee:* updated:<=${timestamp}`,
+        per_page: 100,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
+      });
+      core.info(
+        `\u{1F4CA} Found ${issues.length} open issues with the ${this.assignedLabel} label`
+      );
+      const unassignIssues = [];
+      const reminderIssues = [];
+      const chunks = chunkArray(issues, 10);
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        core.info(
+          `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`
+        );
+        const results = yield Promise.all(
+          chunk.map((issue) => __async(this, null, function* () {
+            const activityData = yield this._get_issue_activity(issue);
+            if (!activityData) return null;
+            return {
+              issue,
+              activityData
+            };
+          }))
+        );
+        for (const result of results.filter(Boolean)) {
+          if (!result) continue;
+          const { issue, activityData } = result;
+          if (!activityData) continue;
+          const { daysSinceActivity } = activityData;
+          if (daysSinceActivity >= daysUntilUnassign) {
+            unassignIssues.push(issue);
+          } else if (daysSinceActivity >= reminderDays && daysSinceActivity < daysUntilUnassign) {
+            reminderIssues.push(issue);
           }
         }
-      );
-      return issues.data.items;
+        if (i < chunks.length - 1) {
+          yield new Promise((resolve) => setTimeout(resolve, 1e3));
+        }
+      }
+      core.info(`\u{1F4CB} Found ${unassignIssues.length} issues to unassign`);
+      core.info(`\u{1F514} Found ${reminderIssues.length} issues to send reminders for`);
+      return { unassignIssues, reminderIssues };
     });
   }
-  unassignIssue(issue) {
+  _get_issue_activity(issue) {
     return __async(this, null, function* () {
-      var _a;
+      try {
+        const {
+          data: timelines,
+          url,
+          status
+        } = yield this.octokit.request(
+          "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
+          {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            issue_number: issue.number,
+            per_page: 1,
+            page: 1,
+            query: "sort:created-desc event:commented",
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
+          }
+        );
+        core.info(
+          `\u{1F50D} Timeline URL just for debugging: ${url} - with status - ${status}`
+        );
+        const assignmentDate = new Date(issue.created_at);
+        const lastActivityDate = new Date(timelines[0].created_at);
+        const daysSinceActivity = getDaysBetween(lastActivityDate, /* @__PURE__ */ new Date());
+        return {
+          assignmentDate,
+          lastActivityDate,
+          daysSinceActivity
+        };
+      } catch (error) {
+        core.warning(
+          `\u26A0\uFE0F Error getting activity for issue #${issue.number}: ${error}`
+        );
+        return null;
+      }
+    });
+  }
+  _process_unassignments(issues) {
+    return __async(this, null, function* () {
+      core.info(`\u2699\uFE0F Processing ${issues.length} issues for unassignment`);
+      const unassignedIssues = [];
+      const chunks = chunkArray(issues, 5);
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        core.info(
+          `Processing unassignment chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`
+        );
+        const results = yield Promise.all(
+          chunk.map((issue) => __async(this, null, function* () {
+            var _a;
+            try {
+              core.info(
+                `\u{1F504} Unassigning @${(_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login} from issue #${issue.number}`
+              );
+              yield this._unassign_issue(issue);
+              core.info(`\u2705 Unassigned issue #${issue.number}`);
+              return issue.number;
+            } catch (error) {
+              core.warning(`Failed to unassign issue #${issue.number}: ${error}`);
+              return null;
+            }
+          }))
+        );
+        unassignedIssues.push(...results.filter(Boolean));
+        if (i < chunks.length - 1) {
+          yield new Promise((resolve) => setTimeout(resolve, 1e3));
+        }
+      }
+      core.setOutput("unassigned_issues", unassignedIssues);
+      core.info(`\u2705 Successfully unassigned ${unassignedIssues.length} issues`);
+    });
+  }
+  _process_reminders(issues) {
+    return __async(this, null, function* () {
+      core.info(`\u2699\uFE0F Processing ${issues.length} issues for reminders`);
+      const chunks = chunkArray(issues, 5);
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        core.info(
+          `Processing reminder chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`
+        );
+        yield Promise.all(
+          chunk.map((issue) => __async(this, null, function* () {
+            var _a;
+            try {
+              core.info(
+                `\u{1F514} Sending reminder to @${(_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login} for issue #${issue.number}`
+              );
+              yield this._send_reminder_for_issue(issue);
+              core.info(`\u2705 Reminder sent for issue #${issue.number}`);
+            } catch (error) {
+              core.warning(
+                `\u{1F6A8} Failed to send reminder for issue #${issue.number}: ${error}`
+              );
+            }
+          }))
+        );
+        if (i < chunks.length - 1) {
+          yield new Promise((resolve) => setTimeout(resolve, 1e3));
+        }
+      }
+      core.info(`\u2705 Successfully sent reminders for ${issues.length} issues`);
+    });
+  }
+  _unassign_issue(issue) {
+    return __async(this, null, function* () {
+      if (!issue.assignee) {
+        core.warning(`\u26A0\uFE0F Issue #${issue.number} has no assignee, skipping...`);
+        return;
+      }
       const body = mustache_mustache.render(core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */), {
-        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        handle: issue.assignee.login,
         pin_label: core.getInput("pin_label" /* PIN_LABEL */)
       });
       return Promise.all([
@@ -39413,8 +39573,8 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
-            assignees: [issue == null ? void 0 : issue.assignees.map((ass) => ass.login).join(",")],
+            issue_number: issue.number,
+            assignees: [issue.assignee.login],
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }
@@ -39425,7 +39585,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: issue.number,
             name: this.assignedLabel,
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39437,7 +39597,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: issue.number,
             body,
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39447,47 +39607,7 @@ var ScheduleHandler = class {
       ]);
     });
   }
-  since(days) {
-    const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1e3;
-    const date = new Date(+/* @__PURE__ */ new Date() - totalDaysInMilliseconds);
-    return new Date(date).toISOString().substring(0, 10);
-  }
-  get_issues_for_reminder() {
-    return __async(this, null, function* () {
-      const { owner, repo } = this.context.repo;
-      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      let reminderDays = core.getInput("reminder_days" /* REMINDER_DAYS */);
-      let daysBeforeReminder;
-      if (reminderDays === "auto") {
-        daysBeforeReminder = Math.floor(totalDays / 2);
-      } else {
-        daysBeforeReminder = totalDays - Number(reminderDays);
-      }
-      daysBeforeReminder = Math.max(1, daysBeforeReminder);
-      const timestamp = this.since(daysBeforeReminder);
-      core.info(`\u{1F916} Searching issues for reminder - updated since ${timestamp}`);
-      const q = [
-        `label:"${this.assignedLabel}"`,
-        `-label:"${this.exemptLabel}"`,
-        '-label:"\u{1F514} reminder-sent"',
-        "is:issue",
-        `repo:${owner}/${repo}`,
-        "assignee:*",
-        "is:open",
-        `updated:<${timestamp}`
-      ];
-      const issues = yield this.octokit.request(
-        `GET /search/issues?q=${encodeURIComponent(q.join(" "))}`,
-        {
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      );
-      return issues.data.items;
-    });
-  }
-  send_reminder_notification(issue) {
+  _send_reminder_for_issue(issue) {
     return __async(this, null, function* () {
       var _a;
       const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
@@ -39497,9 +39617,12 @@ var ScheduleHandler = class {
         daysRemaining = Math.ceil(totalDays / 2);
       } else {
         daysRemaining = Number(reminderDays);
+        if (isNaN(daysRemaining)) {
+          daysRemaining = Math.ceil(totalDays / 2);
+        }
       }
       const body = mustache_mustache.render(core.getInput("reminder_comment" /* REMINDER_COMMENT */), {
-        handle: (_a = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a.login,
+        handle: (_a = issue.assignee) == null ? void 0 : _a.login,
         days_remaining: daysRemaining,
         pin_label: core.getInput("pin_label" /* PIN_LABEL */)
       });
@@ -39511,7 +39634,6 @@ var ScheduleHandler = class {
             repo: this.context.repo.repo,
             issue_number: issue == null ? void 0 : issue.number,
             labels: ["\u{1F514} reminder-sent"],
-            // Add a "reminder sent" label to avoid sending multiple reminders
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }
@@ -39543,20 +39665,7 @@ var ScheduleHandler = class {
       yield cmtHandler.handle_issue_comment();
     } else if (event === "workflow_dispatch" || event === "schedule") {
       const scheduleHandler = new ScheduleHandler();
-      if (event === "schedule") {
-        yield scheduleHandler.handle_unassignments();
-      } else if (event === "workflow_dispatch") {
-        const action = core.getInput("workflow_dispatch_action" /* WORKFLOW_DISPATCH_ACTION */) || "all";
-        if (action === "all" || action === "unassign") {
-          yield scheduleHandler.handle_unassignments();
-        }
-        if (action === "all" || action === "remind") {
-          const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
-          if (enableReminder === "true") {
-            yield scheduleHandler.send_reminders();
-          }
-        }
-      }
+      yield scheduleHandler.handle_unassignments();
     } else {
       return;
     }

@@ -4,11 +4,14 @@ import { Octokit } from '@octokit/core';
 import { throttling } from '@octokit/plugin-throttling';
 import mustache from 'mustache';
 
-import type { WebhookPayload } from '@actions/github/lib/interfaces';
-import { GhIssue } from '../types';
+import { components } from '@octokit/openapi-types';
+
 import { INPUTS } from '../utils/lib/inputs';
+import { since, chunkArray, getDaysBetween } from '../utils/helpers/common';
 
 const MyOctokit = Octokit.plugin(throttling);
+
+type Issue = components['schemas']['issue-search-result-item'];
 
 export default class ScheduleHandler {
   private token: string;
@@ -57,29 +60,30 @@ export default class ScheduleHandler {
   async handle_unassignments() {
     // Get all assigned issues with their activity status in a single query
     const { unassignIssues, reminderIssues } =
-      await this.getAllAssignedIssues();
+      await this._get_assigned_issues();
 
     // Process unassignment for stale issues
     if (unassignIssues.length > 0) {
-      await this.processUnassignments(unassignIssues);
+      await this._process_unassignments(unassignIssues);
     } else {
-      core.info('No issues to unassign');
+      core.info('🔍 No issues to unassign, skipping...');
     }
 
     // Process reminders if enabled
     const enableReminder = core.getInput(INPUTS.ENABLE_REMINDER);
-    if (enableReminder === 'true' && reminderIssues.length > 0) {
-      await this.processReminders(reminderIssues);
-    } else if (enableReminder === 'true') {
-      core.info('No issues need reminders at this time');
+    if (enableReminder !== 'true') return;
+
+    if (reminderIssues.length > 0) {
+      await this._process_reminders(reminderIssues);
+    } else {
+      core.info('🔍 No issues need reminders at this time, skipping...');
     }
   }
 
-  private async getAllAssignedIssues() {
+  private async _get_assigned_issues() {
     const { owner, repo } = this.context.repo;
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
 
-    // Calculate reminder days
     let reminderDays;
     const reminderDaysInput = core.getInput(INPUTS.REMINDER_DAYS);
     if (reminderDaysInput === 'auto') {
@@ -96,50 +100,38 @@ export default class ScheduleHandler {
       `⏱️ Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`,
     );
 
-    // Get all open issues with the assigned label in one request
-    const { data: issues } = await this.octokit.request(
-      'GET /repos/{owner}/{repo}/issues',
-      {
-        owner,
-        repo,
-        state: 'open',
-        labels: this.assignedLabel,
-        per_page: 100,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
+    const timestamp = since(reminderDays);
+    // Get all open issues with the assigned label and not updated in the last "reminderDays" days
+    const {
+      data: { items: issues },
+    } = await this.octokit.request('GET /search/issues', {
+      q: `repo:${owner}/${repo} is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" -label:"🔔 reminder-sent" assignee:* updated:<=${timestamp}`,
+      per_page: 100,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
       },
-    );
+    });
 
     core.info(
       `📊 Found ${issues.length} open issues with the ${this.assignedLabel} label`,
     );
 
-    // Get activity for each issue
     const unassignIssues = [];
     const reminderIssues = [];
 
     // Process in chunks of 10 to avoid rate limits
-    const chunks = this.chunkArray(issues, 10);
+    const chunks = chunkArray(issues, 10);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       core.info(
-        `Processing chunk ${i + 1}/${chunks.length} (${chunks.length} issues)`,
+        `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
       );
 
       // Process chunk in parallel
       const results = await Promise.all(
         chunk.map(async (issue) => {
-          // Skip issues without assignees
-          if (!issue.assignee) return null;
-
-          // Skip issues with exempt label
-          if (issue.labels.some((label) => label.name === this.exemptLabel))
-            return null;
-
-          // Get the issue activity
-          const activityData = await this.getIssueActivity(issue);
+          const activityData = await this._get_issue_activity(issue);
           if (!activityData) return null;
 
           return {
@@ -151,15 +143,18 @@ export default class ScheduleHandler {
 
       // Filter out nulls and categorize issues
       for (const result of results.filter(Boolean)) {
+        if (!result) continue;
+
         const { issue, activityData } = result;
-        const { lastActivityDate, daysSinceActivity } = activityData;
+        if (!activityData) continue;
+
+        const { daysSinceActivity } = activityData;
 
         if (daysSinceActivity >= daysUntilUnassign) {
           unassignIssues.push(issue);
         } else if (
           daysSinceActivity >= reminderDays &&
-          daysSinceActivity < daysUntilUnassign &&
-          !(await this.hasReminderAlready(issue))
+          daysSinceActivity < daysUntilUnassign
         ) {
           reminderIssues.push(issue);
         }
@@ -177,81 +172,39 @@ export default class ScheduleHandler {
     return { unassignIssues, reminderIssues };
   }
 
-  private async getIssueActivity(issue) {
+  private async _get_issue_activity(issue: Issue) {
     try {
-      // Get issue comments to analyze activity
-      const { data: comments } = await this.octokit.request(
-        'GET /repos/{owner}/{repo}/issues/{issue_number}/comments',
+      const {
+        data: timelines,
+        url,
+        status,
+      } = await this.octokit.request(
+        'GET /repos/{owner}/{repo}/issues/{issue_number}/timeline',
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: issue.number,
-          per_page: 20, // Limit to most recent comments
+          per_page: 1,
+          page: 1,
+          query: 'sort:created-desc event:commented',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
         },
       );
 
-      // Use the issue's assigned date as the baseline
-      // This is typically when the label was added or the user was assigned
-      const assignmentDate = new Date(issue.created_at); // Default to issue creation
-
-      // Find the last activity date from comments
-      let lastActivityDate = new Date(issue.updated_at); // Default to issue updated date
-
-      // Check for specific activity marker
-      const requireTriggerActive = core.getBooleanInput(
-        INPUTS.REQUIRE_TRIGGER_ACTIVE,
+      core.info(
+        `🔍 Timeline URL just for debugging: ${url} - with status - ${status}`,
       );
-      if (requireTriggerActive) {
-        const triggerActive = core.getInput(INPUTS.TRIGGER_ACTIVE);
-        const foundActive = comments.some(
-          (comment) =>
-            comment.user.login === issue.assignee.login &&
-            comment.body.toLowerCase().includes(triggerActive.toLowerCase()),
-        );
 
-        if (foundActive) {
-          // If they used the active trigger, look at the most recent active trigger comment
-          const activeComment = comments
-            .filter(
-              (comment) =>
-                comment.user.login === issue.assignee.login &&
-                comment.body
-                  .toLowerCase()
-                  .includes(triggerActive.toLowerCase()),
-            )
-            .sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime(),
-            )[0];
+      // Use the issue's assigned date as the baseline
+      const assignmentDate = new Date(issue.created_at);
 
-          if (activeComment) {
-            lastActivityDate = new Date(activeComment.created_at);
-          }
-        }
-      } else {
-        // Otherwise use any comment from the assignee as activity
-        const assigneeComments = comments
-          .filter((comment) => comment.user.login === issue.assignee.login)
-          .sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
-          );
-
-        if (assigneeComments.length > 0) {
-          lastActivityDate = new Date(assigneeComments[0].created_at);
-        }
-      }
+      // @ts-expect-error it actually exists but the type is wrong for some reason
+      const lastActivityDate = new Date(timelines[0].created_at);
 
       // Calculate days since last activity
-      const daysSinceActivity = this.getDaysBetween(
-        lastActivityDate,
-        new Date(),
-      );
+      const daysSinceActivity = getDaysBetween(lastActivityDate, new Date());
 
       return {
         assignmentDate,
@@ -260,63 +213,33 @@ export default class ScheduleHandler {
       };
     } catch (error) {
       core.warning(
-        `Error getting activity for issue #${issue.number}: ${error}`,
+        `⚠️ Error getting activity for issue #${issue.number}: ${error}`,
       );
       return null;
     }
   }
 
-  private async hasReminderAlready(issue) {
-    try {
-      const { data: comments } = await this.octokit.request(
-        'GET /repos/{owner}/{repo}/issues/{issue_number}/comments',
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: issue.number,
-          per_page: 10, // Just check recent comments
-          headers: {
-            'X-GitHub-Api-Version': '2022-11-28',
-          },
-        },
-      );
-
-      // Check if there's already a reminder comment
-      const reminderComment = core.getInput(INPUTS.REMINDER_COMMENT);
-      const reminderMarker = reminderComment.split('\n')[0]; // Use first line as marker
-
-      return comments.some(
-        (comment) =>
-          comment.user.login === 'github-actions[bot]' &&
-          comment.body.includes(reminderMarker),
-      );
-    } catch (error) {
-      core.warning(
-        `Error checking for reminders on issue #${issue.number}: ${error}`,
-      );
-      return false; // Assume no reminder if we can't check
-    }
-  }
-
-  private async processUnassignments(issues) {
+  private async _process_unassignments(issues: Issue[]) {
     core.info(`⚙️ Processing ${issues.length} issues for unassignment`);
     const unassignedIssues = [];
 
     // Process in chunks of 5
-    const chunks = this.chunkArray(issues, 5);
+    const chunks = chunkArray(issues, 5);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(`Processing unassignment chunk ${i + 1}/${chunks.length}`);
+      core.info(
+        `Processing unassignment chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
+      );
 
       // Process chunk in parallel
       const results = await Promise.all(
         chunk.map(async (issue) => {
           try {
             core.info(
-              `🔄 Unassigning @${issue.assignee.login} from issue #${issue.number}`,
+              `🔄 Unassigning @${issue?.assignee?.login} from issue #${issue.number}`,
             );
-            await this.unassignIssue(issue);
+            await this._unassign_issue(issue);
             core.info(`✅ Unassigned issue #${issue.number}`);
             return issue.number;
           } catch (error) {
@@ -339,28 +262,30 @@ export default class ScheduleHandler {
     core.info(`✅ Successfully unassigned ${unassignedIssues.length} issues`);
   }
 
-  private async processReminders(issues) {
+  private async _process_reminders(issues: Issue[]) {
     core.info(`⚙️ Processing ${issues.length} issues for reminders`);
 
     // Process in chunks of 5
-    const chunks = this.chunkArray(issues, 5);
+    const chunks = chunkArray(issues, 5);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(`Processing reminder chunk ${i + 1}/${chunks.length}`);
+      core.info(
+        `Processing reminder chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
+      );
 
       // Process chunk in parallel
       await Promise.all(
         chunk.map(async (issue) => {
           try {
             core.info(
-              `🔔 Sending reminder to @${issue.assignee.login} for issue #${issue.number}`,
+              `🔔 Sending reminder to @${issue?.assignee?.login} for issue #${issue.number}`,
             );
-            await this.sendReminderForIssue(issue);
+            await this._send_reminder_for_issue(issue);
             core.info(`✅ Reminder sent for issue #${issue.number}`);
           } catch (error) {
             core.warning(
-              `Failed to send reminder for issue #${issue.number}: ${error}`,
+              `🚨 Failed to send reminder for issue #${issue.number}: ${error}`,
             );
           }
         }),
@@ -375,14 +300,19 @@ export default class ScheduleHandler {
     core.info(`✅ Successfully sent reminders for ${issues.length} issues`);
   }
 
-  private async unassignIssue(issue) {
+  private async _unassign_issue(issue: Issue) {
+    if (!issue.assignee) {
+      // well, this should never happen anyway :)
+      core.warning(`⚠️ Issue #${issue.number} has no assignee, skipping...`);
+      return;
+    }
+
     const body = mustache.render(core.getInput(INPUTS.UNASSIGNED_COMMENT), {
       handle: issue.assignee.login,
       pin_label: core.getInput(INPUTS.PIN_LABEL),
     });
 
     return Promise.all([
-      // Unassign the user
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees',
         {
@@ -395,7 +325,6 @@ export default class ScheduleHandler {
           },
         },
       ),
-      // Remove the assigned label
       this.octokit.request(
         'DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}',
         {
@@ -408,7 +337,6 @@ export default class ScheduleHandler {
           },
         },
       ),
-      // Add the comment
       this.octokit.request(
         'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
         {
@@ -424,7 +352,7 @@ export default class ScheduleHandler {
     ]);
   }
 
-  private async sendReminderForIssue(issue) {
+  private async _send_reminder_for_issue(issue: Issue) {
     const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
     let reminderDays = core.getInput(INPUTS.REMINDER_DAYS);
     let daysRemaining;
@@ -433,41 +361,42 @@ export default class ScheduleHandler {
       daysRemaining = Math.ceil(totalDays / 2);
     } else {
       daysRemaining = Number(reminderDays);
+      if (isNaN(daysRemaining)) {
+        daysRemaining = Math.ceil(totalDays / 2);
+      }
     }
 
     const body = mustache.render(core.getInput(INPUTS.REMINDER_COMMENT), {
-      handle: issue.assignee.login,
+      handle: issue.assignee?.login,
       days_remaining: daysRemaining,
       pin_label: core.getInput(INPUTS.PIN_LABEL),
     });
 
-    // Just add the comment - no need to add a special label
-    return this.octokit.request(
-      'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
-      {
-        owner: this.context.repo.owner,
-        repo: this.context.repo.repo,
-        issue_number: issue.number,
-        body,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
+    return Promise.all([
+      this.octokit.request(
+        'POST /repos/{owner}/{repo}/issues/{issue_number}/labels',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: issue?.number!,
+          labels: ['🔔 reminder-sent'],
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
         },
-      },
-    );
-  }
-
-  // Utility function to split array into chunks
-  private chunkArray(array, chunkSize) {
-    const chunks = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-      chunks.push(array.slice(i, i + chunkSize));
-    }
-    return chunks;
-  }
-
-  // Utility function to calculate days between dates
-  private getDaysBetween(start, end) {
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      ),
+      this.octokit.request(
+        'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
+        {
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: issue?.number!,
+          body,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      ),
+    ]);
   }
 }
