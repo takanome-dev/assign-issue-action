@@ -39495,7 +39495,9 @@ var ScheduleHandler = class {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
             issue_number: issue.number,
-            per_page: 100,
+            per_page: 1,
+            page: 1,
+            query: "sort:created-desc event:commented",
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }
@@ -39504,23 +39506,8 @@ var ScheduleHandler = class {
         core.info(
           `\u{1F50D} Timeline URL just for debugging: ${url} - with status - ${status}`
         );
-        const assignmentEvent = timelines.find(
-          (event) => {
-            var _a, _b;
-            return event.event === "assigned" && // @ts-expect-error timeline events have event property but types are incomplete
-            ((_a = event.assignee) == null ? void 0 : _a.login) === ((_b = issue.assignee) == null ? void 0 : _b.login);
-          }
-        );
-        const assignmentDate = assignmentEvent ? (
-          // @ts-expect-error created_at exists on timeline events
-          new Date(assignmentEvent.created_at)
-        ) : new Date(issue.created_at);
-        let lastActivityDate;
-        if (timelines.length > 0) {
-          lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
-        } else {
-          lastActivityDate = assignmentDate;
-        }
+        const assignmentDate = new Date(issue.created_at);
+        const lastActivityDate = new Date(timelines[0].created_at);
         const daysSinceActivity = getDaysBetween(lastActivityDate, /* @__PURE__ */ new Date());
         return {
           assignmentDate,
