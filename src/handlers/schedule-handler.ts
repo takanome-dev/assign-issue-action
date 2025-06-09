@@ -184,9 +184,7 @@ export default class ScheduleHandler {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: issue.number,
-          per_page: 1,
-          page: 1,
-          query: 'sort:created-desc event:commented',
+          per_page: 100,
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
@@ -197,11 +195,29 @@ export default class ScheduleHandler {
         `🔍 Timeline URL just for debugging: ${url} - with status - ${status}`,
       );
 
-      // Use the issue's assigned date as the baseline
-      const assignmentDate = new Date(issue.created_at);
+      // Find the actual assignment event in the timeline
+      const assignmentEvent = timelines.find(
+        (event) =>
+          event.event === 'assigned' &&
+          // @ts-expect-error timeline events have event property but types are incomplete
+          event.assignee?.login === issue.assignee?.login,
+      );
 
-      // @ts-expect-error it actually exists but the type is wrong for some reason
-      const lastActivityDate = new Date(timelines[0].created_at);
+      // Use assignment date if found, otherwise fall back to issue creation date
+      const assignmentDate = assignmentEvent
+        ? // @ts-expect-error created_at exists on timeline events
+          new Date(assignmentEvent.created_at)
+        : new Date(issue.created_at);
+
+      // Find the most recent activity (last timeline event)
+      let lastActivityDate;
+      if (timelines.length > 0) {
+        // @ts-expect-error created_at exists on timeline events
+        lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
+      } else {
+        // If no timeline events, use the assignment date as last activity
+        lastActivityDate = assignmentDate;
+      }
 
       // Calculate days since last activity
       const daysSinceActivity = getDaysBetween(lastActivityDate, new Date());
