@@ -3,7 +3,7 @@
   "version": "2.1.1",
   "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
-    "node": "20.x",
+    "node": "22.x",
     "npm": "10.x"
   },
   "main": "dist/index.js",
@@ -48,7 +48,7 @@
     "@babel/preset-typescript": "7.26.0",
     "@types/js-yaml": "4.0.9",
     "@types/mustache": "4.2.5",
-    "@types/node": "18.19.79",
+    "@types/node": "22.16.5",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "8.26.0",
     "@vercel/ncc": "0.38.3",
