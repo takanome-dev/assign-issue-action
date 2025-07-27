@@ -92,7 +92,9 @@ export default class CommentHandler {
     const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
     const maintainers = maintainersInput.split(',');
 
-    const body = (this.context.payload.comment?.body as string).toLowerCase();
+    const rawBody = this.context.payload.comment?.body as string;
+    // Normalize command: replace leading backslash with slash
+    const body = rawBody.replace(/^\\/, '/').toLowerCase();
 
     // Ignore quoted replies or maintainers using self-assignment commands
     if (
