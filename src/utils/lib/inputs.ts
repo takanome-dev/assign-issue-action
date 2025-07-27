@@ -18,6 +18,7 @@ export enum INPUTS {
   ASSIGNED_COMMENT = 'assigned_comment',
   UNASSIGNED_COMMENT = 'unassigned_comment',
   ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
+  ALREADY_ASSIGNED_COMMENT_PINNED = 'already_assigned_comment_pinned',
   ASSIGNMENT_SUGGESTION_COMMENT = 'assignment_suggestion_comment',
   BLOCK_ASSIGNMENT_COMMENT = 'block_assignment_comment',
   ENABLE_REMINDER = 'enable_reminder',

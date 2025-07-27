@@ -94,6 +94,24 @@ inputs:
       - **Collaborate**: You can ask the assignee if they want help
       - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
       </details>
+  already_assigned_comment_pinned:
+    description: >
+      The comment posted when a user tries to assign themselves to a pinned issue that is already assigned.
+    default: |
+      ### ⚠️ Issue Already Assigned
+
+      Hi @{{ handle }}, this issue is currently assigned to @{{ assignee }}.
+
+      > [!NOTE]
+      > This issue is pinned and will not be automatically unassigned.
+
+      <details>
+      <summary>Options for contributors</summary>
+
+      - **Collaborate**: You can ask the assignee if they want help
+      - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
+      - **Wait for completion**: The issue will remain assigned until the work is complete
+      </details>
   unassigned_comment:
     description: >
       The comment posted after a user is unassigned from an issue.
