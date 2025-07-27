@@ -38910,25 +38910,19 @@ var CommentHandler = class {
       `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
     );
   }
-  _is_issue_pinned() {
-    var _a, _b;
-    const pinLabel = core.getInput("pin_label" /* PIN_LABEL */);
-    return ((_b = (_a = this.issue) == null ? void 0 : _a.labels) == null ? void 0 : _b.some(
-      (label) => label.name === pinLabel
-    )) || false;
-  }
   $_handle_assignment_interest() {
     return __async(this, null, function* () {
       var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
       const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
       if (((_a = this.issue) == null ? void 0 : _a.assignee) || (((_c = (_b = this.issue) == null ? void 0 : _b.assignees) == null ? void 0 : _c.length) || 0) > 0) {
-        const isPinned = this._is_issue_pinned();
-        const commentTemplate = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
-        yield this._create_comment(commentTemplate, {
-          total_days: String(daysUntilUnassign),
-          handle: (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login,
-          assignee: (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login
-        });
+        yield this._create_comment(
+          "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */,
+          {
+            total_days: String(daysUntilUnassign),
+            handle: (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login,
+            assignee: (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login
+          }
+        );
         core.setOutput("assigned", "no");
         return core.info(
           `\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} is already assigned to @${(_j = (_i = this.issue) == null ? void 0 : _i.assignee) == null ? void 0 : _j.login}`
@@ -38985,13 +38979,14 @@ var CommentHandler = class {
         );
       }
       if ((_j = this.issue) == null ? void 0 : _j.assignee) {
-        const isPinned = this._is_issue_pinned();
-        const commentTemplate = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
-        yield this._create_comment(commentTemplate, {
-          total_days: String(daysUntilUnassign),
-          handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
-          assignee: (_n = (_m = this.issue) == null ? void 0 : _m.assignee) == null ? void 0 : _n.login
-        });
+        yield this._create_comment(
+          "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */,
+          {
+            total_days: String(daysUntilUnassign),
+            handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
+            assignee: (_n = (_m = this.issue) == null ? void 0 : _m.assignee) == null ? void 0 : _n.login
+          }
+        );
         core.setOutput("assigned", "no");
         return core.info(
           `\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} is already assigned to @${(_q = (_p = this.issue) == null ? void 0 : _p.assignee) == null ? void 0 : _q.login}`
