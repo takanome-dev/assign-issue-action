@@ -38870,7 +38870,8 @@ var CommentHandler = class {
     );
     const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
     const maintainers = maintainersInput.split(",");
-    const body = ((_e = this.context.payload.comment) == null ? void 0 : _e.body).toLowerCase();
+    const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
+    const body = rawBody.replace(/^\\/, "/").toLowerCase();
     if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
       core.info(
         `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
