@@ -14516,7 +14516,7 @@ module.exports = {
 
 
 const { parseSetCookie } = __nccwpck_require__(8915)
-const { stringify } = __nccwpck_require__(3834)
+const { stringify, getHeadersList } = __nccwpck_require__(3834)
 const { webidl } = __nccwpck_require__(4222)
 const { Headers } = __nccwpck_require__(6349)
 
@@ -14592,13 +14592,14 @@ function getSetCookies (headers) {
 
   webidl.brandCheck(headers, Headers, { strict: false })
 
-  const cookies = headers.getSetCookie()
+  const cookies = getHeadersList(headers).cookies
 
   if (!cookies) {
     return []
   }
 
-  return cookies.map((pair) => parseSetCookie(pair))
+  // In older versions of undici, cookies is a list of name:value.
+  return cookies.map((pair) => parseSetCookie(Array.isArray(pair) ? pair[1] : pair))
 }
 
 /**
@@ -15025,14 +15026,13 @@ module.exports = {
 /***/ }),
 
 /***/ 3834:
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
 
-/**
- * @param {string} value
- * @returns {boolean}
- */
+const assert = __nccwpck_require__(2613)
+const { kHeadersList } = __nccwpck_require__(6443)
+
 function isCTLExcludingHtab (value) {
   if (value.length === 0) {
     return false
@@ -15293,13 +15293,31 @@ function stringify (cookie) {
   return out.join('; ')
 }
 
+let kHeadersListNode
+
+function getHeadersList (headers) {
+  if (headers[kHeadersList]) {
+    return headers[kHeadersList]
+  }
+
+  if (!kHeadersListNode) {
+    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
+      (symbol) => symbol.description === 'headers list'
+    )
+
+    assert(kHeadersListNode, 'Headers cannot be parsed')
+  }
+
+  const headersList = headers[kHeadersListNode]
+  assert(headersList)
+
+  return headersList
+}
+
 module.exports = {
   isCTLExcludingHtab,
-  validateCookieName,
-  validateCookiePath,
-  validateCookieValue,
-  toIMFDate,
-  stringify
+  stringify,
+  getHeadersList
 }
 
 
@@ -19290,7 +19308,6 @@ const {
   isValidHeaderName,
   isValidHeaderValue
 } = __nccwpck_require__(5523)
-const util = __nccwpck_require__(9023)
 const { webidl } = __nccwpck_require__(4222)
 const assert = __nccwpck_require__(2613)
 
@@ -19844,9 +19861,6 @@ Object.defineProperties(Headers.prototype, {
   [Symbol.toStringTag]: {
     value: 'Headers',
     configurable: true
-  },
-  [util.inspect.custom]: {
-    enumerable: false
   }
 })
 
@@ -28994,20 +29008,6 @@ class Pool extends PoolBase {
       ? { ...options.interceptors }
       : undefined
     this[kFactory] = factory
-
-    this.on('connectionError', (origin, targets, error) => {
-      // If a connection error occurs, we remove the client from the pool,
-      // and emit a connectionError event. They will not be re-used.
-      // Fixes https://github.com/nodejs/undici/issues/3895
-      for (const target of targets) {
-        // Do not use kRemoveClient here, as it will close the client,
-        // but the client cannot be closed in this state.
-        const idx = this[kClients].indexOf(target)
-        if (idx !== -1) {
-          this[kClients].splice(idx, 1)
-        }
-      }
-    })
   }
 
   [kGetDispatcher] () {
@@ -39283,13 +39283,14 @@ var CommentHandler = class {
         "is:open",
         `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
       ];
-      const issues = yield this.octokit.request(`GET /search/issues`, {
-        advanced_search: true,
-        q: query.join(" "),
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
+      const issues = yield this.octokit.request(
+        `GET /search/issues?q=${encodeURIComponent(query.join(" "))}`,
+        {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
         }
-      });
+      );
       return issues.data.items.length;
     });
   }
@@ -39434,9 +39435,8 @@ var ScheduleHandler = class {
       const {
         data: { items: issues }
       } = yield this.octokit.request("GET /search/issues", {
-        q: `repo:${owner}/${repo} AND is:open AND label:"${this.assignedLabel}" AND -label:"${this.exemptLabel}" AND -label:"\u{1F514} reminder-sent" AND assignee:* AND updated:<=${timestamp}`,
+        q: `repo:${owner}/${repo} is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" -label:"\u{1F514} reminder-sent" assignee:* updated:<=${timestamp}`,
         per_page: 100,
-        advanced_search: true,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28"
         }
@@ -39495,7 +39495,9 @@ var ScheduleHandler = class {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
             issue_number: issue.number,
-            per_page: 100,
+            per_page: 1,
+            page: 1,
+            query: "sort:created-desc event:commented",
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
             }
@@ -39504,23 +39506,8 @@ var ScheduleHandler = class {
         core.info(
           `\u{1F50D} Timeline URL just for debugging: ${url} - with status - ${status}`
         );
-        const assignmentEvent = timelines.find(
-          (event) => {
-            var _a, _b;
-            return event.event === "assigned" && // @ts-expect-error timeline events have event property but types are incomplete
-            ((_a = event.assignee) == null ? void 0 : _a.login) === ((_b = issue.assignee) == null ? void 0 : _b.login);
-          }
-        );
-        const assignmentDate = assignmentEvent ? (
-          // @ts-expect-error created_at exists on timeline events
-          new Date(assignmentEvent.created_at)
-        ) : new Date(issue.created_at);
-        let lastActivityDate;
-        if (timelines.length > 0) {
-          lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
-        } else {
-          lastActivityDate = assignmentDate;
-        }
+        const assignmentDate = new Date(issue.created_at);
+        const lastActivityDate = new Date(timelines[0].created_at);
         const daysSinceActivity = getDaysBetween(lastActivityDate, /* @__PURE__ */ new Date());
         return {
           assignmentDate,

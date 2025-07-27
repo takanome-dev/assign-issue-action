@@ -561,14 +561,13 @@ export default class CommentHandler {
       `assignee:${this.comment?.user?.login}`,
     ];
 
-    const issues = await this.octokit.request(
-      `GET /search/issues?q=${encodeURIComponent(query.join(' '))}`,
-      {
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
+    const issues = await this.octokit.request(`GET /search/issues`, {
+      advanced_search: true,
+      q: query.join(' '),
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
       },
-    );
+    });
 
     return issues.data.items.length;
   }
