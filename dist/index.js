@@ -39283,14 +39283,13 @@ var CommentHandler = class {
         "is:open",
         `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
       ];
-      const issues = yield this.octokit.request(
-        `GET /search/issues?q=${encodeURIComponent(query.join(" "))}`,
-        {
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
+      const issues = yield this.octokit.request(`GET /search/issues`, {
+        advanced_search: true,
+        q: query.join(" "),
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
         }
-      );
+      });
       return issues.data.items.length;
     });
   }
@@ -39435,8 +39434,9 @@ var ScheduleHandler = class {
       const {
         data: { items: issues }
       } = yield this.octokit.request("GET /search/issues", {
-        q: `repo:${owner}/${repo} is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" -label:"\u{1F514} reminder-sent" assignee:* updated:<=${timestamp}`,
+        q: `repo:${owner}/${repo} AND is:open AND label:"${this.assignedLabel}" AND -label:"${this.exemptLabel}" AND -label:"\u{1F514} reminder-sent" AND assignee:* AND updated:<=${timestamp}`,
         per_page: 100,
+        advanced_search: true,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28"
         }

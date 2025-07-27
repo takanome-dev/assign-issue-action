@@ -105,8 +105,9 @@ export default class ScheduleHandler {
     const {
       data: { items: issues },
     } = await this.octokit.request('GET /search/issues', {
-      q: `repo:${owner}/${repo} is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" -label:"🔔 reminder-sent" assignee:* updated:<=${timestamp}`,
+      q: `repo:${owner}/${repo} AND is:open AND label:"${this.assignedLabel}" AND -label:"${this.exemptLabel}" AND -label:"🔔 reminder-sent" AND assignee:* AND updated:<=${timestamp}`,
       per_page: 100,
+      advanced_search: true,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28',
       },
