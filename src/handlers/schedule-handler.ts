@@ -518,8 +518,10 @@ export default class ScheduleHandler {
 
     const unassignedTable = unassignedIssues.map((issue) => ({
       Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
-      Assignee: issue.assignee?.login || 'Unassigned',
-      'Days Since Activity': `${issue.activityData?.daysSinceActivity || 'N/A'}`,
+      Assignee: issue.assignee?.login
+        ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})`
+        : 'Unassigned',
+      'Days Since Activity': `${(issue as any).activityData?.daysSinceActivity || 'N/A'}`,
       Status: 'Unassigned',
     }));
 
