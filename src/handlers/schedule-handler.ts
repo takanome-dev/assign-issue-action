@@ -100,12 +100,14 @@ export default class ScheduleHandler {
       `⏱️ Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`,
     );
 
-    const timestamp = since(reminderDays);
-    // Get all open issues with the assigned label and not updated in the last "reminderDays" days
+    const timestamp = since(daysUntilUnassign);
+    core.info(`📅 Timestamp for filtering: ${timestamp}`);
+
+    // Get all open issues with the assigned label and not updated in the last "daysUntilUnassign" days
     const {
       data: { items: issues },
     } = await this.octokit.request('GET /search/issues', {
-      q: `repo:${owner}/${repo} AND is:open AND label:"${this.assignedLabel}" AND -label:"${this.exemptLabel}" AND -label:"🔔 reminder-sent" AND assignee:* AND updated:<=${timestamp}`,
+      q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:* updated:<=${timestamp}`,
       per_page: 100,
       advanced_search: true,
       headers: {
@@ -114,7 +116,7 @@ export default class ScheduleHandler {
     });
 
     core.info(
-      `📊 Found ${issues.length} open issues with the ${this.assignedLabel} label`,
+      `📊 Found ${issues.length} open issues with the ${this.assignedLabel} label that are not pinned, and not updated since ${timestamp}`,
     );
 
     const unassignIssues = [];
@@ -125,9 +127,6 @@ export default class ScheduleHandler {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
 
       // Process chunk in parallel
       const results = await Promise.all(
@@ -149,15 +148,24 @@ export default class ScheduleHandler {
         const { issue, activityData } = result;
         if (!activityData) continue;
 
-        const { daysSinceActivity } = activityData;
-
-        if (daysSinceActivity >= daysUntilUnassign) {
+        if (activityData.daysSinceActivity >= daysUntilUnassign) {
           unassignIssues.push(issue);
         } else if (
-          daysSinceActivity >= reminderDays &&
-          daysSinceActivity < daysUntilUnassign
+          activityData.daysSinceActivity >= reminderDays &&
+          activityData.daysSinceActivity < daysUntilUnassign
         ) {
-          reminderIssues.push(issue);
+          // Only add to reminder list if it doesn't already have the reminder-sent label
+          const hasReminderLabel = issue.labels?.some(
+            (label) => label.name === '🔔 reminder-sent',
+          );
+
+          if (!hasReminderLabel) {
+            reminderIssues.push(issue);
+          } else {
+            core.info(
+              `📝 Issue #${issue.number} already has reminder-sent label, will be unassigned in ${daysUntilUnassign - activityData.daysSinceActivity} days`,
+            );
+          }
         }
       }
 
@@ -175,11 +183,7 @@ export default class ScheduleHandler {
 
   private async _get_issue_activity(issue: Issue) {
     try {
-      const {
-        data: timelines,
-        url,
-        status,
-      } = await this.octokit.request(
+      const { data: timelines } = await this.octokit.request(
         'GET /repos/{owner}/{repo}/issues/{issue_number}/timeline',
         {
           owner: this.context.repo.owner,
@@ -190,10 +194,6 @@ export default class ScheduleHandler {
             'X-GitHub-Api-Version': '2022-11-28',
           },
         },
-      );
-
-      core.info(
-        `🔍 Timeline URL just for debugging: ${url} - with status - ${status}`,
       );
 
       // Find the actual assignment event in the timeline
@@ -245,9 +245,6 @@ export default class ScheduleHandler {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing unassignment chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
 
       // Process chunk in parallel
       const results = await Promise.all(
@@ -260,7 +257,9 @@ export default class ScheduleHandler {
             core.info(`✅ Unassigned issue #${issue.number}`);
             return issue.number;
           } catch (error) {
-            core.warning(`Failed to unassign issue #${issue.number}: ${error}`);
+            core.warning(
+              `🚨 Failed to unassign issue #${issue.number}: ${error}`,
+            );
             return null;
           }
         }),
@@ -287,10 +286,6 @@ export default class ScheduleHandler {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing reminder chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
-
       // Process chunk in parallel
       await Promise.all(
         chunk.map(async (issue) => {
