@@ -18,12 +18,12 @@ export enum INPUTS {
   ASSIGNED_COMMENT = 'assigned_comment',
   UNASSIGNED_COMMENT = 'unassigned_comment',
   ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
+  ALREADY_ASSIGNED_COMMENT_PINNED = 'already_assigned_comment_pinned',
   ASSIGNMENT_SUGGESTION_COMMENT = 'assignment_suggestion_comment',
   BLOCK_ASSIGNMENT_COMMENT = 'block_assignment_comment',
   ENABLE_REMINDER = 'enable_reminder',
   REMINDER_DAYS = 'reminder_days',
   REMINDER_COMMENT = 'reminder_comment',
-  WORKFLOW_DISPATCH_ACTION = 'workflow_dispatch_action',
 
   MAX_ASSIGNMENTS = 'max_assignments',
   MAX_ASSIGNMENTS_MESSAGE = 'max_assignments_message',

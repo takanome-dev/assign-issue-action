@@ -92,7 +92,9 @@ export default class CommentHandler {
     const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
     const maintainers = maintainersInput.split(',');
 
-    const body = (this.context.payload.comment?.body as string).toLowerCase();
+    const rawBody = this.context.payload.comment?.body as string;
+    // Normalize command: replace leading backslash with slash
+    const body = rawBody.replace(/^\\/, '/').toLowerCase();
 
     // Ignore quoted replies or maintainers using self-assignment commands
     if (
@@ -155,18 +157,31 @@ export default class CommentHandler {
     );
   }
 
+  private _is_issue_pinned(): boolean {
+    const pinLabel = core.getInput(INPUTS.PIN_LABEL);
+    return (
+      this.issue?.labels?.some(
+        (label: { name: string }) => label.name === pinLabel,
+      ) || false
+    );
+  }
+
   private async $_handle_assignment_interest() {
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
 
     if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
-      await this._create_comment<AlreadyAssignedCommentArg>(
-        INPUTS.ALREADY_ASSIGNED_COMMENT,
-        {
-          total_days: String(daysUntilUnassign),
-          handle: this.comment?.user?.login,
-          assignee: this.issue?.assignee?.login,
-        },
-      );
+      // Check if the issue is pinned
+      const isPinned = this._is_issue_pinned();
+
+      const commentTemplate = isPinned
+        ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED
+        : INPUTS.ALREADY_ASSIGNED_COMMENT;
+
+      await this._create_comment<AlreadyAssignedCommentArg>(commentTemplate, {
+        total_days: String(daysUntilUnassign),
+        handle: this.comment?.user?.login,
+        assignee: this.issue?.assignee?.login,
+      });
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
@@ -228,14 +243,18 @@ export default class CommentHandler {
     }
 
     if (this.issue?.assignee) {
-      await this._create_comment<AlreadyAssignedCommentArg>(
-        INPUTS.ALREADY_ASSIGNED_COMMENT,
-        {
-          total_days: String(daysUntilUnassign),
-          handle: this.comment?.user?.login,
-          assignee: this.issue?.assignee?.login,
-        },
-      );
+      // Check if the issue is pinned
+      const isPinned = this._is_issue_pinned();
+
+      const commentTemplate = isPinned
+        ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED
+        : INPUTS.ALREADY_ASSIGNED_COMMENT;
+
+      await this._create_comment<AlreadyAssignedCommentArg>(commentTemplate, {
+        total_days: String(daysUntilUnassign),
+        handle: this.comment?.user?.login,
+        assignee: this.issue?.assignee?.login,
+      });
       core.setOutput('assigned', 'no');
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
@@ -561,14 +580,13 @@ export default class CommentHandler {
       `assignee:${this.comment?.user?.login}`,
     ];
 
-    const issues = await this.octokit.request(
-      `GET /search/issues?q=${encodeURIComponent(query.join(' '))}`,
-      {
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
+    const issues = await this.octokit.request(`GET /search/issues`, {
+      advanced_search: true,
+      q: query.join(' '),
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
       },
-    );
+    });
 
     return issues.data.items.length;
   }
