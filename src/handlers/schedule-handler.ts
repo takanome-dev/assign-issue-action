@@ -269,7 +269,7 @@ export default class ScheduleHandler {
 
       // Add successful unassignments to the numbers list for output
       unassignedIssueNumbers.push(
-        results
+        ...results
           .filter((r) => r.status === 'fulfilled')
           .map((r) => r.value.issue.number),
       );
@@ -488,45 +488,42 @@ export default class ScheduleHandler {
       }),
     );
 
-    const summary = [
-      '## 📋 Summary of Processed Issues',
-      '',
-      `**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
-      `**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
-      '',
-      '### Unassigned Issues',
-      '',
-      unassignedTable.length > 0
-        ? `| Issue | Assignee | Days Since Activity | Status |` +
-          '\n' +
-          `|-------|----------|--------------------|--------|` +
-          '\n' +
-          unassignedTable
-            .map(
-              (row) =>
-                `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
-            )
-            .join('\n')
-        : 'No unassigned issues found.',
-      '',
-      '### Reminder Sent Issues',
-      '',
-      reminderTable.length > 0
-        ? `| Issue | Assignee | Days Since Activity | Status |` +
-          '\n' +
-          `|-------|----------|--------------------|--------|` +
-          '\n' +
-          reminderTable
-            .map(
-              (row) =>
-                `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
-            )
-            .join('\n')
-        : 'No reminder sent issues found.',
-      '',
-    ];
-
-    core.summary.addRaw(summary.join('\n'));
+    core.summary.addHeading('📋 Summary of Processed Issues', 2);
+    core.summary.addBreak();
+    if (unassignedTable.length > 0) {
+      core.summary.addHeading('🔍 Unassigned Issues', 3);
+      core.summary.addTable([
+        ['Issue', 'Assignee', 'Days Since Activity', 'Status'],
+        ...unassignedTable.map((row) => [
+          row.Issue,
+          row.Assignee,
+          row['Days Since Activity'],
+          row.Status,
+        ]),
+      ]);
+    }
+    core.summary.addBreak();
+    if (reminderTable.length > 0) {
+      core.summary.addHeading('🔔 Reminder Sent Issues', 3);
+      core.summary.addTable([
+        ['Issue', 'Assignee', 'Days Since Activity', 'Status'],
+        ...reminderTable.map((row) => [
+          row.Issue,
+          row.Assignee,
+          row['Days Since Activity'],
+          row.Status,
+        ]),
+      ]);
+    }
+    core.summary.addBreak();
+    core.summary.addCodeBlock(
+      JSON.stringify({
+        unassigned: processedUnassignments,
+        reminders: processedReminders,
+      }),
+      'json',
+    );
+    core.summary.addBreak();
     await core.summary.write();
   }
 }
