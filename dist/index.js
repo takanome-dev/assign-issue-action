@@ -39380,11 +39380,6 @@ var CommentHandler = class {
 
 
 // src/utils/helpers/common.ts
-function since(days) {
-  const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1e3;
-  const date = new Date(+/* @__PURE__ */ new Date() - totalDaysInMilliseconds);
-  return new Date(date).toISOString().substring(0, 10);
-}
 function chunkArray(array, chunkSize) {
   const chunks = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -39408,7 +39403,6 @@ var ScheduleHandler = class {
     this.octokit = new MyOctokit2({
       auth: this.token,
       throttle: {
-        // @ts-expect-error it's fine buddy :)
         onRateLimit: (retryAfter, options, octokit, retryCount) => {
           core.warning(
             `\u26A0\uFE0F Request quota exhausted for request ${options.method} ${options.url} \u26A0\uFE0F`
@@ -39417,6 +39411,7 @@ var ScheduleHandler = class {
             core.warning(`\u26A0\uFE0F Retrying after ${retryAfter} seconds! \u26A0\uFE0F`);
             return true;
           }
+          return false;
         },
         onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
           core.warning(
@@ -39428,6 +39423,7 @@ var ScheduleHandler = class {
             );
             return true;
           }
+          return false;
         }
       }
     });
@@ -39439,8 +39435,6 @@ var ScheduleHandler = class {
       let processedReminders = [];
       if (unassignIssues.length > 0) {
         processedUnassignments = yield this._process_unassignments(unassignIssues);
-      } else {
-        core.info("\u{1F50D} No issues to unassign, skipping...");
       }
       const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
       if (enableReminder !== "true") {
@@ -39449,8 +39443,6 @@ var ScheduleHandler = class {
       }
       if (reminderIssues.length > 0) {
         processedReminders = yield this._process_reminders(reminderIssues);
-      } else {
-        core.info("\u{1F50D} No issues need reminders at this time, skipping...");
       }
       yield this._generate_summary(processedUnassignments, processedReminders);
     });
@@ -39470,25 +39462,16 @@ var ScheduleHandler = class {
           reminderDays = Math.floor(daysUntilUnassign / 2);
         }
       }
-      core.info(`\u{1F50D} Fetching assigned issues from ${owner}/${repo}`);
-      core.info(
-        `\u23F1\uFE0F Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`
-      );
-      const timestamp = since(daysUntilUnassign);
-      core.info(`\u{1F4C5} Timestamp for filtering: ${timestamp}`);
       const {
         data: { items: issues }
       } = yield this.octokit.request("GET /search/issues", {
-        q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:* updated:<=${timestamp}`,
+        q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
         per_page: 100,
         advanced_search: true,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28"
         }
       });
-      core.info(
-        `\u{1F4CA} Found ${issues.length} open issues with the ${this.assignedLabel} label that are not pinned, and not updated since ${timestamp}`
-      );
       const unassignIssues = [];
       const reminderIssues = [];
       const chunks = chunkArray(issues, 10);
@@ -39508,13 +39491,12 @@ var ScheduleHandler = class {
           );
           if (result.daysSinceActivity >= daysUntilUnassign) {
             unassignIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
+            continue;
           }
-          if (result.daysSinceActivity >= reminderDays && !hasReminderLabel) {
-            reminderIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
-          } else {
-            core.info(
-              `\u{1F4DD} Issue #${result.issue.number} already has reminder-sent label, will be unassigned in ${daysUntilUnassign - result.daysSinceActivity} days`
-            );
+          if (result.daysSinceActivity >= reminderDays) {
+            if (!hasReminderLabel) {
+              reminderIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
+            }
           }
         }
       }
@@ -39583,18 +39565,10 @@ var ScheduleHandler = class {
         const results = yield Promise.allSettled(
           chunk.map((_a) => __async(this, null, function* () {
             var _b = _a, { issue } = _b, rest = __objRest(_b, ["issue"]);
-            var _a2;
             try {
-              core.info(
-                `\u{1F504} Unassigning @${(_a2 = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a2.login} from issue #${issue.number}`
-              );
               yield this._unassign_issue(issue);
-              core.info(`\u2705 Unassigned issue #${issue.number}`);
               return __spreadValues({ issue }, rest);
             } catch (error) {
-              core.warning(
-                `\u{1F6A8} Failed to unassign issue #${issue.number}: ${error}`
-              );
               return __spreadValues({ issue }, rest);
             }
           }))
@@ -39610,9 +39584,6 @@ var ScheduleHandler = class {
         }
       }
       core.setOutput("unassigned_issues", unassignedIssueNumbers);
-      core.info(
-        `\u2705 Successfully unassigned ${unassignedIssueNumbers.length} issues`
-      );
       return processedResults;
     });
   }
@@ -39625,18 +39596,10 @@ var ScheduleHandler = class {
         const results = yield Promise.allSettled(
           chunk.map((_a) => __async(this, null, function* () {
             var _b = _a, { issue } = _b, rest = __objRest(_b, ["issue"]);
-            var _a2;
             try {
-              core.info(
-                `\u{1F514} Sending reminder to @${(_a2 = issue == null ? void 0 : issue.assignee) == null ? void 0 : _a2.login} for issue #${issue.number}`
-              );
               yield this._send_reminder_for_issue(issue);
-              core.info(`\u2705 Reminder sent for issue #${issue.number}`);
               return __spreadValues({ issue }, rest);
             } catch (error) {
-              core.warning(
-                `\u{1F6A8} Failed to send reminder for issue #${issue.number}: ${error}`
-              );
               return __spreadValues({ issue }, rest);
             }
           }))
@@ -39645,9 +39608,6 @@ var ScheduleHandler = class {
           ...results.filter((r) => r.status === "fulfilled").map((r) => r.value)
         );
       }
-      core.info(
-        `\u2705 Successfully sent reminders for ${processedResults.length} issues`
-      );
       return processedResults;
     });
   }
@@ -39800,42 +39760,30 @@ var ScheduleHandler = class {
           };
         }
       );
-      core.summary.addHeading("\u{1F4CB} Summary of Processed Issues", 2);
-      core.summary.addBreak();
-      if (unassignedTable.length > 0) {
-        core.summary.addHeading("\u{1F50D} Unassigned Issues", 3);
-        core.summary.addTable([
-          ["Issue", "Assignee", "Days Since Activity", "Status"],
-          ...unassignedTable.map((row) => [
-            row.Issue,
-            row.Assignee,
-            row["Days Since Activity"],
-            row.Status
-          ])
-        ]);
-      }
-      core.summary.addBreak();
-      if (reminderTable.length > 0) {
-        core.summary.addHeading("\u{1F514} Reminder Sent Issues", 3);
-        core.summary.addTable([
-          ["Issue", "Assignee", "Days Since Activity", "Status"],
-          ...reminderTable.map((row) => [
-            row.Issue,
-            row.Assignee,
-            row["Days Since Activity"],
-            row.Status
-          ])
-        ]);
-      }
-      core.summary.addBreak();
-      core.summary.addCodeBlock(
-        JSON.stringify({
-          unassigned: processedUnassignments,
-          reminders: processedReminders
-        }),
-        "json"
-      );
-      core.summary.addBreak();
+      const summary2 = [
+        "## \u{1F4CB} Summary of Processed Issues",
+        "",
+        `**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
+        `**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
+        "",
+        "### Unassigned Issues",
+        "",
+        unassignedTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|
+` + unassignedTable.map(
+          (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
+        ).join("\n") : "No unassigned issues found.",
+        "",
+        "### Reminder Sent Issues",
+        "",
+        reminderTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|
+` + reminderTable.map(
+          (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
+        ).join("\n") : "No reminder sent issues found.",
+        ""
+      ];
+      core.summary.addRaw(summary2.join("\n"));
       yield core.summary.write();
     });
   }

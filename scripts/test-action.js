@@ -80,7 +80,8 @@ async function testSearchQueries() {
   console.log(`📅 Timestamp for filtering: ${timestamp}`);
 
   try {
-    const query = `repo:${config.owner}/${config.repo} is:issue is:open label:"${config.assignedLabel}" assignee:* -label:"${config.exemptLabel}" updated:<=${timestamp}`;
+    const query = `repo:${config.owner}/${config.repo} is:issue is:open label:"${config.assignedLabel}" assignee:* -label:"${config.exemptLabel}"`;
+    // const query = `repo:${config.owner}/${config.repo} is:issue is:open label:"${config.assignedLabel}" assignee:* -label:"${config.exemptLabel}" updated:<=${timestamp}`;
     console.log(`Query: ${query}`);
     const result = await octokit.request('GET /search/issues', {
       q: query,
@@ -116,6 +117,7 @@ async function testSearchQueries() {
 
           if (result.daysSinceActivity >= config.daysUntilUnassign) {
             unassignIssues.push({ ...result, hasReminderLabel });
+            continue;
           }
 
           if (result.daysSinceActivity >= reminderDays && !hasReminderLabel) {
