@@ -69,8 +69,8 @@ export default class ScheduleHandler {
     const { unassignIssues, reminderIssues } =
       await this._get_assigned_issues();
 
-    let processedUnassignments: Array<ExtendedIssue> = [];
-    let processedReminders: Array<ExtendedIssue> = [];
+    let processedUnassignments: ExtendedIssue[] = [];
+    let processedReminders: ExtendedIssue[] = [];
 
     // Process unassignment for stale issues
     if (unassignIssues.length > 0) {
@@ -227,8 +227,8 @@ export default class ScheduleHandler {
   //   }
   // }
 
-  private async _process_unassignments(arr: Array<ExtendedIssue>) {
-    const processedResults: Array<ExtendedIssue> = [];
+  private async _process_unassignments(arr: ExtendedIssue[]) {
+    const processedResults: ExtendedIssue[] = [];
     const unassignedIssueNumbers = [];
 
     // Process in chunks of 5
@@ -247,7 +247,7 @@ export default class ScheduleHandler {
             await this._unassign_issue(issue);
             // core.info(`✅ Unassigned issue #${issue.number}`);
             return { issue, ...rest };
-          } catch (error) {
+          } catch (err) {
             // core.warning(
             //   `🚨 Failed to unassign issue #${issue.number}: ${error}`,
             // );
@@ -280,8 +280,8 @@ export default class ScheduleHandler {
     return processedResults;
   }
 
-  private async _process_reminders(arr: Array<ExtendedIssue>) {
-    const processedResults: Array<ExtendedIssue> = [];
+  private async _process_reminders(arr: ExtendedIssue[]) {
+    const processedResults: ExtendedIssue[] = [];
 
     // Process in chunks of 5
     const chunks = chunkArray(arr, 5);
@@ -365,7 +365,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           name: core.getInput(INPUTS.PIN_LABEL),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -377,7 +377,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -418,7 +418,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           labels: ['🔔 reminder-sent'],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -430,7 +430,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           body,
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -441,8 +441,8 @@ export default class ScheduleHandler {
   }
 
   private async _generate_summary(
-    processedUnassignments: Array<ExtendedIssue>,
-    processedReminders: Array<ExtendedIssue>,
+    processedUnassignments: ExtendedIssue[],
+    processedReminders: ExtendedIssue[],
   ) {
     if (
       processedUnassignments.length === 0 &&
@@ -484,30 +484,28 @@ export default class ScheduleHandler {
       '',
       unassignedTable.length > 0
         ? `| Issue | Assignee | Days Since Activity | Status |` +
-          '\n' +
+          `\n` +
           `|-------|----------|--------------------|--------|` +
-          '\n' +
-          unassignedTable
+          `\n${unassignedTable
             .map(
               (row) =>
                 `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
             )
-            .join('\n')
+            .join('\n')}`
         : 'No unassigned issues found.',
       '',
       '### Reminder Sent Issues',
       '',
       reminderTable.length > 0
         ? `| Issue | Assignee | Days Since Activity | Status |` +
-          '\n' +
+          `\n` +
           `|-------|----------|--------------------|--------|` +
-          '\n' +
-          reminderTable
+          `\n${reminderTable
             .map(
               (row) =>
                 `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
             )
-            .join('\n')
+            .join('\n')}`
         : 'No reminder sent issues found.',
       '',
     ];

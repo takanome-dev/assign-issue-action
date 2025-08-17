@@ -38987,7 +38987,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_b = this.issue) == null ? void 0 : _b.number,
+          issue_number: Number((_b = this.issue) == null ? void 0 : _b.number),
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
           }
@@ -39113,7 +39113,7 @@ var CommentHandler = class {
               {
                 owner: this.context.repo.owner,
                 repo: this.context.repo.repo,
-                issue_number: (_e = this.issue) == null ? void 0 : _e.number,
+                issue_number: Number((_e = this.issue) == null ? void 0 : _e.number),
                 assignees: [userHandle.trim()],
                 headers: {
                   "X-GitHub-Api-Version": "2022-11-28"
@@ -39125,7 +39125,7 @@ var CommentHandler = class {
               {
                 owner: this.context.repo.owner,
                 repo: this.context.repo.repo,
-                issue_number: (_f = this.issue) == null ? void 0 : _f.number,
+                issue_number: Number((_f = this.issue) == null ? void 0 : _f.number),
                 labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)],
                 headers: {
                   "X-GitHub-Api-Version": "2022-11-28"
@@ -39190,7 +39190,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_a = this.issue) == null ? void 0 : _a.number,
+          issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
           assignees: [(_b = this.comment) == null ? void 0 : _b.user.login],
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39202,7 +39202,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_c = this.issue) == null ? void 0 : _c.number,
+          issue_number: Number((_c = this.issue) == null ? void 0 : _c.number),
           labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)],
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39219,7 +39219,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_a = this.issue) == null ? void 0 : _a.number,
+          issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
           assignees: [(_b = this.issue) == null ? void 0 : _b.assignee.login],
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39231,7 +39231,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_c = this.issue) == null ? void 0 : _c.number,
+          issue_number: Number((_c = this.issue) == null ? void 0 : _c.number),
           name: core.getInput("assigned_label" /* ASSIGNED_LABEL */),
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39243,7 +39243,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_d = this.issue) == null ? void 0 : _d.number,
+          issue_number: Number((_d = this.issue) == null ? void 0 : _d.number),
           name: core.getInput("pin_label" /* PIN_LABEL */),
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39255,7 +39255,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: (_e = this.issue) == null ? void 0 : _e.number,
+          issue_number: Number((_e = this.issue) == null ? void 0 : _e.number),
           name: "\u{1F514} reminder-sent",
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
@@ -39302,7 +39302,7 @@ var CommentHandler = class {
       {
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        issue_number: (_a = this.issue) == null ? void 0 : _a.number,
+        issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
         body,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28"
@@ -39568,7 +39568,7 @@ var ScheduleHandler = class {
             try {
               yield this._unassign_issue(issue);
               return __spreadValues({ issue }, rest);
-            } catch (error) {
+            } catch (err) {
               return __spreadValues({ issue }, rest);
             }
           }))
@@ -39651,7 +39651,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: Number(issue == null ? void 0 : issue.number),
             name: core.getInput("pin_label" /* PIN_LABEL */),
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39663,7 +39663,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: Number(issue == null ? void 0 : issue.number),
             name: "\u{1F514} reminder-sent",
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39701,7 +39701,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: Number(issue == null ? void 0 : issue.number),
             labels: ["\u{1F514} reminder-sent"],
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39713,7 +39713,7 @@ var ScheduleHandler = class {
           {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            issue_number: issue == null ? void 0 : issue.number,
+            issue_number: Number(issue == null ? void 0 : issue.number),
             body,
             headers: {
               "X-GitHub-Api-Version": "2022-11-28"
@@ -39761,17 +39761,17 @@ var ScheduleHandler = class {
         "",
         unassignedTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
 |-------|----------|--------------------|--------|
-` + unassignedTable.map(
+${unassignedTable.map(
           (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
-        ).join("\n") : "No unassigned issues found.",
+        ).join("\n")}` : "No unassigned issues found.",
         "",
         "### Reminder Sent Issues",
         "",
         reminderTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
 |-------|----------|--------------------|--------|
-` + reminderTable.map(
+${reminderTable.map(
           (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
-        ).join("\n") : "No reminder sent issues found.",
+        ).join("\n")}` : "No reminder sent issues found.",
         ""
       ];
       core.summary.addRaw(summary2.join("\n"));
