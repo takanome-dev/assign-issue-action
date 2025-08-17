@@ -1,21 +1,19 @@
+import { context } from '@actions/github';
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import Comment from './lib/comment';
-import scheduleHandler from './lib/schedule';
 
-export type Core = typeof core;
-export type Github = typeof github;
+import CommentHandler from './handlers/comment-handler';
+import ScheduleHandler from './handlers/schedule-handler';
 
 (async () => {
+  const event = context.eventName;
+
   try {
-    if (github.context.eventName === 'issue_comment') {
-      const issue = new Comment(core, github);
-      await issue.handleAssignIssue();
-    } else if (
-      github.context.eventName === 'workflow_dispatch' ||
-      github.context.eventName === 'schedule'
-    ) {
-      await scheduleHandler(core);
+    if (event === 'issue_comment') {
+      const cmtHandler = new CommentHandler();
+      await cmtHandler.handle_issue_comment();
+    } else if (event === 'workflow_dispatch' || event === 'schedule') {
+      const scheduleHandler = new ScheduleHandler();
+      await scheduleHandler.handle_unassignments();
     } else {
       return;
     }

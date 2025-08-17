@@ -1,9 +1,17 @@
-name: Assign Me Action
-author: TAKANOME-DEV
-description: Enable a '/assign-me' command/comment that allows contributors to assign themselves issues.
+name: Assign Issue Action
+author: takanome-dev
+description: >
+  Enable commands that streamline issue assignments:
+
+  - /assign-me for contributors to self-assign.
+  - /unassign-me for self-unassignment.
+  - /assign @user for maintainers to assign specific users.
+  - /unassign @user for maintainers to unassign others easily.
+
+  This action simplifies issue management for maintainers and contributors, making collaboration more efficient.
 
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
 
 branding:
@@ -14,35 +22,196 @@ inputs:
   github_token:
     default: ${{ github.token }}
     required: true
-  trigger:
-    description: The comment that triggers the action
+    description: The GitHub token used to authenticate API requests.
+  self_assign_cmd:
+    description: The command that assigns the issue to the one who triggered it
     default: /assign-me
+  self_unassign_cmd:
+    description: The command that unassigns the issue from the user who triggered it, if they are already assigned.
+    default: /unassign-me
+  assign_user_cmd:
+    description: The command that assigns the user to the issue
+    default: /assign
+  unassign_user_cmd:
+    description: The command that unassigns the user from the issue, if they are assigned.
+    default: /unassign
+  maintainers:
+    description: >
+      A list of maintainers authorized to use `/assign` and `/unassign` commands.
+      List the usernames with comma separated. If not set, the usage of those commands will be ignored.
+    default: '' # i.e: 'takanome-dev,octokit'
+    required: true
+  enable_auto_suggestion:
+    description: A boolean input that controls whether the action should automatically check user comments for phrases signaling interest in issue assignment. Set to true by default.
+    default: 'true'
   assigned_label:
-    description: A label that is added to issues when they're assigned, to track which issues were assigned by this action.
+    description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
   required_label:
-    description: If set, the issue must have this label to be assigned.
+    description: If set, the issue must have this label in order for users to self-assign it.
+    required: false
+    default: ''
   days_until_unassign:
-    description: The span of time between a user assigning themselves to the issue being unassigned automatically by the action.
-    default: 7
+    description: The number of days after assignment before the user is automatically unassigned (if the issue remains open).
+    default: '7'
   pin_label:
     default: 📌 Pinned
-    description: A label that prevents the user from being unassigned, typically for issues that are expected to take a long time.
+    description: A label that prevents automatic unassignment, typically for long-term issues.
   assigned_comment:
     description: >
       The comment posted after a user has assigned themselves to an issue.
     default: |
-      👋 Hey @{{ comment.user.login }}, thanks for your interest in this issue! 🎉
+      ### 🎉 Issue Assignment Confirmation
 
-      ⚠ Note that this issue will become unassigned if it isn't closed within **{{ totalDays }} days**.
+      Hey @{{ handle }}, thanks for taking on this issue!
 
-      🔧 A maintainer can also add the **{{ inputs.pin_label }}** label to prevent it from being unassigned automatically.
+      > [!IMPORTANT]
+      > This issue will be automatically unassigned if idle for **{{ total_days }} days**.
+
+      <details>
+      <summary>ℹ️ Important information</summary>
+
+      - To prevent automatic unassignment, a maintainer can add the **{{{ pin_label }}}** label
+      - You can unassign yourself at any time by commenting with `/unassign-me`
+      - Updates and status reports are encouraged to show progress
+      </details>
+
   already_assigned_comment:
     description: >
       The comment posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
-      👋 Hey @{{ comment.user.login }}, this issue is already assigned to @{{ assignee.login }}.
+      ### ⚠️ Issue Already Assigned
 
-      ⚠️ It will become unassigned if it isn't closed within **{{ daysUntilUnassign }} days**. 
+      Hi @{{ handle }}, this issue is currently assigned to @{{ assignee }}.
 
-      🔧 A maintainer can also add you to the list of assignees or swap you with the current assignee.
+      > [!NOTE]
+      > If no progress is made within **{{ total_days }} days**, the issue will be automatically unassigned.
+
+      <details>
+      <summary>Options for contributors</summary>
+
+      - **Wait for availability**: The issue may become available if auto-unassigned
+      - **Collaborate**: You can ask the assignee if they want help
+      - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
+      </details>
+  already_assigned_comment_pinned:
+    description: >
+      The comment posted when a user tries to assign themselves to a pinned issue that is already assigned.
+    default: |
+      ### ⚠️ Issue Already Assigned
+
+      Hi @{{ handle }}, this issue is currently assigned to @{{ assignee }}.
+
+      > [!NOTE]
+      > This issue is pinned and will not be automatically unassigned.
+
+      <details>
+      <summary>Options for contributors</summary>
+
+      - **Collaborate**: You can ask the assignee if they want help
+      - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
+      - **Wait for completion**: The issue will remain assigned until the work is complete
+      </details>
+  unassigned_comment:
+    description: >
+      The comment posted after a user is unassigned from an issue.
+    default: |
+      ### 📋 Assignment Update
+
+      Hi @{{ handle }}, you are no longer assigned to this issue.
+
+      <details open>
+      <summary>Next steps</summary>
+
+      **If you still want to work on this:**
+      - Comment with `/assign-me` to request reassignment
+      - Ask a maintainer to assign you again
+      - If you're making progress, a maintainer can add the **{{{ pin_label }}}** label to prevent future automatic unassignment
+      </details>
+  assignment_suggestion_comment:
+    description: >
+      The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.
+    default: |
+      ### 👋 Interested in Contributing?
+
+      Hi @{{ handle }}, it looks like you're interested in working on this issue!
+
+      > [!TIP]
+      > Use the command `{{{ trigger }}}` to assign yourself to this issue.
+
+      Once assigned, you can start working on it right away. We appreciate your contribution!
+  block_assignment:
+    description: Whether to block self-assignment after unassignment
+    default: 'true'
+  block_assignment_comment:
+    description: Message shown when blocked from self-assignment
+    default: |
+      ### ⚠️ Reassignment Blocked
+
+      Hi @{{ handle }}, you cannot assign yourself to this issue again.
+
+      > [!NOTE]
+      > Since you were previously unassigned from this issue, a maintainer needs to approve your reassignment.
+
+      Please ask a maintainer to assign you if you'd like to continue working on this issue.
+
+  enable_reminder:
+    description: Whether to send a reminder before unassignment
+    default: 'true'
+
+  reminder_days:
+    description: Number of days before unassignment to send a reminder
+    default: 'auto'
+
+  reminder_comment:
+    description: >
+      The comment posted as a reminder before automatic unassignment occurs
+    default: |
+      ### ⏰ Assignment Reminder
+
+      Hi @{{ handle }}, this is a friendly reminder about your assignment to this issue.
+
+      > [!WARNING]
+      > This issue will be **automatically unassigned** in **{{ days_remaining }} days** if there's no activity.
+
+      <details>
+      <summary>How to keep your assignment</summary>
+
+      You can prevent automatic unassignment by:
+      - Making progress on the issue (commenting, submitting PR)
+      - Asking for the **{{{ pin_label }}}** label if you need more time
+      - Letting maintainers know if you're still working on it
+      </details>
+
+      We appreciate your contribution and are here to help if needed!
+
+  max_assignments:
+    description: 'Maximum number of issues a user can be assigned to at once'
+    required: false
+    default: '3'
+  max_assignments_message:
+    description: 'Message to display when a user has reached their maximum assignments'
+    required: false
+    default: |
+      ### ⚠️ Assignment Limit Reached
+
+      Hi @{{ handle }}, you've reached the maximum number of **{{ max_assignments }}** concurrent assignments.
+
+      > [!NOTE]
+      > Please complete or unassign from your current issues before taking on new ones.
+
+      <details>
+      <summary>Current options</summary>
+
+      - Complete one of your assigned issues and close it
+      - Use `/unassign-me` on an issue you're no longer working on
+      - Ask a maintainer for an exception if this is a special case
+      </details>
+
+outputs:
+  assigned:
+    description: Boolean indicating if the issue was assigned (yes/no)
+  unassigned:
+    description: Boolean indicating if the issue was unassigned (yes/no)
+  unassigned_issues:
+    description: List of unassigned issue numbers (array of numbers)

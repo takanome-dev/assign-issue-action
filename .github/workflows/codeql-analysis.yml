@@ -2,7 +2,7 @@ name: 'CodeQL'
 
 on:
   pull_request:
-    branches: [master, main]
+    branches: [main, beta]
 
 jobs:
   analyze:
@@ -12,11 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         language: ['javascript']
-        node-version: [18.x]
+        node-version: [20.x]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node.js v${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -27,12 +27,12 @@ jobs:
         run: npm ci
 
       - name: Build files
-        run: npm run build
+        run: npm run tsup
 
       - name: Setup CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Perform Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3

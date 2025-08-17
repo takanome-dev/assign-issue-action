@@ -13,7 +13,7 @@ First, fork the repository to your own account and run the following command:
 
 ## Issue
 
-If you see an open issue you would like to work on, just comment `.take` and the action will assign the issue to you 😉
+If you see an open issue you would like to work on, just comment `/assign-me` and the action will assign the issue to you 😉
 Issues that are not assigned are assumed open, and to avoid conflicts, please assign yourself before beginning work on any issues.
 
 > [!NOTE]
