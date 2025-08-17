@@ -11,6 +11,7 @@ export function getDefaultValues() {
     path.join(__dirname, '../../../action.yml'),
     'utf8',
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, import/no-named-as-default-member
   const { inputs } = jsYaml.load(yaml) as any;
 
   return Object.keys(inputs).reduce((acc, key) => {

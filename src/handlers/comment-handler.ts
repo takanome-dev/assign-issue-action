@@ -211,7 +211,7 @@ export default class CommentHandler {
       {
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        issue_number: this.issue?.number!,
+        issue_number: Number(this.issue?.number),
         headers: {
           'X-GitHub-Api-Version': '2022-11-28',
         },
@@ -358,7 +358,7 @@ export default class CommentHandler {
             {
               owner: this.context.repo.owner,
               repo: this.context.repo.repo,
-              issue_number: this.issue?.number!,
+              issue_number: Number(this.issue?.number),
               assignees: [userHandle.trim()],
               headers: {
                 'X-GitHub-Api-Version': '2022-11-28',
@@ -370,7 +370,7 @@ export default class CommentHandler {
             {
               owner: this.context.repo.owner,
               repo: this.context.repo.repo,
-              issue_number: this.issue?.number!,
+              issue_number: Number(this.issue?.number),
               labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
               headers: {
                 'X-GitHub-Api-Version': '2022-11-28',
@@ -443,7 +443,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           assignees: [this.comment?.user.login],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -455,7 +455,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -472,7 +472,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           assignees: [this.issue?.assignee!.login],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -484,7 +484,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           name: core.getInput(INPUTS.ASSIGNED_LABEL),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -496,7 +496,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           name: core.getInput(INPUTS.PIN_LABEL),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -508,7 +508,7 @@ export default class CommentHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: this.issue?.number!,
+          issue_number: Number(this.issue?.number),
           name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -561,7 +561,7 @@ export default class CommentHandler {
       {
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        issue_number: this.issue?.number!,
+        issue_number: Number(this.issue?.number),
         body,
         headers: {
           'X-GitHub-Api-Version': '2022-11-28',
