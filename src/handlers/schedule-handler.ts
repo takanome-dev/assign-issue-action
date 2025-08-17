@@ -359,7 +359,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           name: core.getInput(INPUTS.PIN_LABEL),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -371,7 +371,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           name: '🔔 reminder-sent',
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -395,7 +395,7 @@ export default class ScheduleHandler {
 
   private async _send_reminder_for_issue(issue: Issue) {
     const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    let reminderDays = core.getInput(INPUTS.REMINDER_DAYS);
+    const reminderDays = core.getInput(INPUTS.REMINDER_DAYS);
     let daysRemaining;
 
     if (reminderDays === 'auto') {
@@ -419,7 +419,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           labels: ['🔔 reminder-sent'],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -431,7 +431,7 @@ export default class ScheduleHandler {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: issue?.number!,
+          issue_number: Number(issue?.number),
           body,
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
