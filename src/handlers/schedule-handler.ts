@@ -7,11 +7,17 @@ import mustache from 'mustache';
 import { components } from '@octokit/openapi-types';
 
 import { INPUTS } from '../utils/lib/inputs';
-import { since, chunkArray, getDaysBetween } from '../utils/helpers/common';
+import { chunkArray, getDaysBetween } from '../utils/helpers/common';
 
 const MyOctokit = Octokit.plugin(throttling);
 
 type Issue = components['schemas']['issue-search-result-item'];
+type ExtendedIssue = {
+  issue: Issue;
+  lastActivityDate: Date;
+  daysSinceActivity: number;
+  hasReminderLabel: boolean;
+};
 
 export default class ScheduleHandler {
   private token: string;
@@ -27,7 +33,6 @@ export default class ScheduleHandler {
     this.octokit = new MyOctokit({
       auth: this.token,
       throttle: {
-        // @ts-expect-error it's fine buddy :)
         onRateLimit: (retryAfter, options, octokit, retryCount) => {
           core.warning(
             `⚠️ Request quota exhausted for request ${options.method} ${options.url} ⚠️`,
@@ -38,6 +43,7 @@ export default class ScheduleHandler {
             core.warning(`⚠️ Retrying after ${retryAfter} seconds! ⚠️`);
             return true;
           }
+          return false;
         },
         onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
           // Add retry logic for secondary rate limit
@@ -52,6 +58,7 @@ export default class ScheduleHandler {
             );
             return true;
           }
+          return false;
         },
       },
     });
@@ -62,22 +69,29 @@ export default class ScheduleHandler {
     const { unassignIssues, reminderIssues } =
       await this._get_assigned_issues();
 
+    let processedUnassignments: ExtendedIssue[] = [];
+    let processedReminders: ExtendedIssue[] = [];
+
     // Process unassignment for stale issues
     if (unassignIssues.length > 0) {
-      await this._process_unassignments(unassignIssues);
-    } else {
-      core.info('🔍 No issues to unassign, skipping...');
+      processedUnassignments =
+        await this._process_unassignments(unassignIssues);
     }
 
     // Process reminders if enabled
     const enableReminder = core.getInput(INPUTS.ENABLE_REMINDER);
-    if (enableReminder !== 'true') return;
+    if (enableReminder !== 'true') {
+      // Generate summary even if reminders are disabled
+      await this._generate_summary(processedUnassignments, processedReminders);
+      return;
+    }
 
     if (reminderIssues.length > 0) {
-      await this._process_reminders(reminderIssues);
-    } else {
-      core.info('🔍 No issues need reminders at this time, skipping...');
+      processedReminders = await this._process_reminders(reminderIssues);
     }
+
+    // Generate the markdown summary
+    await this._generate_summary(processedUnassignments, processedReminders);
   }
 
   private async _get_assigned_issues() {
@@ -95,17 +109,16 @@ export default class ScheduleHandler {
       }
     }
 
-    core.info(`🔍 Fetching assigned issues from ${owner}/${repo}`);
-    core.info(
-      `⏱️ Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`,
-    );
+    // core.info(`🔍 Fetching assigned issues from ${owner}/${repo}`);
+    // core.info(
+    //   `⏱️ Unassign after ${daysUntilUnassign} days, remind after ${reminderDays} days`,
+    // );
 
-    const timestamp = since(reminderDays);
-    // Get all open issues with the assigned label and not updated in the last "reminderDays" days
+    // Fetch all open assigned issues, we'll filter in-memory to prioritize unassignment over reminders
     const {
       data: { items: issues },
     } = await this.octokit.request('GET /search/issues', {
-      q: `repo:${owner}/${repo} AND is:open AND label:"${this.assignedLabel}" AND -label:"${this.exemptLabel}" AND -label:"🔔 reminder-sent" AND assignee:* AND updated:<=${timestamp}`,
+      q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
       per_page: 100,
       advanced_search: true,
       headers: {
@@ -113,9 +126,9 @@ export default class ScheduleHandler {
       },
     });
 
-    core.info(
-      `📊 Found ${issues.length} open issues with the ${this.assignedLabel} label`,
-    );
+    // core.info(
+    //   `📊 Found ${issues.length} open issues with the ${this.assignedLabel} label that are not pinned and currently assigned`,
+    // );
 
     const unassignIssues = [];
     const reminderIssues = [];
@@ -125,45 +138,30 @@ export default class ScheduleHandler {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
+      const results = chunk.map((issue) => ({
+        issue,
+        lastActivityDate: new Date(issue.updated_at),
+        daysSinceActivity: getDaysBetween(
+          new Date(issue.updated_at),
+          new Date(),
+        ),
+      }));
 
-      // Process chunk in parallel
-      const results = await Promise.all(
-        chunk.map(async (issue) => {
-          const activityData = await this._get_issue_activity(issue);
-          if (!activityData) return null;
-
-          return {
-            issue,
-            activityData,
-          };
-        }),
-      );
-
-      // Filter out nulls and categorize issues
       for (const result of results.filter(Boolean)) {
-        if (!result) continue;
+        const hasReminderLabel = result.issue?.labels?.some(
+          (label) => label?.name === '🔔 reminder-sent',
+        );
 
-        const { issue, activityData } = result;
-        if (!activityData) continue;
-
-        const { daysSinceActivity } = activityData;
-
-        if (daysSinceActivity >= daysUntilUnassign) {
-          unassignIssues.push(issue);
-        } else if (
-          daysSinceActivity >= reminderDays &&
-          daysSinceActivity < daysUntilUnassign
-        ) {
-          reminderIssues.push(issue);
+        if (result.daysSinceActivity >= daysUntilUnassign) {
+          unassignIssues.push({ ...result, hasReminderLabel });
+          continue;
         }
-      }
 
-      // Add a delay between chunks to prevent rate limiting
-      if (i < chunks.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (result.daysSinceActivity >= reminderDays) {
+          if (!hasReminderLabel) {
+            reminderIssues.push({ ...result, hasReminderLabel });
+          }
+        }
       }
     }
 
@@ -173,101 +171,101 @@ export default class ScheduleHandler {
     return { unassignIssues, reminderIssues };
   }
 
-  private async _get_issue_activity(issue: Issue) {
-    try {
-      const {
-        data: timelines,
-        url,
-        status,
-      } = await this.octokit.request(
-        'GET /repos/{owner}/{repo}/issues/{issue_number}/timeline',
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: issue.number,
-          per_page: 100,
-          headers: {
-            'X-GitHub-Api-Version': '2022-11-28',
-          },
-        },
-      );
+  // fallback to using issue.updated_at instead of fetching timeline events
+  // private async _get_issue_activity(issue: Issue) {
+  //   try {
+  //     const { data: timelines } = await this.octokit.request(
+  //       'GET /repos/{owner}/{repo}/issues/{issue_number}/timeline',
+  //       {
+  //         owner: this.context.repo.owner,
+  //         repo: this.context.repo.repo,
+  //         issue_number: issue.number,
+  //         per_page: 100,
+  //         headers: {
+  //           'X-GitHub-Api-Version': '2022-11-28',
+  //         },
+  //       },
+  //     );
 
-      core.info(
-        `🔍 Timeline URL just for debugging: ${url} - with status - ${status}`,
-      );
+  //     // Find the actual assignment event in the timeline
+  //     const assignmentEvent = timelines.find(
+  //       (event) =>
+  //         event.event === 'assigned' &&
+  //         // @ts-expect-error timeline events have event property but types are incomplete
+  //         event.assignee?.login === issue.assignee?.login,
+  //     );
 
-      // Find the actual assignment event in the timeline
-      const assignmentEvent = timelines.find(
-        (event) =>
-          event.event === 'assigned' &&
-          // @ts-expect-error timeline events have event property but types are incomplete
-          event.assignee?.login === issue.assignee?.login,
-      );
+  //     // Use assignment date if found, otherwise fall back to issue creation date
+  //     const assignmentDate = assignmentEvent
+  //       ? // @ts-expect-error created_at exists on timeline events
+  //         new Date(assignmentEvent.created_at)
+  //       : new Date(issue.created_at);
 
-      // Use assignment date if found, otherwise fall back to issue creation date
-      const assignmentDate = assignmentEvent
-        ? // @ts-expect-error created_at exists on timeline events
-          new Date(assignmentEvent.created_at)
-        : new Date(issue.created_at);
+  //     // Find the most recent activity (last timeline event)
+  //     let lastActivityDate;
+  //     if (timelines.length > 0) {
+  //       // @ts-expect-error created_at exists on timeline events
+  //       lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
+  //     } else {
+  //       // If no timeline events, use the assignment date as last activity
+  //       lastActivityDate = assignmentDate;
+  //     }
 
-      // Find the most recent activity (last timeline event)
-      let lastActivityDate;
-      if (timelines.length > 0) {
-        // @ts-expect-error created_at exists on timeline events
-        lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
-      } else {
-        // If no timeline events, use the assignment date as last activity
-        lastActivityDate = assignmentDate;
-      }
+  //     // Calculate days since last activity
+  //     const daysSinceActivity = getDaysBetween(lastActivityDate, new Date());
 
-      // Calculate days since last activity
-      const daysSinceActivity = getDaysBetween(lastActivityDate, new Date());
+  //     return {
+  //       assignmentDate,
+  //       lastActivityDate,
+  //       daysSinceActivity,
+  //     };
+  //   } catch (error) {
+  //     core.warning(
+  //       `⚠️ Error getting activity for issue #${issue.number}: ${error}`,
+  //     );
+  //     return null;
+  //   }
+  // }
 
-      return {
-        assignmentDate,
-        lastActivityDate,
-        daysSinceActivity,
-      };
-    } catch (error) {
-      core.warning(
-        `⚠️ Error getting activity for issue #${issue.number}: ${error}`,
-      );
-      return null;
-    }
-  }
-
-  private async _process_unassignments(issues: Issue[]) {
-    core.info(`⚙️ Processing ${issues.length} issues for unassignment`);
-    const unassignedIssues = [];
+  private async _process_unassignments(arr: ExtendedIssue[]) {
+    const processedResults: ExtendedIssue[] = [];
+    const unassignedIssueNumbers = [];
 
     // Process in chunks of 5
-    const chunks = chunkArray(issues, 5);
+    const chunks = chunkArray(arr, 5);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing unassignment chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
 
       // Process chunk in parallel
-      const results = await Promise.all(
-        chunk.map(async (issue) => {
+      const results = await Promise.allSettled(
+        chunk.map(async ({ issue, ...rest }) => {
           try {
-            core.info(
-              `🔄 Unassigning @${issue?.assignee?.login} from issue #${issue.number}`,
-            );
+            // core.info(
+            //   `🔄 Unassigning @${issue?.assignee?.login} from issue #${issue.number}`,
+            // );
             await this._unassign_issue(issue);
-            core.info(`✅ Unassigned issue #${issue.number}`);
-            return issue.number;
-          } catch (error) {
-            core.warning(`Failed to unassign issue #${issue.number}: ${error}`);
-            return null;
+            // core.info(`✅ Unassigned issue #${issue.number}`);
+            return { issue, ...rest };
+          } catch (err) {
+            // core.warning(
+            //   `🚨 Failed to unassign issue #${issue.number}: ${error}`,
+            // );
+            return { issue, ...rest };
           }
         }),
       );
 
-      // Add successful unassignments to the list
-      unassignedIssues.push(...results.filter(Boolean));
+      processedResults.push(
+        ...results.filter((r) => r.status === 'fulfilled').map((r) => r.value),
+      );
+
+      // Add successful unassignments to the numbers list for output
+      unassignedIssueNumbers.push(
+        ...results
+          .filter((r) => r.status === 'fulfilled')
+          .map((r) => r.value.issue.number),
+      );
 
       // Add delay between chunks
       if (i < chunks.length - 1) {
@@ -275,46 +273,54 @@ export default class ScheduleHandler {
       }
     }
 
-    core.setOutput('unassigned_issues', unassignedIssues);
-    core.info(`✅ Successfully unassigned ${unassignedIssues.length} issues`);
+    core.setOutput('unassigned_issues', unassignedIssueNumbers);
+    // core.info(
+    //   `✅ Successfully unassigned ${unassignedIssueNumbers.length} issues`,
+    // );
+    return processedResults;
   }
 
-  private async _process_reminders(issues: Issue[]) {
-    core.info(`⚙️ Processing ${issues.length} issues for reminders`);
+  private async _process_reminders(arr: ExtendedIssue[]) {
+    const processedResults: ExtendedIssue[] = [];
 
     // Process in chunks of 5
-    const chunks = chunkArray(issues, 5);
+    const chunks = chunkArray(arr, 5);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      core.info(
-        `Processing reminder chunk ${i + 1}/${chunks.length} (${chunk.length} issues)`,
-      );
-
       // Process chunk in parallel
-      await Promise.all(
-        chunk.map(async (issue) => {
+      const results = await Promise.allSettled(
+        chunk.map(async ({ issue, daysSinceActivity, ...rest }) => {
           try {
-            core.info(
-              `🔔 Sending reminder to @${issue?.assignee?.login} for issue #${issue.number}`,
-            );
-            await this._send_reminder_for_issue(issue);
-            core.info(`✅ Reminder sent for issue #${issue.number}`);
+            // core.info(
+            //   `🔔 Sending reminder to @${issue?.assignee?.login} for issue #${issue.number}`,
+            // );
+            await this._send_reminder_for_issue(issue, daysSinceActivity);
+            // core.info(`✅ Reminder sent for issue #${issue.number}`);
+            return { issue, daysSinceActivity, ...rest };
           } catch (error) {
-            core.warning(
-              `🚨 Failed to send reminder for issue #${issue.number}: ${error}`,
-            );
+            // core.warning(
+            //   `🚨 Failed to send reminder for issue #${issue.number}: ${error}`,
+            // );
+            return { issue, daysSinceActivity, ...rest };
           }
         }),
       );
 
+      processedResults.push(
+        ...results.filter((r) => r.status === 'fulfilled').map((r) => r.value),
+      );
+
       // Add delay between chunks
-      if (i < chunks.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+      // if (i < chunks.length - 1) {
+      //   await new Promise((resolve) => setTimeout(resolve, 1000));
+      // }
     }
 
-    core.info(`✅ Successfully sent reminders for ${issues.length} issues`);
+    // core.info(
+    //   `✅ Successfully sent reminders for ${processedResults.length} issues`,
+    // );
+    return processedResults;
   }
 
   private async _unassign_issue(issue: Issue) {
@@ -393,19 +399,12 @@ export default class ScheduleHandler {
     ]);
   }
 
-  private async _send_reminder_for_issue(issue: Issue) {
+  private async _send_reminder_for_issue(
+    issue: Issue,
+    daysSinceActivity: number,
+  ) {
     const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    const reminderDays = core.getInput(INPUTS.REMINDER_DAYS);
-    let daysRemaining;
-
-    if (reminderDays === 'auto') {
-      daysRemaining = Math.ceil(totalDays / 2);
-    } else {
-      daysRemaining = Number(reminderDays);
-      if (isNaN(daysRemaining)) {
-        daysRemaining = Math.ceil(totalDays / 2);
-      }
-    }
+    const daysRemaining = Math.max(0, totalDays - daysSinceActivity);
 
     const body = mustache.render(core.getInput(INPUTS.REMINDER_COMMENT), {
       handle: issue.assignee?.login,
@@ -439,5 +438,79 @@ export default class ScheduleHandler {
         },
       ),
     ]);
+  }
+
+  private async _generate_summary(
+    processedUnassignments: ExtendedIssue[],
+    processedReminders: ExtendedIssue[],
+  ) {
+    if (
+      processedUnassignments.length === 0 &&
+      processedReminders.length === 0
+    ) {
+      core.info('✅ No issues to summarize.');
+      return;
+    }
+
+    const unassignedTable = processedUnassignments.map(
+      ({ issue, daysSinceActivity }) => ({
+        Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+        Assignee: issue.assignee?.login
+          ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})`
+          : 'Unassigned',
+        'Days Since Activity': `${daysSinceActivity || 'N/A'}`,
+        Status: 'Unassigned',
+      }),
+    );
+
+    const reminderTable = processedReminders.map(
+      ({ issue, daysSinceActivity }) => ({
+        Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+        Assignee: issue.assignee?.login
+          ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})`
+          : 'Unassigned',
+        'Days Since Activity': `${daysSinceActivity || 'N/A'}`,
+        Status: 'Reminder Sent',
+      }),
+    );
+
+    const summary = [
+      '## 📋 Summary of Processed Issues',
+      '',
+      `**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
+      `**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
+      '',
+      '### Unassigned Issues',
+      '',
+      unassignedTable.length > 0
+        ? `| Issue | Assignee | Days Since Activity | Status |` +
+          `\n` +
+          `|-------|----------|--------------------|--------|` +
+          `\n${unassignedTable
+            .map(
+              (row) =>
+                `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
+            )
+            .join('\n')}`
+        : 'No unassigned issues found.',
+      '',
+      '### Reminder Sent Issues',
+      '',
+      reminderTable.length > 0
+        ? `| Issue | Assignee | Days Since Activity | Status |` +
+          `\n` +
+          `|-------|----------|--------------------|--------|` +
+          `\n${reminderTable
+            .map(
+              (row) =>
+                `| ${row.Issue} | ${row.Assignee} | ${row['Days Since Activity']} | ${row.Status} |`,
+            )
+            .join('\n')}`
+        : 'No reminder sent issues found.',
+      '',
+    ];
+
+    core.summary.addRaw(summary.join('\n'));
+    await core.summary.write();
   }
 }

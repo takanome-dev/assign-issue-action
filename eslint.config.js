@@ -15,6 +15,8 @@ export default [
       'github/no-then': 'error',
       'github/no-blur': 'error',
       'import/no-unresolved': 'off',
+      'no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
   {

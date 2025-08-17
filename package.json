@@ -16,7 +16,10 @@
     "tsup": "tsup src/index.ts --format esm",
     "bundle": "npm run tsup && npm run build",
     "all": "npm run format && npm run lint && npm run bundle",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:search": "node scripts/test-action.js search",
+    "test:unassign": "node scripts/test-action.js unassign",
+    "test:help": "node scripts/test-action.js help"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
@@ -58,7 +61,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "husky": "9.1.7",
     "js-yaml": "4.1.0",
-    "lint-staged": "15.4.3",
+    "lint-staged": "15.5.2",
     "prettier": "3.5.3",
     "tsup": "^8.4.0",
     "typescript": "5.8.3"
