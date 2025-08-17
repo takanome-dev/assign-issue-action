@@ -290,19 +290,19 @@ export default class ScheduleHandler {
       const chunk = chunks[i];
       // Process chunk in parallel
       const results = await Promise.allSettled(
-        chunk.map(async ({ issue, ...rest }) => {
+        chunk.map(async ({ issue, daysSinceActivity, ...rest }) => {
           try {
             // core.info(
             //   `🔔 Sending reminder to @${issue?.assignee?.login} for issue #${issue.number}`,
             // );
-            await this._send_reminder_for_issue(issue);
+            await this._send_reminder_for_issue(issue, daysSinceActivity);
             // core.info(`✅ Reminder sent for issue #${issue.number}`);
-            return { issue, ...rest };
+            return { issue, daysSinceActivity, ...rest };
           } catch (error) {
             // core.warning(
             //   `🚨 Failed to send reminder for issue #${issue.number}: ${error}`,
             // );
-            return { issue, ...rest };
+            return { issue, daysSinceActivity, ...rest };
           }
         }),
       );
@@ -399,19 +399,12 @@ export default class ScheduleHandler {
     ]);
   }
 
-  private async _send_reminder_for_issue(issue: Issue) {
+  private async _send_reminder_for_issue(
+    issue: Issue,
+    daysSinceActivity: number,
+  ) {
     const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    let reminderDays = core.getInput(INPUTS.REMINDER_DAYS);
-    let daysRemaining;
-
-    if (reminderDays === 'auto') {
-      daysRemaining = Math.ceil(totalDays / 2);
-    } else {
-      daysRemaining = Number(reminderDays);
-      if (isNaN(daysRemaining)) {
-        daysRemaining = Math.ceil(totalDays / 2);
-      }
-    }
+    const daysRemaining = Math.max(0, totalDays - daysSinceActivity);
 
     const body = mustache.render(core.getInput(INPUTS.REMINDER_COMMENT), {
       handle: issue.assignee?.login,

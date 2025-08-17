@@ -66,7 +66,7 @@ inputs:
       Hey @{{ handle }}, thanks for taking on this issue!
 
       > [!IMPORTANT]
-      > This issue will be automatically unassigned if not closed within **{{ total_days }} days** (by **{{ unassigned_date }})**.
+      > This issue will be automatically unassigned if idle for **{{ total_days }} days**.
 
       <details>
       <summary>ℹ️ Important information</summary>
