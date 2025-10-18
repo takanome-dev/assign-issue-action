@@ -38976,7 +38976,7 @@ var CommentHandler = class {
   }
   $_handle_self_assignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H;
       core.info(
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
@@ -39028,24 +39028,56 @@ var CommentHandler = class {
           `\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} is already assigned to @${(_q = (_p = this.issue) == null ? void 0 : _p.assignee) == null ? void 0 : _q.login}`
         );
       }
+      const overallLabelsRaw = core.getInput(
+        "max_overall_assignment_labels" /* MAX_OVERALL_ASSIGNMENT_LABELS */
+      );
+      const overallCountLimit = parseInt(
+        core.getInput("max_overall_assignment_count" /* MAX_OVERALL_ASSIGNMENT_COUNT */) || "0"
+      );
+      if (overallLabelsRaw && overallCountLimit > 0) {
+        const currentIssueLabels = ((_s = (_r = this.issue) == null ? void 0 : _r.labels) == null ? void 0 : _s.map(
+          (l) => typeof l === "string" ? l : l.name
+        )) || [];
+        const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+        const matchingLabels = currentIssueLabels.filter(
+          (label) => trackedLabels.includes(label)
+        );
+        if (matchingLabels.length > 0) {
+          const labelCounts = yield this._get_assignment_count_per_label(overallLabelsRaw);
+          for (const label of matchingLabels) {
+            const count = labelCounts.get(label) || 0;
+            if (count >= overallCountLimit) {
+              yield this._create_comment("max_overall_assignment_message" /* MAX_OVERALL_ASSIGNMENT_MESSAGE */, {
+                handle: (_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login,
+                max_overall_assignment_count: overallCountLimit.toString(),
+                label
+              });
+              core.setOutput("assigned", "no");
+              return core.info(
+                `\u{1F916} User @${(_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`
+              );
+            }
+          }
+        }
+      }
       const maxAssignments = parseInt(
         core.getInput("max_assignments" /* MAX_ASSIGNMENTS */) || "3"
       );
       const assignmentCount = yield this._get_assignment_count();
       if (assignmentCount >= maxAssignments) {
         yield this._create_comment("max_assignments_message" /* MAX_ASSIGNMENTS_MESSAGE */, {
-          handle: (_s = (_r = this.comment) == null ? void 0 : _r.user) == null ? void 0 : _s.login,
+          handle: (_y = (_x = this.comment) == null ? void 0 : _x.user) == null ? void 0 : _y.login,
           max_assignments: maxAssignments.toString()
         });
         core.setOutput("assigned", "no");
         return core.info(
-          `\u{1F916} User @${(_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login} has reached the maximum number of assignments (${maxAssignments})`
+          `\u{1F916} User @${(_A = (_z = this.comment) == null ? void 0 : _z.user) == null ? void 0 : _A.login} has reached the maximum number of assignments (${maxAssignments})`
         );
       }
       core.info(
-        `\u{1F916} Assigning @${(_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login} to issue #${(_x = this.issue) == null ? void 0 : _x.number}`
+        `\u{1F916} Assigning @${(_C = (_B = this.comment) == null ? void 0 : _B.user) == null ? void 0 : _C.login} to issue #${(_D = this.issue) == null ? void 0 : _D.number}`
       );
-      core.info(`\u{1F916} Adding comment to issue #${(_y = this.issue) == null ? void 0 : _y.number}`);
+      core.info(`\u{1F916} Adding comment to issue #${(_E = this.issue) == null ? void 0 : _E.number}`);
       yield Promise.all([
         this._add_assignee(),
         this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
@@ -39054,11 +39086,11 @@ var CommentHandler = class {
             add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
             "dd LLLL y"
           ),
-          handle: (_A = (_z = this.comment) == null ? void 0 : _z.user) == null ? void 0 : _A.login,
+          handle: (_G = (_F = this.comment) == null ? void 0 : _F.user) == null ? void 0 : _G.login,
           pin_label: core.getInput("pin_label" /* PIN_LABEL */)
         })
       ]);
-      core.info(`\u{1F916} Issue #${(_B = this.issue) == null ? void 0 : _B.number} assigned!`);
+      core.info(`\u{1F916} Issue #${(_H = this.issue) == null ? void 0 : _H.number} assigned!`);
       return core.setOutput("assigned", "yes");
     });
   }
@@ -39328,6 +39360,37 @@ var CommentHandler = class {
         }
       });
       return issues.data.items.length;
+    });
+  }
+  /**
+   * Count issues (open or closed) assigned to the current commenter for each label.
+   * `labelsRaw` is a comma-separated list of label names.
+   * Returns a Map of label -> count of issues with that label.
+   */
+  _get_assignment_count_per_label(labelsRaw) {
+    return __async(this, null, function* () {
+      var _a, _b;
+      const { owner, repo } = this.context.repo;
+      const labels = labelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+      const labelCounts = /* @__PURE__ */ new Map();
+      if (labels.length === 0) return labelCounts;
+      const baseQuery = [
+        `repo:${owner}/${repo}`,
+        "is:issue",
+        `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
+      ];
+      for (const label of labels) {
+        const q = [...baseQuery, `label:"${label}"`].join(" ");
+        const issues = yield this.octokit.request(`GET /search/issues`, {
+          advanced_search: true,
+          q,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        });
+        labelCounts.set(label, issues.data.total_count || 0);
+      }
+      return labelCounts;
     });
   }
   _contribution_phrases() {

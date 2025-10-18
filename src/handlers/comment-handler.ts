@@ -272,7 +272,7 @@ export default class CommentHandler {
     if (overallLabelsRaw && overallCountLimit > 0) {
       // Get the current issue's labels
       const currentIssueLabels =
-        this.issue?.labels?.map((l: any) =>
+        this.issue?.labels?.map((l: string | { name: string }) =>
           typeof l === 'string' ? l : l.name,
         ) || [];
 
@@ -283,7 +283,7 @@ export default class CommentHandler {
         .filter(Boolean);
 
       // Find which tracked labels are on this issue
-      const matchingLabels = currentIssueLabels.filter((label: any) =>
+      const matchingLabels = currentIssueLabels.filter((label: string) =>
         trackedLabels.includes(label),
       );
 
@@ -299,7 +299,7 @@ export default class CommentHandler {
             await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
               handle: this.comment?.user?.login,
               max_overall_assignment_count: overallCountLimit.toString(),
-              label: label,
+              label,
             });
 
             core.setOutput('assigned', 'no');
