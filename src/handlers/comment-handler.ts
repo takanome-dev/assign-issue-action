@@ -261,6 +261,56 @@ export default class CommentHandler {
       );
     }
 
+    // First, check the new per-label assignment limit
+    const overallLabelsRaw = core.getInput(
+      INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS,
+    );
+    const overallCountLimit = parseInt(
+      core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || '0',
+    );
+
+    if (overallLabelsRaw && overallCountLimit > 0) {
+      // Get the current issue's labels
+      const currentIssueLabels =
+        this.issue?.labels?.map((l: any) =>
+          typeof l === 'string' ? l : l.name,
+        ) || [];
+
+      // Get configured labels to track
+      const trackedLabels = overallLabelsRaw
+        .split(',')
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      // Find which tracked labels are on this issue
+      const matchingLabels = currentIssueLabels.filter((label: any) =>
+        trackedLabels.includes(label),
+      );
+
+      if (matchingLabels.length > 0) {
+        // Get assignment counts for all tracked labels
+        const labelCounts =
+          await this._get_assignment_count_per_label(overallLabelsRaw);
+
+        // Check if user has reached limit for any of the current issue's labels
+        for (const label of matchingLabels) {
+          const count = labelCounts.get(label) || 0;
+          if (count >= overallCountLimit) {
+            await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
+              handle: this.comment?.user?.login,
+              max_overall_assignment_count: overallCountLimit.toString(),
+              label: label,
+            });
+
+            core.setOutput('assigned', 'no');
+            return core.info(
+              `🤖 User @${this.comment?.user?.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`,
+            );
+          }
+        }
+      }
+    }
+
     // Check assignment count limit before assigning
     const maxAssignments = parseInt(
       core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3',
@@ -589,6 +639,46 @@ export default class CommentHandler {
     });
 
     return issues.data.items.length;
+  }
+
+  /**
+   * Count issues (open or closed) assigned to the current commenter for each label.
+   * `labelsRaw` is a comma-separated list of label names.
+   * Returns a Map of label -> count of issues with that label.
+   */
+  private async _get_assignment_count_per_label(
+    labelsRaw: string,
+  ): Promise<Map<string, number>> {
+    const { owner, repo } = this.context.repo;
+    const labels = labelsRaw
+      .split(',')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const labelCounts = new Map<string, number>();
+
+    if (labels.length === 0) return labelCounts;
+
+    const baseQuery = [
+      `repo:${owner}/${repo}`,
+      'is:issue',
+      `assignee:${this.comment?.user?.login}`,
+    ];
+
+    for (const label of labels) {
+      const q = [...baseQuery, `label:"${label}"`].join(' ');
+      const issues = await this.octokit.request(`GET /search/issues`, {
+        advanced_search: true,
+        q,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+
+      labelCounts.set(label, issues.data.total_count || 0);
+    }
+
+    return labelCounts;
   }
 
   private _contribution_phrases() {

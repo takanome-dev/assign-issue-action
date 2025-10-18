@@ -234,6 +234,122 @@ async function testUnassignLogic() {
   console.log('This would test the actual unassignment logic');
 }
 
+
+async function testUserAssignments() {
+  console.log('\n🔎 Testing per-label assignment limits (mirrors _get_assignment_count_per_label logic)...');
+
+  if (!config.token) {
+    console.error('❌ GITHUB_TOKEN environment variable is required');
+    process.exit(1);
+  }
+
+  const octokit = new MyOctokit({
+    auth: config.token,
+    throttle: {
+      onRateLimit: (retryAfter, options) => {
+        console.warn(
+          `⚠️ Request quota exhausted for request ${options.method} ${options.url}`,
+        );
+        return true;
+      },
+      onSecondaryRateLimit: (retryAfter, options) => {
+        console.warn(
+          `⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+        );
+      },
+    },
+  });
+
+  try {
+    // Hardcoded target user and repo per request
+    const targetOwner = 'JabRef';
+    const targetRepo = 'jabref';
+    const targetUser = 'Yubo-Cao';
+    // const targetUser = 'D-Prasanth-Kumar';
+    
+    // Test with labels like the actual feature
+    const labelsRaw = 'good first issue, good second issue, good third issue';
+    const labels = labelsRaw.split(',').map(l => l.trim()).filter(Boolean);
+    
+    // Simulate checking if user can be assigned to an issue with specific label(s)
+    const currentIssueLabels = ['good first issue']; // Change this to test different scenarios
+    const maxCountLimit = 2; // Simulated limit per label
+
+    console.log(`Checking issues assigned to @${targetUser} in ${targetOwner}/${targetRepo}`);
+    console.log(`Tracked labels: ${labels.join(', ')}`);
+    console.log(`Current issue has labels: ${currentIssueLabels.join(', ')}`);
+    console.log(`Limit per label: ${maxCountLimit}`);
+    console.log('---');
+
+    // Build a map of label -> count (mirrors _get_assignment_count_per_label)
+    const labelCounts = new Map();
+    
+    for (const label of labels) {
+      const query = `repo:${targetOwner}/${targetRepo} is:issue assignee:${targetUser} label:"${label}"`;
+      console.log(`\n🔍 Checking label "${label}":`);
+      console.log(`   Query: ${query}`);
+
+      try {
+        const result = await octokit.request('GET /search/issues', {
+          q: query,
+          per_page: 100,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        });
+
+        const count = result.data.total_count || 0;
+        labelCounts.set(label, count);
+        
+        console.log(`   Count: ${count} issues`);
+        
+        if (result.data.items.length > 0) {
+          const samples = result.data.items.slice(0, 5);
+          for (const item of samples) {
+            console.log(`     #${item.number} [${item.state}] ${item.title.substring(0, 50)}...`);
+          }
+        }
+      } catch (err) {
+        console.error(`   ❌ Error for label "${label}":`, err.message);
+        labelCounts.set(label, 0);
+      }
+    }
+
+    console.log('\n---');
+    console.log('📊 PER-LABEL ASSIGNMENT COUNTS:');
+    for (const [label, count] of labelCounts) {
+      const status = count >= maxCountLimit ? '❌ AT LIMIT' : '✅ AVAILABLE';
+      console.log(`   "${label}": ${count}/${maxCountLimit} ${status}`);
+    }
+    
+    console.log('\n---');
+    console.log('🎯 ASSIGNMENT DECISION FOR CURRENT ISSUE:');
+    const matchingLabels = currentIssueLabels.filter(l => labels.includes(l));
+    
+    if (matchingLabels.length === 0) {
+      console.log('   ✅ ALLOW - Issue has no tracked labels');
+    } else {
+      let shouldBlock = false;
+      for (const label of matchingLabels) {
+        const count = labelCounts.get(label) || 0;
+        if (count >= maxCountLimit) {
+          console.log(`   ❌ DENY - User has ${count}/${maxCountLimit} "${label}" issues (at limit)`);
+          shouldBlock = true;
+        } else {
+          console.log(`   ✓ "${label}": ${count}/${maxCountLimit} (OK)`);
+        }
+      }
+      
+      if (!shouldBlock) {
+        console.log('   ✅ ALLOW - User has not reached limit for any label on this issue');
+      }
+    }
+    
+  } catch (err) {
+    console.error('❌ Error querying user assignments:', err);
+  }
+}
+
 // CLI argument parsing
 const args = process.argv.slice(2);
 const command = args[0] || 'search';
@@ -266,6 +382,9 @@ Environment Variables:
 Example:
   GITHUB_TOKEN=your_token node scripts/test-action.js search
       `);
+      break;
+    case 'check-user':
+      await testUserAssignments();
       break;
     default:
       console.error(`❌ Unknown command: ${command}`);
