@@ -208,6 +208,42 @@ inputs:
       - Ask a maintainer for an exception if this is a special case
       </details>
 
+  max_overall_assignment_labels:
+    description: >
+      A comma-separated list of labels which share a combined assignment limit.
+      For example: `good first issue,good second issue`.
+    required: false
+    default: 'good first issue,good second issue'
+  max_overall_assignment_count:
+    description: >
+      The maximum number of open (assigned) issues across the labels listed in
+      `max_overall_assignment_labels` that a single user can hold at once.
+    required: false
+    default: '2'
+  max_overall_assignment_message:
+    description: Message shown when a user has reached the overall assignment limit
+    required: false
+    default: |
+      ### ⚠️ Assignment Limit Reached for Beginner Issues
+
+      Hi @{{ handle }}, you've already reached the limit of **{{ max_overall_assignment_count }}** active assignments across the labels:
+      `{{ max_overall_assignment_labels }}`.
+
+      These labels are meant for **new contributors** to get started, so we encourage you to now explore more advanced issues.  
+      This helps new contributors take their first steps while you continue to grow with more challenging tasks 💪
+
+      ---
+      **What you can do next:**
+      - ✅ Finish one of your current beginner-labeled issues, then come back for another.
+      - 🔄 Use `/unassign-me` on an issue you're no longer working on.
+      - 🚀 Ask a maintainer for suggestions on "next-level" issues (e.g. `good second issue` or beyond).
+      - 🙋 Request an exception from a maintainer if there’s a special case.
+
+      > [!TIP]
+      > Moving to higher-level issues helps you deepen your skills and contribute more impactfully to the project.
+
+      Thanks for your great work and for helping keep the community open to newcomers! 💜
+
 outputs:
   assigned:
     description: Boolean indicating if the issue was assigned (yes/no)
