@@ -39552,7 +39552,14 @@ var ScheduleHandler = class {
           const hasReminderLabel = (_b = (_a = result.issue) == null ? void 0 : _a.labels) == null ? void 0 : _b.some(
             (label) => (label == null ? void 0 : label.name) === "\u{1F514} reminder-sent"
           );
-          if (result.daysSinceActivity >= daysUntilUnassign) {
+          let shouldUnassign = result.daysSinceActivity >= daysUntilUnassign;
+          if (hasReminderLabel) {
+            shouldUnassign = shouldUnassign || // The last day of activity is (normally) the point in time where the reminder label was sent.
+            // Thus, reminderDays already passed of the number of daysUntilUnassign.
+            // Therefore, we substract reminderDays from daysUntilUnassign to know the "real" period to wait for.
+            result.daysSinceActivity >= daysUntilUnassign - reminderDays;
+          }
+          if (shouldUnassign) {
             unassignIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
             continue;
           }
