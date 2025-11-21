@@ -152,7 +152,15 @@ export default class ScheduleHandler {
           (label) => label?.name === '🔔 reminder-sent',
         );
 
-        if (result.daysSinceActivity >= daysUntilUnassign) {
+        boolean shouldUnassign = (result.daysSinceActivity >= daysUntilUnassign);
+        if (hasReminderLabel) {
+          shouldUnassign = shouldUnassign ||
+            // The last day of activity is (normally) the point in time where the reminder label was sent.
+            // Thus, reminderDays already passed of the number of daysUntilUnassign.
+            // Therefore, we substract reminderDays from daysUntilUnassign to know the "real" period to wait for.
+            (result.daysSinceActivity >= (daysUntilUnassign - reminderDays));
+        }
+        if (shouldUnassign) {
           unassignIssues.push({ ...result, hasReminderLabel });
           continue;
         }
