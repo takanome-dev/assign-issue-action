@@ -54,7 +54,7 @@ export default class CommentHandler {
     });
   }
 
-  handle_issue_comment() {
+  async handle_issue_comment() {
     core.info(
       `🤖 Checking commands in the issue (#${this.issue?.number}) comments"`,
     );
@@ -139,7 +139,10 @@ export default class CommentHandler {
         );
       }
 
-      if (!maintainers.includes(this.comment?.user?.login)) {
+      const resolvedMaintainers =
+        await this._resolve_maintainers(maintainersInput);
+
+      if (!resolvedMaintainers.includes(this.comment?.user?.login)) {
         return core.info(
           `🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`,
         );
@@ -155,6 +158,49 @@ export default class CommentHandler {
     return core.info(
       `🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`,
     );
+  }
+
+  private async _resolve_maintainers(
+    maintainersInput: string,
+  ): Promise<string[]> {
+    const maintainers = maintainersInput
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
+    const resolvedMaintainers = new Set<string>();
+
+    for (const maintainer of maintainers) {
+      if (maintainer.startsWith('@') && maintainer.includes('/')) {
+        const [org, team] = maintainer.substring(1).split('/');
+        const members = await this._get_team_members(org, team);
+        members.forEach((m) => resolvedMaintainers.add(m));
+      } else {
+        resolvedMaintainers.add(maintainer);
+      }
+    }
+
+    return Array.from(resolvedMaintainers);
+  }
+
+  private async _get_team_members(
+    org: string,
+    team_slug: string,
+  ): Promise<string[]> {
+    try {
+      const response = await this.octokit.request(
+        'GET /orgs/{org}/teams/{team_slug}/members',
+        {
+          org,
+          team_slug,
+        },
+      );
+      return response.data.map((m: any) => m.login);
+    } catch (error) {
+      core.warning(
+        `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`,
+      );
+      return [];
+    }
   }
 
   private _is_issue_pinned(): boolean {

@@ -38,8 +38,10 @@ inputs:
   maintainers:
     description: >
       A list of maintainers authorized to use `/assign` and `/unassign` commands.
-      List the usernames with comma separated. If not set, the usage of those commands will be ignored.
-    default: '' # i.e: 'takanome-dev,octokit'
+      List the usernames or team slugs (e.g., `@org/team-name`) comma-separated.
+      
+      Note: To use team slugs, `github_token` must be a Personal Access Token (PAT) with `read:org` scope.
+    default: '' # i.e: 'takanome-dev,octokit,@my-org/core-team'
     required: true
   enable_auto_suggestion:
     description: A boolean input that controls whether the action should automatically check user comments for phrases signaling interest in issue assignment. Set to true by default.
