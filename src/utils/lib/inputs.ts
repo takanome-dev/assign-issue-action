@@ -27,4 +27,8 @@ export enum INPUTS {
 
   MAX_ASSIGNMENTS = 'max_assignments',
   MAX_ASSIGNMENTS_MESSAGE = 'max_assignments_message',
+
+  MAX_OVERALL_ASSIGNMENT_LABELS = 'max_overall_assignment_labels',
+  MAX_OVERALL_ASSIGNMENT_COUNT = 'max_overall_assignment_count',
+  MAX_OVERALL_ASSIGNMENT_MESSAGE = 'max_overall_assignment_message',
 }

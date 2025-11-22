@@ -16,6 +16,7 @@ See the list of [features](#features) below for more details.
 - 🛡️ Block self-reassignment after unassignment (requires maintainer approval)
 - 🔔 Send reminder notifications before automatic unassignment occurs
 - 🔢 Limit the maximum number of issues a user can be assigned to simultaneously (default: 3)
+- 🎯 Per-label assignment limits to encourage progression from beginner to advanced issues (e.g., limit "good first issue" to 2 assignments)
 
 ## 💻 Usage
 
@@ -74,6 +75,9 @@ Various inputs are defined in action.yml to let you configure the action:
 | `reminder_comment`                | The comment posted as a reminder before automatic unassignment.                                                                                                                                             | Customizable message warning about upcoming unassignment.                        |
 | `max_assignments`                 | The maximum number of issues a user can be assigned to at once.                                                                                                                                             | `3`                                                                              |
 | `max_assignments_message`         | The message posted when a user has reached their maximum assignments.                                                                                                                                       | Customizable message explaining the limit and options for managing assignments.  |
+| `max_overall_assignment_labels`   | A comma-separated list of labels that share a per-label assignment limit (e.g., to limit "good first issue" assignments separately from "good second issue").                                               | `good first issue,good second issue`                                             |
+| `max_overall_assignment_count`    | The maximum number of issues a user can be assigned for each label in `max_overall_assignment_labels`. Each label has its own independent limit.                                                            | `2`                                                                              |
+| `max_overall_assignment_message`  | The message posted when a user has reached the per-label assignment limit.                                                                                                                                  | Customizable message encouraging progression to more advanced issues.            |
 
 ## Outputs
 
