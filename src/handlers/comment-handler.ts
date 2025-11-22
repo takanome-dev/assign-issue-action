@@ -173,7 +173,9 @@ export default class CommentHandler {
       if (maintainer.startsWith('@') && maintainer.includes('/')) {
         const [org, team] = maintainer.substring(1).split('/');
         const members = await this._get_team_members(org, team);
-        members.forEach((m) => resolvedMaintainers.add(m));
+        for (const m of members) {
+          resolvedMaintainers.add(m);
+        }
       } else {
         resolvedMaintainers.add(maintainer);
       }
@@ -194,7 +196,7 @@ export default class CommentHandler {
           team_slug,
         },
       );
-      return response.data.map((m: any) => m.login);
+      return response.data.map((m: { login: string }) => m.login);
     } catch (error) {
       core.warning(
         `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`,
