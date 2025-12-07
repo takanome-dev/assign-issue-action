@@ -38976,7 +38976,7 @@ var CommentHandler = class {
   }
   $_handle_self_assignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L;
       core.info(
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
@@ -39017,8 +39017,8 @@ var CommentHandler = class {
       }
       if ((_j = this.issue) == null ? void 0 : _j.assignee) {
         const isPinned = this._is_issue_pinned();
-        const commentTemplate = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
-        yield this._create_comment(commentTemplate, {
+        const commentTemplate2 = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
+        yield this._create_comment(commentTemplate2, {
           total_days: String(daysUntilUnassign),
           handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
           assignee: (_n = (_m = this.issue) == null ? void 0 : _m.assignee) == null ? void 0 : _n.login
@@ -39078,42 +39078,68 @@ var CommentHandler = class {
         `\u{1F916} Assigning @${(_C = (_B = this.comment) == null ? void 0 : _B.user) == null ? void 0 : _C.login} to issue #${(_D = this.issue) == null ? void 0 : _D.number}`
       );
       core.info(`\u{1F916} Adding comment to issue #${(_E = this.issue) == null ? void 0 : _E.number}`);
+      const isNewcomer = yield this._is_newcomer((_G = (_F = this.comment) == null ? void 0 : _F.user) == null ? void 0 : _G.login);
+      const commentTemplate = isNewcomer ? "assigned_comment_newcomer" /* ASSIGNED_COMMENT_NEWCOMER */ : "assigned_comment" /* ASSIGNED_COMMENT */;
+      core.info(
+        `\u{1F916} User @${(_I = (_H = this.comment) == null ? void 0 : _H.user) == null ? void 0 : _I.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
+      );
       yield Promise.all([
         this._add_assignee(),
-        this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
+        this._create_comment(commentTemplate, {
           total_days: daysUntilUnassign,
           unassigned_date: format(
             add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
             "dd LLLL y"
           ),
-          handle: (_G = (_F = this.comment) == null ? void 0 : _F.user) == null ? void 0 : _G.login,
+          handle: (_K = (_J = this.comment) == null ? void 0 : _J.user) == null ? void 0 : _K.login,
           pin_label: core.getInput("pin_label" /* PIN_LABEL */)
         })
       ]);
-      core.info(`\u{1F916} Issue #${(_H = this.issue) == null ? void 0 : _H.number} assigned!`);
+      core.info(`\u{1F916} Issue #${(_L = this.issue) == null ? void 0 : _L.number} assigned!`);
       return core.setOutput("assigned", "yes");
     });
   }
   $_handle_self_unassignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
       core.info(
-        `\u{1F916} Starting issue #${(_a = this.issue) == null ? void 0 : _a.number} unassignment for user @${(_b = this.issue) == null ? void 0 : _b.assignee.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
+        `\u{1F916} Starting issue #${(_a = this.issue) == null ? void 0 : _a.number} unassignment for user @${(_c = (_b = this.issue) == null ? void 0 : _b.assignee) == null ? void 0 : _c.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
-      if (((_d = (_c = this.issue) == null ? void 0 : _c.assignee) == null ? void 0 : _d.login) === ((_f = (_e = this.comment) == null ? void 0 : _e.user) == null ? void 0 : _f.login)) {
+      const commenterLogin = (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login;
+      const assigneeLogin = (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login;
+      const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
+      const rawBody = (_h = this.context.payload.comment) == null ? void 0 : _h.body;
+      const body = rawBody.replace(/^\\/, "/").toLowerCase();
+      const idx = body.indexOf(selfUnassignCmd);
+      let targetUsername = null;
+      if (idx !== -1) {
+        const afterCmd = rawBody.slice(idx + selfUnassignCmd.length).trim();
+        const userHandleMatch = afterCmd.match(/@([a-zA-Z0-9-]{1,39})/i);
+        if (userHandleMatch && userHandleMatch[1]) {
+          targetUsername = userHandleMatch[1];
+        }
+      }
+      if (targetUsername && targetUsername.toLowerCase() !== (commenterLogin == null ? void 0 : commenterLogin.toLowerCase())) {
+        core.setOutput("unassigned", "no");
+        core.setOutput("unassigned_issues", []);
+        return core.info(
+          `\u{1F916} User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`
+        );
+      }
+      if (assigneeLogin === commenterLogin) {
         yield Promise.all([
           this._remove_assignee(),
           this._create_comment(
             "unassigned_comment" /* UNASSIGNED_COMMENT */,
             {
-              handle: (_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login,
+              handle: (_j = (_i = this.comment) == null ? void 0 : _i.user) == null ? void 0 : _j.login,
               pin_label: core.getInput("pin_label" /* PIN_LABEL */)
             }
           )
         ]);
         core.info(`\u{1F916} Done issue unassignment!`);
         core.setOutput("unassigned", "yes");
-        core.setOutput("unassigned_issues", [(_i = this.issue) == null ? void 0 : _i.number]);
+        core.setOutput("unassigned_issues", [(_k = this.issue) == null ? void 0 : _k.number]);
         return;
       }
       core.setOutput("unassigned", "no");
@@ -39138,6 +39164,11 @@ var CommentHandler = class {
           );
           const daysUntilUnassign = Number(
             core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */)
+          );
+          const isNewcomer = yield this._is_newcomer(userHandle);
+          const commentTemplate = isNewcomer ? "assigned_comment_newcomer" /* ASSIGNED_COMMENT_NEWCOMER */ : "assigned_comment" /* ASSIGNED_COMMENT */;
+          core.info(
+            `\u{1F916} User @${userHandle} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
           );
           yield Promise.all([
             this.octokit.request(
@@ -39164,7 +39195,7 @@ var CommentHandler = class {
                 }
               }
             ),
-            this._create_comment("assigned_comment" /* ASSIGNED_COMMENT */, {
+            this._create_comment(commentTemplate, {
               total_days: daysUntilUnassign,
               unassigned_date: format(
                 add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
@@ -39391,6 +39422,33 @@ var CommentHandler = class {
         labelCounts.set(label, issues.data.total_count || 0);
       }
       return labelCounts;
+    });
+  }
+  /**
+   * Check if a user is a newcomer (has never opened a PR in this repo)
+   */
+  _is_newcomer(username) {
+    return __async(this, null, function* () {
+      const { owner, repo } = this.context.repo;
+      try {
+        const query = [
+          `repo:${owner}/${repo}`,
+          "is:pr",
+          `author:${username}`
+        ].join(" ");
+        const prs = yield this.octokit.request("GET /search/issues", {
+          q: query,
+          per_page: 1,
+          advanced_search: true,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        });
+        return prs.data.total_count === 0;
+      } catch (error) {
+        core.warning(`Failed to check PR history for @${username}: ${error}`);
+        return false;
+      }
     });
   }
   _contribution_phrases() {
