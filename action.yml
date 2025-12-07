@@ -44,6 +44,12 @@ inputs:
   enable_auto_suggestion:
     description: A boolean input that controls whether the action should automatically check user comments for phrases signaling interest in issue assignment. Set to true by default.
     default: 'true'
+  allow_self_assign_author:
+    description: >
+      Whether to allow the issue author to self-assign their own issue.
+      Set to 'false' to prevent users from creating issues and immediately assigning themselves.
+      This gives maintainers control over which issues get worked on.
+    default: 'true'
   assigned_label:
     description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
@@ -276,6 +282,25 @@ inputs:
       > Moving to higher-level issues helps you deepen your skills and contribute more impactfully to the project.
 
       Thanks for your great work and for helping keep the community open to newcomers! 💜
+
+  self_assign_author_blocked_comment:
+    description: Message shown when the issue author tries to self-assign their own issue but it's not allowed
+    required: false
+    default: |
+      ### ⚠️ Self-Assignment Not Allowed
+
+      Hi @{{ handle }}, you cannot self-assign an issue you created.
+
+      > [!NOTE]
+      > This project requires maintainer approval before working on self-created issues to ensure alignment with the project roadmap.
+
+      <details>
+      <summary>What you can do</summary>
+
+      - Wait for a maintainer to review and approve your issue
+      - Ask a maintainer to assign you if the issue is approved
+      - Look for other existing issues to contribute to
+      </details>
 
 outputs:
   assigned:

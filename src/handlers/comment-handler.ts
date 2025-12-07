@@ -202,6 +202,21 @@ export default class CommentHandler {
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     );
 
+    // Check if author self-assignment is allowed
+    const allowSelfAssignAuthor =
+      core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false';
+    const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+
+    if (!allowSelfAssignAuthor && isIssueAuthor) {
+      await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, {
+        handle: this.comment?.user?.login,
+      });
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`,
+      );
+    }
+
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
     const blockAssignment = core.getInput('block_assignment');
 

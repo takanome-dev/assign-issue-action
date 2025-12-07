@@ -7,6 +7,7 @@ export enum INPUTS {
   GITHUB_TOKEN = 'github_token',
   MAINTAINERS = 'maintainers',
   ENABLE_AUTO_SUGGESTION = 'enable_auto_suggestion',
+  ALLOW_SELF_ASSIGN_AUTHOR = 'allow_self_assign_author',
 
   ASSIGNED_LABEL = 'assigned_label',
   REQUIRED_LABEL = 'required_label',
@@ -32,4 +33,6 @@ export enum INPUTS {
   MAX_OVERALL_ASSIGNMENT_LABELS = 'max_overall_assignment_labels',
   MAX_OVERALL_ASSIGNMENT_COUNT = 'max_overall_assignment_count',
   MAX_OVERALL_ASSIGNMENT_MESSAGE = 'max_overall_assignment_message',
+
+  SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT = 'self_assign_author_blocked_comment',
 }
