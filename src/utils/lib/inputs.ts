@@ -16,6 +16,7 @@ export enum INPUTS {
   STALE_ASSIGNMENT_LABEL = 'stale_assignment_label',
 
   ASSIGNED_COMMENT = 'assigned_comment',
+  ASSIGNED_COMMENT_NEWCOMER = 'assigned_comment_newcomer',
   UNASSIGNED_COMMENT = 'unassigned_comment',
   ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
   ALREADY_ASSIGNED_COMMENT_PINNED = 'already_assigned_comment_pinned',

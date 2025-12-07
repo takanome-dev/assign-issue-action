@@ -59,7 +59,7 @@ inputs:
     description: A label that prevents automatic unassignment, typically for long-term issues.
   assigned_comment:
     description: >
-      The comment posted after a user has assigned themselves to an issue.
+      The comment posted after a returning contributor (has opened a PR before) has assigned themselves to an issue.
     default: |
       ### 🎉 Issue Assignment Confirmation
 
@@ -75,6 +75,39 @@ inputs:
       - You can unassign yourself at any time by commenting with `/unassign-me`
       - Updates and status reports are encouraged to show progress
       </details>
+
+  assigned_comment_newcomer:
+    description: >
+      The comment posted after a first-time contributor (has never opened a PR) has assigned themselves to an issue.
+      If not set, defaults to the `assigned_comment` message.
+    default: |
+      ### 🎉 Welcome to the Project!
+
+      Hey @{{ handle }}, thank you for your interest in this issue! 🎊
+
+      We're excited to have you on board. Start by exploring our [Contributing guidelines](CONTRIBUTING.md) and set up your local development workspace by following the steps in our documentation to get started smoothly.
+
+      > [!IMPORTANT]
+      > This issue will be automatically unassigned if idle for **{{ total_days }} days**.
+
+      <details>
+      <summary>ℹ️ Helpful resources for first-time contributors</summary>
+
+      - Check out the project's README for setup instructions
+      - Read through the codebase documentation if available
+      - Don't hesitate to ask questions here on GitHub
+      - Please open a (draft) pull request early to show the direction you're heading towards
+      </details>
+
+      <details>
+      <summary>📋 Assignment details</summary>
+
+      - To prevent automatic unassignment, a maintainer can add the **{{{ pin_label }}}** label
+      - You can unassign yourself at any time by commenting with `/unassign-me`
+      - Updates and status reports are encouraged to show progress
+      </details>
+
+      Happy coding! 🚀
 
   already_assigned_comment:
     description: >
