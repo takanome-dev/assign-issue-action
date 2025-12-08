@@ -38870,76 +38870,116 @@ var CommentHandler = class {
     });
   }
   handle_issue_comment() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
-    core.info(
-      `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
-    );
-    if (!this.token) {
-      return core.setFailed(
-        `\u{1F6AB} Missing required input "token", received "${this.token}"`
-      );
-    }
-    const requiredLabel = core.getInput("required_label" /* REQUIRED_LABEL */);
-    if (requiredLabel) {
-      const hasLabel = (_c = (_b = this.issue) == null ? void 0 : _b.labels) == null ? void 0 : _c.find(
-        (label) => label.name === requiredLabel
-      );
-      if (!hasLabel) {
-        return core.setFailed(
-          `\u{1F6AB} Missing required label: "${core.getInput(
-            "required_label"
-          )}" not found in issue #${(_d = this.issue) == null ? void 0 : _d.number}.`
-        );
-      }
-    }
-    const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
-    const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
-    const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
-    const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
-    const enableAutoSuggestion = core.getBooleanInput(
-      "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
-    );
-    const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
-    const maintainers = maintainersInput.split(",");
-    const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
-    const body = rawBody.replace(/^\\/, "/").toLowerCase();
-    if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+    return __async(this, null, function* () {
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
       core.info(
-        `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
+        `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
       );
-      return;
-    }
-    if (enableAutoSuggestion && this._contribution_phrases().some(
-      (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
-    )) {
-      core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
-      return this.$_handle_assignment_interest();
-    }
-    if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
-      return this.$_handle_self_assignment();
-    }
-    if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
-      return this.$_handle_self_unassignment();
-    }
-    if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
-      if (!maintainersInput) {
-        return core.info(
-          `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
+      if (!this.token) {
+        return core.setFailed(
+          `\u{1F6AB} Missing required input "token", received "${this.token}"`
         );
       }
-      if (!maintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
-        return core.info(
-          `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
+      const requiredLabel = core.getInput("required_label" /* REQUIRED_LABEL */);
+      if (requiredLabel) {
+        const hasLabel = (_c = (_b = this.issue) == null ? void 0 : _b.labels) == null ? void 0 : _c.find(
+          (label) => label.name === requiredLabel
         );
+        if (!hasLabel) {
+          return core.setFailed(
+            `\u{1F6AB} Missing required label: "${core.getInput(
+              "required_label"
+            )}" not found in issue #${(_d = this.issue) == null ? void 0 : _d.number}.`
+          );
+        }
       }
-      if (body.includes(assignCommenterCmd)) {
-        return this.$_handle_user_assignment(assignCommenterCmd);
+      const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
+      const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
+      const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
+      const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
+      const enableAutoSuggestion = core.getBooleanInput(
+        "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
+      );
+      const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
+      const maintainers = maintainersInput.split(",");
+      const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
+      const body = rawBody.replace(/^\\/, "/").toLowerCase();
+      if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+        core.info(
+          `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
+        );
+        return;
       }
-      return this.$_handle_user_unassignment(unassignCommenterCmd);
-    }
-    return core.info(
-      `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
-    );
+      if (enableAutoSuggestion && this._contribution_phrases().some(
+        (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
+      )) {
+        core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
+        return this.$_handle_assignment_interest();
+      }
+      if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
+        return this.$_handle_self_assignment();
+      }
+      if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
+        return this.$_handle_self_unassignment();
+      }
+      if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+        if (!maintainersInput) {
+          return core.info(
+            `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
+          );
+        }
+        const resolvedMaintainers = yield this._resolve_maintainers(maintainersInput);
+        if (!resolvedMaintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
+          return core.info(
+            `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
+          );
+        }
+        if (body.includes(assignCommenterCmd)) {
+          return this.$_handle_user_assignment(assignCommenterCmd);
+        }
+        return this.$_handle_user_unassignment(unassignCommenterCmd);
+      }
+      return core.info(
+        `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
+      );
+    });
+  }
+  _resolve_maintainers(maintainersInput) {
+    return __async(this, null, function* () {
+      const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
+      const resolvedMaintainers = /* @__PURE__ */ new Set();
+      for (const maintainer of maintainers) {
+        if (maintainer.startsWith("@") && maintainer.includes("/")) {
+          const [org, team] = maintainer.substring(1).split("/");
+          const members = yield this._get_team_members(org, team);
+          for (const m of members) {
+            resolvedMaintainers.add(m);
+          }
+        } else {
+          resolvedMaintainers.add(maintainer);
+        }
+      }
+      return Array.from(resolvedMaintainers);
+    });
+  }
+  _get_team_members(org, team_slug) {
+    return __async(this, null, function* () {
+      try {
+        const response = yield this.octokit.request(
+          "GET /orgs/{org}/teams/{team_slug}/members",
+          {
+            org,
+            team_slug
+          }
+        );
+        return response.data.map((m) => m.login);
+      } catch (error) {
+        core.warning(
+          `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`
+        );
+        return [];
+      }
+    });
   }
   _is_issue_pinned() {
     var _a, _b;
