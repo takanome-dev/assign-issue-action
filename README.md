@@ -11,7 +11,7 @@ See the list of [features](#features) below for more details.
 
 - 📝 Self-assign issues using `/assign-me` command (default)
 - 🗑️ Self-unassign from issues using `/unassign-me` command (default)
-- 👥 Maintainer-controlled assignments using `/assign @<user>` and `/unassign <@user>` commands
+- 👥 Maintainer-controlled assignments using `/assign @<user>` and `/unassign @<user>` commands
 - 🎉 Different welcome messages for first-time contributors vs returning contributors
 - ⏰ Automatic unassignment of inactive issues after configurable period (default: 7 days)
 - 🛡️ Block self-reassignment after unassignment (requires maintainer approval)
