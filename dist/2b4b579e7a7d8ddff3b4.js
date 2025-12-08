@@ -38870,116 +38870,76 @@ var CommentHandler = class {
     });
   }
   handle_issue_comment() {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
-      core.info(
-        `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+    core.info(
+      `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
+    );
+    if (!this.token) {
+      return core.setFailed(
+        `\u{1F6AB} Missing required input "token", received "${this.token}"`
       );
-      if (!this.token) {
+    }
+    const requiredLabel = core.getInput("required_label" /* REQUIRED_LABEL */);
+    if (requiredLabel) {
+      const hasLabel = (_c = (_b = this.issue) == null ? void 0 : _b.labels) == null ? void 0 : _c.find(
+        (label) => label.name === requiredLabel
+      );
+      if (!hasLabel) {
         return core.setFailed(
-          `\u{1F6AB} Missing required input "token", received "${this.token}"`
+          `\u{1F6AB} Missing required label: "${core.getInput(
+            "required_label"
+          )}" not found in issue #${(_d = this.issue) == null ? void 0 : _d.number}.`
         );
       }
-      const requiredLabel = core.getInput("required_label" /* REQUIRED_LABEL */);
-      if (requiredLabel) {
-        const hasLabel = (_c = (_b = this.issue) == null ? void 0 : _b.labels) == null ? void 0 : _c.find(
-          (label) => label.name === requiredLabel
-        );
-        if (!hasLabel) {
-          return core.setFailed(
-            `\u{1F6AB} Missing required label: "${core.getInput(
-              "required_label"
-            )}" not found in issue #${(_d = this.issue) == null ? void 0 : _d.number}.`
-          );
-        }
-      }
-      const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
-      const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
-      const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
-      const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
-      const enableAutoSuggestion = core.getBooleanInput(
-        "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
+    }
+    const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
+    const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
+    const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
+    const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
+    const enableAutoSuggestion = core.getBooleanInput(
+      "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
+    );
+    const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
+    const maintainers = maintainersInput.split(",");
+    const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
+    const body = rawBody.replace(/^\\/, "/").toLowerCase();
+    if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+      core.info(
+        `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
       );
-      const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
-      const maintainers = maintainersInput.split(",");
-      const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
-      const body = rawBody.replace(/^\\/, "/").toLowerCase();
-      if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
-        core.info(
-          `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
+      return;
+    }
+    if (enableAutoSuggestion && this._contribution_phrases().some(
+      (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
+    )) {
+      core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
+      return this.$_handle_assignment_interest();
+    }
+    if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
+      return this.$_handle_self_assignment();
+    }
+    if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
+      return this.$_handle_self_unassignment();
+    }
+    if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+      if (!maintainersInput) {
+        return core.info(
+          `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
         );
-        return;
       }
-      if (enableAutoSuggestion && this._contribution_phrases().some(
-        (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
-      )) {
-        core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
-        return this.$_handle_assignment_interest();
-      }
-      if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
-        return this.$_handle_self_assignment();
-      }
-      if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
-        return this.$_handle_self_unassignment();
-      }
-      if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
-        if (!maintainersInput) {
-          return core.info(
-            `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
-          );
-        }
-        const resolvedMaintainers = yield this._resolve_maintainers(maintainersInput);
-        if (!resolvedMaintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
-          return core.info(
-            `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
-          );
-        }
-        if (body.includes(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
-        return this.$_handle_user_unassignment(unassignCommenterCmd);
-      }
-      return core.info(
-        `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
-      );
-    });
-  }
-  _resolve_maintainers(maintainersInput) {
-    return __async(this, null, function* () {
-      const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
-      const resolvedMaintainers = /* @__PURE__ */ new Set();
-      for (const maintainer of maintainers) {
-        if (maintainer.startsWith("@") && maintainer.includes("/")) {
-          const [org, team] = maintainer.substring(1).split("/");
-          const members = yield this._get_team_members(org, team);
-          for (const m of members) {
-            resolvedMaintainers.add(m);
-          }
-        } else {
-          resolvedMaintainers.add(maintainer);
-        }
-      }
-      return Array.from(resolvedMaintainers);
-    });
-  }
-  _get_team_members(org, team_slug) {
-    return __async(this, null, function* () {
-      try {
-        const response = yield this.octokit.request(
-          "GET /orgs/{org}/teams/{team_slug}/members",
-          {
-            org,
-            team_slug
-          }
+      if (!maintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
+        return core.info(
+          `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
         );
-        return response.data.map((m) => m.login);
-      } catch (error) {
-        core.warning(
-          `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`
-        );
-        return [];
       }
-    });
+      if (body.includes(assignCommenterCmd)) {
+        return this.$_handle_user_assignment(assignCommenterCmd);
+      }
+      return this.$_handle_user_unassignment(unassignCommenterCmd);
+    }
+    return core.info(
+      `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
+    );
   }
   _is_issue_pinned() {
     var _a, _b;
@@ -39016,21 +38976,10 @@ var CommentHandler = class {
   }
   $_handle_self_assignment() {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L;
       core.info(
         `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
       );
-      const allowSelfAssignAuthor = core.getInput("allow_self_assign_author" /* ALLOW_SELF_ASSIGN_AUTHOR */) !== "false";
-      const isIssueAuthor = ((_c = (_b = this.issue) == null ? void 0 : _b.user) == null ? void 0 : _c.login) === ((_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login);
-      if (!allowSelfAssignAuthor && isIssueAuthor) {
-        yield this._create_comment("self_assign_author_blocked_comment" /* SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT */, {
-          handle: (_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} User @${(_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login} cannot self-assign their own issue #${(_j = this.issue) == null ? void 0 : _j.number}`
-        );
-      }
       const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
       const blockAssignment = core.getInput("block_assignment");
       const comments = yield this.octokit.request(
@@ -39038,7 +38987,7 @@ var CommentHandler = class {
         {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
-          issue_number: Number((_k = this.issue) == null ? void 0 : _k.number),
+          issue_number: Number((_b = this.issue) == null ? void 0 : _b.number),
           headers: {
             "X-GitHub-Api-Version": "2022-11-28"
           }
@@ -39046,7 +38995,7 @@ var CommentHandler = class {
       );
       const unassignCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
       const unassignedComment = core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */);
-      const userHandle = (_m = (_l = this.comment) == null ? void 0 : _l.user) == null ? void 0 : _m.login;
+      const userHandle = (_d = (_c = this.comment) == null ? void 0 : _c.user) == null ? void 0 : _d.login;
       const wasUnassigned = comments.data.some((comment) => {
         var _a2, _b2;
         const hasManualUnassign = (_a2 = comment.body) == null ? void 0 : _a2.includes(
@@ -39059,24 +39008,24 @@ var CommentHandler = class {
       });
       if (blockAssignment === "true" && wasUnassigned) {
         yield this._create_comment("block_assignment_comment" /* BLOCK_ASSIGNMENT_COMMENT */, {
-          handle: (_o = (_n = this.comment) == null ? void 0 : _n.user) == null ? void 0 : _o.login
+          handle: (_f = (_e = this.comment) == null ? void 0 : _e.user) == null ? void 0 : _f.login
         });
         core.setOutput("assigned", "no");
         return core.info(
-          `\u{1F916} User @${(_q = (_p = this.comment) == null ? void 0 : _p.user) == null ? void 0 : _q.login} was previously unassigned from issue #${(_r = this.issue) == null ? void 0 : _r.number}`
+          `\u{1F916} User @${(_h = (_g = this.comment) == null ? void 0 : _g.user) == null ? void 0 : _h.login} was previously unassigned from issue #${(_i = this.issue) == null ? void 0 : _i.number}`
         );
       }
-      if ((_s = this.issue) == null ? void 0 : _s.assignee) {
+      if ((_j = this.issue) == null ? void 0 : _j.assignee) {
         const isPinned = this._is_issue_pinned();
         const commentTemplate2 = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
         yield this._create_comment(commentTemplate2, {
           total_days: String(daysUntilUnassign),
-          handle: (_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login,
-          assignee: (_w = (_v = this.issue) == null ? void 0 : _v.assignee) == null ? void 0 : _w.login
+          handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
+          assignee: (_n = (_m = this.issue) == null ? void 0 : _m.assignee) == null ? void 0 : _n.login
         });
         core.setOutput("assigned", "no");
         return core.info(
-          `\u{1F916} Issue #${(_x = this.issue) == null ? void 0 : _x.number} is already assigned to @${(_z = (_y = this.issue) == null ? void 0 : _y.assignee) == null ? void 0 : _z.login}`
+          `\u{1F916} Issue #${(_o = this.issue) == null ? void 0 : _o.number} is already assigned to @${(_q = (_p = this.issue) == null ? void 0 : _p.assignee) == null ? void 0 : _q.login}`
         );
       }
       const overallLabelsRaw = core.getInput(
@@ -39086,7 +39035,7 @@ var CommentHandler = class {
         core.getInput("max_overall_assignment_count" /* MAX_OVERALL_ASSIGNMENT_COUNT */) || "0"
       );
       if (overallLabelsRaw && overallCountLimit > 0) {
-        const currentIssueLabels = ((_B = (_A = this.issue) == null ? void 0 : _A.labels) == null ? void 0 : _B.map(
+        const currentIssueLabels = ((_s = (_r = this.issue) == null ? void 0 : _r.labels) == null ? void 0 : _s.map(
           (l) => typeof l === "string" ? l : l.name
         )) || [];
         const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
@@ -39099,13 +39048,13 @@ var CommentHandler = class {
             const count = labelCounts.get(label) || 0;
             if (count >= overallCountLimit) {
               yield this._create_comment("max_overall_assignment_message" /* MAX_OVERALL_ASSIGNMENT_MESSAGE */, {
-                handle: (_D = (_C = this.comment) == null ? void 0 : _C.user) == null ? void 0 : _D.login,
+                handle: (_u = (_t = this.comment) == null ? void 0 : _t.user) == null ? void 0 : _u.login,
                 max_overall_assignment_count: overallCountLimit.toString(),
                 label
               });
               core.setOutput("assigned", "no");
               return core.info(
-                `\u{1F916} User @${(_F = (_E = this.comment) == null ? void 0 : _E.user) == null ? void 0 : _F.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`
+                `\u{1F916} User @${(_w = (_v = this.comment) == null ? void 0 : _v.user) == null ? void 0 : _w.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`
               );
             }
           }
@@ -39117,22 +39066,22 @@ var CommentHandler = class {
       const assignmentCount = yield this._get_assignment_count();
       if (assignmentCount >= maxAssignments) {
         yield this._create_comment("max_assignments_message" /* MAX_ASSIGNMENTS_MESSAGE */, {
-          handle: (_H = (_G = this.comment) == null ? void 0 : _G.user) == null ? void 0 : _H.login,
+          handle: (_y = (_x = this.comment) == null ? void 0 : _x.user) == null ? void 0 : _y.login,
           max_assignments: maxAssignments.toString()
         });
         core.setOutput("assigned", "no");
         return core.info(
-          `\u{1F916} User @${(_J = (_I = this.comment) == null ? void 0 : _I.user) == null ? void 0 : _J.login} has reached the maximum number of assignments (${maxAssignments})`
+          `\u{1F916} User @${(_A = (_z = this.comment) == null ? void 0 : _z.user) == null ? void 0 : _A.login} has reached the maximum number of assignments (${maxAssignments})`
         );
       }
       core.info(
-        `\u{1F916} Assigning @${(_L = (_K = this.comment) == null ? void 0 : _K.user) == null ? void 0 : _L.login} to issue #${(_M = this.issue) == null ? void 0 : _M.number}`
+        `\u{1F916} Assigning @${(_C = (_B = this.comment) == null ? void 0 : _B.user) == null ? void 0 : _C.login} to issue #${(_D = this.issue) == null ? void 0 : _D.number}`
       );
-      core.info(`\u{1F916} Adding comment to issue #${(_N = this.issue) == null ? void 0 : _N.number}`);
-      const isNewcomer = yield this._is_newcomer((_P = (_O = this.comment) == null ? void 0 : _O.user) == null ? void 0 : _P.login);
+      core.info(`\u{1F916} Adding comment to issue #${(_E = this.issue) == null ? void 0 : _E.number}`);
+      const isNewcomer = yield this._is_newcomer((_G = (_F = this.comment) == null ? void 0 : _F.user) == null ? void 0 : _G.login);
       const commentTemplate = isNewcomer ? "assigned_comment_newcomer" /* ASSIGNED_COMMENT_NEWCOMER */ : "assigned_comment" /* ASSIGNED_COMMENT */;
       core.info(
-        `\u{1F916} User @${(_R = (_Q = this.comment) == null ? void 0 : _Q.user) == null ? void 0 : _R.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
+        `\u{1F916} User @${(_I = (_H = this.comment) == null ? void 0 : _H.user) == null ? void 0 : _I.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
       );
       yield Promise.all([
         this._add_assignee(),
@@ -39142,11 +39091,11 @@ var CommentHandler = class {
             add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
             "dd LLLL y"
           ),
-          handle: (_T = (_S = this.comment) == null ? void 0 : _S.user) == null ? void 0 : _T.login,
+          handle: (_K = (_J = this.comment) == null ? void 0 : _J.user) == null ? void 0 : _K.login,
           pin_label: core.getInput("pin_label" /* PIN_LABEL */)
         })
       ]);
-      core.info(`\u{1F916} Issue #${(_U = this.issue) == null ? void 0 : _U.number} assigned!`);
+      core.info(`\u{1F916} Issue #${(_L = this.issue) == null ? void 0 : _L.number} assigned!`);
       return core.setOutput("assigned", "yes");
     });
   }

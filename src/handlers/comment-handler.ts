@@ -250,6 +250,21 @@ export default class CommentHandler {
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     );
 
+    // Check if author self-assignment is allowed
+    const allowSelfAssignAuthor =
+      core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false';
+    const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+
+    if (!allowSelfAssignAuthor && isIssueAuthor) {
+      await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, {
+        handle: this.comment?.user?.login,
+      });
+      core.setOutput('assigned', 'no');
+      return core.info(
+        `🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`,
+      );
+    }
+
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
     const blockAssignment = core.getInput('block_assignment');
 
@@ -382,9 +397,19 @@ export default class CommentHandler {
     );
     core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
 
+    // Check if user is a first-time contributor (no PRs opened)
+    const isNewcomer = await this._is_newcomer(this.comment?.user?.login);
+    const commentTemplate = isNewcomer
+      ? INPUTS.ASSIGNED_COMMENT_NEWCOMER
+      : INPUTS.ASSIGNED_COMMENT;
+
+    core.info(
+      `🤖 User @${this.comment?.user?.login} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
+    );
+
     await Promise.all([
       this._add_assignee(),
-      this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+      this._create_comment<AssignUserCommentArg>(commentTemplate, {
         total_days: daysUntilUnassign,
         unassigned_date: format(
           add(new Date(), { days: daysUntilUnassign }),
@@ -401,10 +426,41 @@ export default class CommentHandler {
 
   private async $_handle_self_unassignment() {
     core.info(
-      `🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
+      `🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee?.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     );
 
-    if (this.issue?.assignee?.login === this.comment?.user?.login) {
+    const commenterLogin = this.comment?.user?.login;
+    const assigneeLogin = this.issue?.assignee?.login;
+
+    // Check if a username was provided in the command (e.g., /unassign @username)
+    const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+    const rawBody = this.context.payload.comment?.body as string;
+    const body = rawBody.replace(/^\\/, '/').toLowerCase();
+
+    const idx = body.indexOf(selfUnassignCmd);
+    let targetUsername: string | null = null;
+
+    if (idx !== -1) {
+      const afterCmd = rawBody.slice(idx + selfUnassignCmd.length).trim();
+      const userHandleMatch = afterCmd.match(/@([a-zA-Z0-9-]{1,39})/i);
+      if (userHandleMatch && userHandleMatch[1]) {
+        targetUsername = userHandleMatch[1];
+      }
+    }
+
+    // If a username was provided, verify it's the commenter's own username
+    if (
+      targetUsername &&
+      targetUsername.toLowerCase() !== commenterLogin?.toLowerCase()
+    ) {
+      core.setOutput('unassigned', 'no');
+      core.setOutput('unassigned_issues', []);
+      return core.info(
+        `🤖 User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`,
+      );
+    }
+
+    if (assigneeLogin === commenterLogin) {
       await Promise.all([
         this._remove_assignee(),
         this._create_comment<UnAssignUserCommentArg>(
@@ -450,6 +506,16 @@ export default class CommentHandler {
           core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
         );
 
+        // Check if user is a first-time contributor (no PRs opened)
+        const isNewcomer = await this._is_newcomer(userHandle);
+        const commentTemplate = isNewcomer
+          ? INPUTS.ASSIGNED_COMMENT_NEWCOMER
+          : INPUTS.ASSIGNED_COMMENT;
+
+        core.info(
+          `🤖 User @${userHandle} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
+        );
+
         await Promise.all([
           this.octokit.request(
             'POST /repos/{owner}/{repo}/issues/{issue_number}/assignees',
@@ -475,7 +541,7 @@ export default class CommentHandler {
               },
             },
           ),
-          this._create_comment<AssignUserCommentArg>(INPUTS.ASSIGNED_COMMENT, {
+          this._create_comment<AssignUserCommentArg>(commentTemplate, {
             total_days: daysUntilUnassign,
             unassigned_date: format(
               add(new Date(), { days: daysUntilUnassign }),
@@ -727,6 +793,36 @@ export default class CommentHandler {
     }
 
     return labelCounts;
+  }
+
+  /**
+   * Check if a user is a newcomer (has never opened a PR in this repo)
+   */
+  private async _is_newcomer(username: string): Promise<boolean> {
+    const { owner, repo } = this.context.repo;
+
+    try {
+      const query = [
+        `repo:${owner}/${repo}`,
+        'is:pr',
+        `author:${username}`,
+      ].join(' ');
+
+      const prs = await this.octokit.request('GET /search/issues', {
+        q: query,
+        per_page: 1,
+        advanced_search: true,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+
+      return prs.data.total_count === 0;
+    } catch (error) {
+      core.warning(`Failed to check PR history for @${username}: ${error}`);
+      // Default to not a newcomer if we can't check
+      return false;
+    }
   }
 
   private _contribution_phrases() {
