@@ -1,5 +1,5 @@
-import { getInput } from '@actions/core';
-import { INPUTS } from '../lib/inputs';
+import { getInput } from '@actions/core'
+import { INPUTS } from '../lib/inputs'
 
 export function getInputs() {
   return {
@@ -21,5 +21,5 @@ export function getInputs() {
     self_unassign_cmd: getInput(INPUTS.SELF_UNASSIGN_CMD),
     assign_user_cmd: getInput(INPUTS.ASSIGN_USER_CMD),
     unassign_user_cmd: getInput(INPUTS.UNASSIGN_USER_CMD),
-  };
+  }
 }

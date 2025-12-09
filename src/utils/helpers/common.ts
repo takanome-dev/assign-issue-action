@@ -4,10 +4,10 @@
  * @returns A date string in the format YYYY-MM-DD
  */
 export function since(days: number) {
-  const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1000;
-  const date = new Date(+new Date() - totalDaysInMilliseconds);
+  const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1000
+  const date = new Date(Date.now() - totalDaysInMilliseconds)
 
-  return new Date(date).toISOString().substring(0, 10);
+  return new Date(date).toISOString().substring(0, 10)
 }
 
 /**
@@ -17,11 +17,11 @@ export function since(days: number) {
  * @returns An array of arrays
  */
 export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
-  const chunks = [];
+  const chunks = []
   for (let i = 0; i < array.length; i += chunkSize) {
-    chunks.push(array.slice(i, i + chunkSize));
+    chunks.push(array.slice(i, i + chunkSize))
   }
-  return chunks;
+  return chunks
 }
 
 /**
@@ -30,7 +30,8 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
  * @param end - The end date
  * @returns The number of days between the two dates
  */
+// TODO: use date-fns utility function
 export function getDaysBetween(start: Date, end: Date) {
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
