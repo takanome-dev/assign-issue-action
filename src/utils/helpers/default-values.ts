@@ -1,6 +1,6 @@
-import fs from 'fs';
-import jsYaml from 'js-yaml';
-import path from 'path';
+import fs from 'node:fs'
+import path from 'node:path'
+import jsYaml from 'js-yaml'
 
 /**
  * Helper that reads the `action.yml` and includes the default values
@@ -10,18 +10,18 @@ export function getDefaultValues() {
   const yaml = fs.readFileSync(
     path.join(__dirname, '../../../action.yml'),
     'utf8',
-  );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, import/no-named-as-default-member
-  const { inputs } = jsYaml.load(yaml) as any;
+  )
+
+  const { inputs } = jsYaml.load(yaml) as any
 
   return Object.keys(inputs).reduce((acc, key) => {
     if ('default' in inputs[key]) {
       return {
         ...acc,
         [`INPUT_${key.toUpperCase()}`]: inputs[key].default,
-      };
+      }
     } else {
-      return acc;
+      return acc
     }
-  }, {});
+  }, {})
 }
