@@ -1,5 +1,5 @@
-import { context } from '@actions/github'
 import * as core from '@actions/core'
+import { context } from '@actions/github'
 
 import CommentHandler from './handlers/comment-handler'
 import ScheduleHandler from './handlers/schedule-handler'

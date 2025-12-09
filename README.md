@@ -97,7 +97,6 @@ The action provides the following outputs that can be used in subsequent workflo
 ## ✏️ Contributing
 
 We would love you to contribute to this project, pull requests are welcome!
-Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 ## ⚖️ LICENSE
 
