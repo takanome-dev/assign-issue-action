@@ -15,7 +15,6 @@
     "tsup": "tsup src/index.ts --format esm",
     "bundle": "bun run tsup && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
-    "prepare": "husky",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
     "test:help": "bun scripts/test-action.js help"
