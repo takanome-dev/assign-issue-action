@@ -9,9 +9,8 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "format": "prettier --write '**/*.ts'",
-    "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint . --ext .ts",
+    "format": "bunx biome format --write",
+    "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
     "tsup": "tsup src/index.ts --format esm",
     "bundle": "npm run tsup && npm run build",
@@ -49,6 +48,7 @@
   "devDependencies": {
     "@babel/preset-env": "7.28.0",
     "@babel/preset-typescript": "7.27.1",
+    "@biomejs/biome": "2.3.8",
     "@types/js-yaml": "4.0.9",
     "@types/mustache": "4.2.6",
     "@types/node": "20.14.8",
