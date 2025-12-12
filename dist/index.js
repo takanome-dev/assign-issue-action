@@ -39388,20 +39388,20 @@ var CommentHandler = class {
     return __async(this, null, function* () {
       var _a, _b;
       const { owner, repo } = this.context.repo;
-      const query = [
-        `repo:${owner}/${repo}`,
-        "is:issue",
-        "is:open",
-        `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
-      ];
-      const issues = yield this.octokit.request(`GET /search/issues`, {
-        advanced_search: true,
-        q: query.join(" "),
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
+      const issues = yield this.octokit.request(
+        "GET /repos/{owner}/{repo}/issues",
+        {
+          owner,
+          repo,
+          assignee: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login,
+          state: "open",
+          per_page: 100,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
         }
-      });
-      return issues.data.items.length;
+      );
+      return issues.data.length;
     });
   }
   /**
@@ -39416,21 +39416,22 @@ var CommentHandler = class {
       const labels = labelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
       const labelCounts = /* @__PURE__ */ new Map();
       if (labels.length === 0) return labelCounts;
-      const baseQuery = [
-        `repo:${owner}/${repo}`,
-        "is:issue",
-        `assignee:${(_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login}`
-      ];
       for (const label of labels) {
-        const q = [...baseQuery, `label:"${label}"`].join(" ");
-        const issues = yield this.octokit.request(`GET /search/issues`, {
-          advanced_search: true,
-          q,
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
+        const issues = yield this.octokit.request(
+          "GET /repos/{owner}/{repo}/issues",
+          {
+            owner,
+            repo,
+            assignee: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login,
+            labels: label,
+            state: "all",
+            per_page: 100,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
           }
-        });
-        labelCounts.set(label, issues.data.total_count || 0);
+        );
+        labelCounts.set(label, issues.data.length);
       }
       return labelCounts;
     });

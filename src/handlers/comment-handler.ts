@@ -689,22 +689,23 @@ export default class CommentHandler {
   private async _get_assignment_count(): Promise<number> {
     const { owner, repo } = this.context.repo;
 
-    const query = [
-      `repo:${owner}/${repo}`,
-      'is:issue',
-      'is:open',
-      `assignee:${this.comment?.user?.login}`,
-    ];
-
-    const issues = await this.octokit.request(`GET /search/issues`, {
-      advanced_search: true,
-      q: query.join(' '),
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28',
+    // Use Issues List API instead of Search API to avoid permission issues
+    // with external contributors who have privacy settings that block search
+    const issues = await this.octokit.request(
+      'GET /repos/{owner}/{repo}/issues',
+      {
+        owner,
+        repo,
+        assignee: this.comment?.user?.login,
+        state: 'open',
+        per_page: 100,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
       },
-    });
+    );
 
-    return issues.data.items.length;
+    return issues.data.length;
   }
 
   /**
@@ -725,23 +726,25 @@ export default class CommentHandler {
 
     if (labels.length === 0) return labelCounts;
 
-    const baseQuery = [
-      `repo:${owner}/${repo}`,
-      'is:issue',
-      `assignee:${this.comment?.user?.login}`,
-    ];
-
+    // Use Issues List API instead of Search API to avoid permission issues
+    // with external contributors who have privacy settings that block search
     for (const label of labels) {
-      const q = [...baseQuery, `label:"${label}"`].join(' ');
-      const issues = await this.octokit.request(`GET /search/issues`, {
-        advanced_search: true,
-        q,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
+      const issues = await this.octokit.request(
+        'GET /repos/{owner}/{repo}/issues',
+        {
+          owner,
+          repo,
+          assignee: this.comment?.user?.login,
+          labels: label,
+          state: 'all',
+          per_page: 100,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
         },
-      });
+      );
 
-      labelCounts.set(label, issues.data.total_count || 0);
+      labelCounts.set(label, issues.data.length);
     }
 
     return labelCounts;
