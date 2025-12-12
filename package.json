@@ -17,7 +17,8 @@
     "all": "bun run format && bun run lint && bun run bundle",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
-    "test:help": "bun scripts/test-action.js help"
+    "test:help": "bun scripts/test-action.js help",
+    "test": "bun test"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
