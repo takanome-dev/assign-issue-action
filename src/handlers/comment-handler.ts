@@ -1,76 +1,76 @@
-import * as core from '@actions/core';
-import { Octokit } from '@octokit/core';
-import { throttling } from '@octokit/plugin-throttling';
-import { context } from '@actions/github';
-import mustache from 'mustache';
-import { add, format } from 'date-fns';
+import * as core from '@actions/core'
+import { Octokit } from '@octokit/core'
+import { throttling } from '@octokit/plugin-throttling'
+import { context } from '@actions/github'
+import mustache from 'mustache'
+import { add, format } from 'date-fns'
 
-import type { WebhookPayload } from '@actions/github/lib/interfaces';
-import type { GhIssue, GhComment } from '../types';
+import type { WebhookPayload } from '@actions/github/lib/interfaces'
+import type { GhIssue, GhComment } from '../types'
 import type {
   AlreadyAssignedCommentArg,
   AssignmentInterestCommentArg,
   AssignUserCommentArg,
   UnAssignUserCommentArg,
-} from '../types/comment';
+} from '../types/comment'
 
-import { INPUTS } from '../utils/lib/inputs';
+import { INPUTS } from '../utils/lib/inputs'
 
-const MyOctokit = Octokit.plugin(throttling);
+const MyOctokit = Octokit.plugin(throttling)
 
 export default class CommentHandler {
-  private readonly issue: WebhookPayload['issue'] | GhIssue;
-  private readonly comment: WebhookPayload['comment'] | GhComment;
-  private token: string;
-  private context = context;
-  private readonly octokit: Octokit;
+  private readonly issue: WebhookPayload['issue'] | GhIssue
+  private readonly comment: WebhookPayload['comment'] | GhComment
+  private token: string
+  private context = context
+  private readonly octokit: Octokit
 
   constructor() {
-    this.issue = this.context.payload.issue;
-    this.comment = this.context.payload.comment;
-    this.token = core.getInput(INPUTS.GITHUB_TOKEN);
+    this.issue = this.context.payload.issue
+    this.comment = this.context.payload.comment
+    this.token = core.getInput(INPUTS.GITHUB_TOKEN)
     this.octokit = new MyOctokit({
       auth: this.token,
       throttle: {
         // @ts-expect-error it's fine buddy :)
-        onRateLimit: (retryAfter, options, octokit, retryCount) => {
+        onRateLimit: (retryAfter, options, _octokit, retryCount) => {
           core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`,
-          );
+          )
 
           if (retryCount < 1) {
             // only retries once
-            core.warning(`Retrying after ${retryAfter} seconds!`);
-            return true;
+            core.warning(`Retrying after ${retryAfter} seconds!`)
+            return true
           }
         },
-        onSecondaryRateLimit: (retryAfter, options) => {
+        onSecondaryRateLimit: (_retryAfter, options) => {
           // does not retry, only logs a warning
           core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
-          );
+          )
         },
       },
-    });
+    })
   }
 
-  handle_issue_comment() {
+  async handle_issue_comment() {
     core.info(
       `🤖 Checking commands in the issue (#${this.issue?.number}) comments"`,
-    );
+    )
 
     if (!this.token) {
       return core.setFailed(
         `🚫 Missing required input "token", received "${this.token}"`,
-      );
+      )
     }
 
-    const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
+    const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL)
 
     if (requiredLabel) {
       const hasLabel = this.issue?.labels?.find(
         (label: { name: string }) => label.name === requiredLabel,
-      );
+      )
 
       if (!hasLabel) {
         // TODO: post a comment?
@@ -78,23 +78,23 @@ export default class CommentHandler {
           `🚫 Missing required label: "${core.getInput(
             'required_label',
           )}" not found in issue #${this.issue?.number}.`,
-        );
+        )
       }
     }
 
-    const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
-    const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
-    const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
-    const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+    const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD)
+    const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD)
+    const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD)
+    const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD)
     const enableAutoSuggestion = core.getBooleanInput(
       INPUTS.ENABLE_AUTO_SUGGESTION,
-    );
-    const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
-    const maintainers = maintainersInput.split(',');
+    )
+    const maintainersInput = core.getInput(INPUTS.MAINTAINERS)
+    const maintainers = maintainersInput.split(',')
 
-    const rawBody = this.context.payload.comment?.body as string;
+    const rawBody = this.context.payload.comment?.body as string
     // Normalize command: replace leading backslash with slash
-    const body = rawBody.replace(/^\\/, '/').toLowerCase();
+    const body = rawBody.replace(/^\\/, '/').toLowerCase()
 
     // Ignore quoted replies or maintainers using self-assignment commands
     if (
@@ -104,8 +104,8 @@ export default class CommentHandler {
     ) {
       core.info(
         `🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`,
-      );
-      return;
+      )
+      return
     }
 
     // Handle auto-suggestion first
@@ -115,17 +115,17 @@ export default class CommentHandler {
         body.toLowerCase().includes(phrase.toLowerCase()),
       )
     ) {
-      core.info(`🤖 Comment indicates interest in contribution: ${body}`);
-      return this.$_handle_assignment_interest();
+      core.info(`🤖 Comment indicates interest in contribution: ${body}`)
+      return this.$_handle_assignment_interest()
     }
 
     // Handle self-assignment commands (available to all users)
     if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
-      return this.$_handle_self_assignment();
+      return this.$_handle_self_assignment()
     }
 
     if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
-      return this.$_handle_self_unassignment();
+      return this.$_handle_self_unassignment()
     }
 
     // Handle maintainer-only commands
@@ -136,56 +136,104 @@ export default class CommentHandler {
       if (!maintainersInput) {
         return core.info(
           `🤖 Ignoring maintainer command because the "maintainers" input is empty`,
-        );
+        )
       }
 
-      if (!maintainers.includes(this.comment?.user?.login)) {
+      const resolvedMaintainers =
+        await this._resolve_maintainers(maintainersInput)
+
+      if (!resolvedMaintainers.includes(this.comment?.user?.login)) {
         return core.info(
           `🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`,
-        );
+        )
       }
 
       if (body.includes(assignCommenterCmd)) {
-        return this.$_handle_user_assignment(assignCommenterCmd);
+        return this.$_handle_user_assignment(assignCommenterCmd)
       }
 
-      return this.$_handle_user_unassignment(unassignCommenterCmd);
+      return this.$_handle_user_unassignment(unassignCommenterCmd)
     }
 
     return core.info(
       `🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`,
-    );
+    )
+  }
+
+  private async _resolve_maintainers(
+    maintainersInput: string,
+  ): Promise<string[]> {
+    const maintainers = maintainersInput
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean)
+    const resolvedMaintainers = new Set<string>()
+
+    for (const maintainer of maintainers) {
+      if (maintainer.startsWith('@') && maintainer.includes('/')) {
+        const [org, team] = maintainer.substring(1).split('/')
+        const members = await this._get_team_members(org, team)
+        for (const m of members) {
+          resolvedMaintainers.add(m)
+        }
+      } else {
+        resolvedMaintainers.add(maintainer)
+      }
+    }
+
+    return Array.from(resolvedMaintainers)
+  }
+
+  private async _get_team_members(
+    org: string,
+    team_slug: string,
+  ): Promise<string[]> {
+    try {
+      const response = await this.octokit.request(
+        'GET /orgs/{org}/teams/{team_slug}/members',
+        {
+          org,
+          team_slug,
+        },
+      )
+      return response.data.map((m: { login: string }) => m.login)
+    } catch (error) {
+      core.warning(
+        `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`,
+      )
+      return []
+    }
   }
 
   private _is_issue_pinned(): boolean {
-    const pinLabel = core.getInput(INPUTS.PIN_LABEL);
+    const pinLabel = core.getInput(INPUTS.PIN_LABEL)
     return (
       this.issue?.labels?.some(
         (label: { name: string }) => label.name === pinLabel,
       ) || false
-    );
+    )
   }
 
   private async $_handle_assignment_interest() {
-    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN))
 
     if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
       // Check if the issue is pinned
-      const isPinned = this._is_issue_pinned();
+      const isPinned = this._is_issue_pinned()
 
       const commentTemplate = isPinned
         ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED
-        : INPUTS.ALREADY_ASSIGNED_COMMENT;
+        : INPUTS.ALREADY_ASSIGNED_COMMENT
 
       await this._create_comment<AlreadyAssignedCommentArg>(commentTemplate, {
         total_days: String(daysUntilUnassign),
         handle: this.comment?.user?.login,
         assignee: this.issue?.assignee?.login,
-      });
-      core.setOutput('assigned', 'no');
+      })
+      core.setOutput('assigned', 'no')
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-      );
+      )
     }
 
     return this._create_comment<AssignmentInterestCommentArg>(
@@ -194,31 +242,31 @@ export default class CommentHandler {
         handle: this.comment?.user?.login,
         trigger: core.getInput(INPUTS.SELF_ASSIGN_CMD),
       },
-    );
+    )
   }
 
   private async $_handle_self_assignment() {
     core.info(
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
-    );
+    )
 
     // Check if author self-assignment is allowed
     const allowSelfAssignAuthor =
-      core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false';
-    const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+      core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false'
+    const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login
 
     if (!allowSelfAssignAuthor && isIssueAuthor) {
       await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, {
         handle: this.comment?.user?.login,
-      });
-      core.setOutput('assigned', 'no');
+      })
+      core.setOutput('assigned', 'no')
       return core.info(
         `🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`,
-      );
+      )
     }
 
-    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
-    const blockAssignment = core.getInput('block_assignment');
+    const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN))
+    const blockAssignment = core.getInput('block_assignment')
 
     // Check if user was previously unassigned
     const comments = await this.octokit.request(
@@ -231,96 +279,95 @@ export default class CommentHandler {
           'X-GitHub-Api-Version': '2022-11-28',
         },
       },
-    );
+    )
 
-    const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
-    const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
-    const userHandle = this.comment?.user?.login;
+    const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD)
+    const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT)
+    const userHandle = this.comment?.user?.login
 
     const wasUnassigned = comments.data.some((comment) => {
       const hasManualUnassign = comment.body?.includes(
         `${unassignCmd} @${userHandle}`,
-      );
+      )
       const hasAutoUnassign = comment.body?.includes(
         mustache.render(unassignedComment, { handle: userHandle }),
-      );
-      return hasManualUnassign || hasAutoUnassign;
-    });
+      )
+      return hasManualUnassign || hasAutoUnassign
+    })
 
     if (blockAssignment === 'true' && wasUnassigned) {
       await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, {
         handle: this.comment?.user?.login,
-      });
-      core.setOutput('assigned', 'no');
+      })
+      core.setOutput('assigned', 'no')
       return core.info(
         `🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`,
-      );
+      )
     }
 
     if (this.issue?.assignee) {
       // Check if the issue is pinned
-      const isPinned = this._is_issue_pinned();
+      const isPinned = this._is_issue_pinned()
 
       const commentTemplate = isPinned
         ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED
-        : INPUTS.ALREADY_ASSIGNED_COMMENT;
+        : INPUTS.ALREADY_ASSIGNED_COMMENT
 
       await this._create_comment<AlreadyAssignedCommentArg>(commentTemplate, {
         total_days: String(daysUntilUnassign),
         handle: this.comment?.user?.login,
         assignee: this.issue?.assignee?.login,
-      });
-      core.setOutput('assigned', 'no');
+      })
+      core.setOutput('assigned', 'no')
       return core.info(
         `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-      );
+      )
     }
 
     // First, check the new per-label assignment limit
-    const overallLabelsRaw = core.getInput(
-      INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS,
-    );
+    const overallLabelsRaw = core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS)
     const overallCountLimit = parseInt(
       core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || '0',
-    );
+      10,
+    )
 
     if (overallLabelsRaw && overallCountLimit > 0) {
       // Get the current issue's labels
       const currentIssueLabels =
         this.issue?.labels?.map((l: string | { name: string }) =>
           typeof l === 'string' ? l : l.name,
-        ) || [];
+        ) || []
 
       // Get configured labels to track
       const trackedLabels = overallLabelsRaw
         .split(',')
         .map((l) => l.trim())
-        .filter(Boolean);
+        .filter(Boolean)
 
       // Find which tracked labels are on this issue
       const matchingLabels = currentIssueLabels.filter((label: string) =>
         trackedLabels.includes(label),
-      );
+      )
 
       if (matchingLabels.length > 0) {
         // Get assignment counts for all tracked labels
         const labelCounts =
-          await this._get_assignment_count_per_label(overallLabelsRaw);
+          await this._get_assignment_count_per_label(overallLabelsRaw)
 
         // Check if user has reached limit for any of the current issue's labels
         for (const label of matchingLabels) {
-          const count = labelCounts.get(label) || 0;
+          const count = labelCounts.get(label) || 0
           if (count >= overallCountLimit) {
             await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
               handle: this.comment?.user?.login,
               max_overall_assignment_count: overallCountLimit.toString(),
               label,
-            });
+            })
 
-            core.setOutput('assigned', 'no');
+            core.setOutput('assigned', 'no')
             return core.info(
               `🤖 User @${this.comment?.user?.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`,
-            );
+            )
           }
         }
       }
@@ -329,35 +376,36 @@ export default class CommentHandler {
     // Check assignment count limit before assigning
     const maxAssignments = parseInt(
       core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3',
-    );
-    const assignmentCount = await this._get_assignment_count();
+      10,
+    )
+    const assignmentCount = await this._get_assignment_count()
 
     if (assignmentCount >= maxAssignments) {
       await this._create_comment(INPUTS.MAX_ASSIGNMENTS_MESSAGE, {
         handle: this.comment?.user?.login,
         max_assignments: maxAssignments.toString(),
-      });
+      })
 
-      core.setOutput('assigned', 'no');
+      core.setOutput('assigned', 'no')
       return core.info(
         `🤖 User @${this.comment?.user?.login} has reached the maximum number of assignments (${maxAssignments})`,
-      );
+      )
     }
 
     core.info(
       `🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`,
-    );
-    core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
+    )
+    core.info(`🤖 Adding comment to issue #${this.issue?.number}`)
 
     // Check if user is a first-time contributor (no PRs opened)
-    const isNewcomer = await this._is_newcomer(this.comment?.user?.login);
+    const isNewcomer = await this._is_newcomer(this.comment?.user?.login)
     const commentTemplate = isNewcomer
       ? INPUTS.ASSIGNED_COMMENT_NEWCOMER
-      : INPUTS.ASSIGNED_COMMENT;
+      : INPUTS.ASSIGNED_COMMENT
 
     core.info(
       `🤖 User @${this.comment?.user?.login} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
-    );
+    )
 
     await Promise.all([
       this._add_assignee(),
@@ -370,33 +418,33 @@ export default class CommentHandler {
         handle: this.comment?.user?.login,
         pin_label: core.getInput(INPUTS.PIN_LABEL),
       }),
-    ]);
+    ])
 
-    core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-    return core.setOutput('assigned', 'yes');
+    core.info(`🤖 Issue #${this.issue?.number} assigned!`)
+    return core.setOutput('assigned', 'yes')
   }
 
   private async $_handle_self_unassignment() {
     core.info(
       `🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee?.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
-    );
+    )
 
-    const commenterLogin = this.comment?.user?.login;
-    const assigneeLogin = this.issue?.assignee?.login;
+    const commenterLogin = this.comment?.user?.login
+    const assigneeLogin = this.issue?.assignee?.login
 
     // Check if a username was provided in the command (e.g., /unassign @username)
-    const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
-    const rawBody = this.context.payload.comment?.body as string;
-    const body = rawBody.replace(/^\\/, '/').toLowerCase();
+    const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD)
+    const rawBody = this.context.payload.comment?.body as string
+    const body = rawBody.replace(/^\\/, '/').toLowerCase()
 
-    const idx = body.indexOf(selfUnassignCmd);
-    let targetUsername: string | null = null;
+    const idx = body.indexOf(selfUnassignCmd)
+    let targetUsername: string | null = null
 
     if (idx !== -1) {
-      const afterCmd = rawBody.slice(idx + selfUnassignCmd.length).trim();
-      const userHandleMatch = afterCmd.match(/@([a-zA-Z0-9-]{1,39})/i);
-      if (userHandleMatch && userHandleMatch[1]) {
-        targetUsername = userHandleMatch[1];
+      const afterCmd = rawBody.slice(idx + selfUnassignCmd.length).trim()
+      const userHandleMatch = afterCmd.match(/@([a-zA-Z0-9-]{1,39})/i)
+      if (userHandleMatch?.[1]) {
+        targetUsername = userHandleMatch[1]
       }
     }
 
@@ -405,11 +453,11 @@ export default class CommentHandler {
       targetUsername &&
       targetUsername.toLowerCase() !== commenterLogin?.toLowerCase()
     ) {
-      core.setOutput('unassigned', 'no');
-      core.setOutput('unassigned_issues', []);
+      core.setOutput('unassigned', 'no')
+      core.setOutput('unassigned_issues', [])
       return core.info(
         `🤖 User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`,
-      );
+      )
     }
 
     if (assigneeLogin === commenterLogin) {
@@ -422,51 +470,47 @@ export default class CommentHandler {
             pin_label: core.getInput(INPUTS.PIN_LABEL),
           },
         ),
-      ]);
+      ])
 
-      core.info(`🤖 Done issue unassignment!`);
-      core.setOutput('unassigned', 'yes');
-      core.setOutput('unassigned_issues', [this.issue?.number]);
-      return;
+      core.info(`🤖 Done issue unassignment!`)
+      core.setOutput('unassigned', 'yes')
+      core.setOutput('unassigned_issues', [this.issue?.number])
+      return
     }
 
-    core.setOutput('unassigned', 'no');
-    core.setOutput('unassigned_issues', []);
-    return core.info(
-      `🤖 Commenter is different from the assignee, ignoring...`,
-    );
+    core.setOutput('unassigned', 'no')
+    core.setOutput('unassigned_issues', [])
+    return core.info(`🤖 Commenter is different from the assignee, ignoring...`)
   }
 
   private async $_handle_user_assignment(input: string) {
-    core.info(`Starting issue assignment to user`);
+    core.info(`Starting issue assignment to user`)
 
-    const idx = this.comment?.body.indexOf(input);
+    const idx = this.comment?.body.indexOf(input)
     if (idx !== -1) {
       const afterAssignCmd = this.comment?.body
         ?.slice(idx + input.length)
-        .trim();
+        .trim()
 
-      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-      if (userHandleMatch && userHandleMatch[1]) {
-        const userHandle = userHandleMatch[1] as string;
+      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/)
+      if (userHandleMatch?.[1]) {
+        const userHandle = userHandleMatch[1] as string
 
-        core.info(
-          `🤖 Assigning @${userHandle} to issue #${this.issue?.number}`,
-        );
+        core.info(`🤖 Assigning @${userHandle} to issue #${this.issue?.number}`)
 
         const daysUntilUnassign = Number(
           core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN),
-        );
+        )
 
         // Check if user is a first-time contributor (no PRs opened)
-        const isNewcomer = await this._is_newcomer(userHandle);
+        const isNewcomer = await this._is_newcomer(userHandle)
         const commentTemplate = isNewcomer
           ? INPUTS.ASSIGNED_COMMENT_NEWCOMER
-          : INPUTS.ASSIGNED_COMMENT;
+          : INPUTS.ASSIGNED_COMMENT
 
         core.info(
           `🤖 User @${userHandle} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
-        );
+        )
 
         await Promise.all([
           this.octokit.request(
@@ -502,52 +546,52 @@ export default class CommentHandler {
             handle: userHandle,
             pin_label: core.getInput(INPUTS.PIN_LABEL),
           }),
-        ]);
+        ])
 
-        core.info(`🤖 Issue #${this.issue?.number} assigned!`);
-        return core.setOutput('assigned', 'yes');
+        core.info(`🤖 Issue #${this.issue?.number} assigned!`)
+        return core.setOutput('assigned', 'yes')
       } else {
-        core.info(`No valid user handle found after /assign command`);
-        return core.setOutput('assigned', 'no');
+        core.info(`No valid user handle found after /assign command`)
+        return core.setOutput('assigned', 'no')
         // TODO: add a comment?
       }
     }
   }
 
   private async $_handle_user_unassignment(input: string) {
-    core.info(`Starting issue unassignment to user`);
+    core.info(`Starting issue unassignment to user`)
 
-    const idx = this.comment?.body.indexOf(input);
+    const idx = this.comment?.body.indexOf(input)
     if (idx !== -1) {
       const afterAssignCmd = this.comment?.body
         ?.slice(idx + input.length)
-        .trim();
+        .trim()
 
-      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
+      const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/)
 
-      if (userHandleMatch && userHandleMatch[1]) {
-        const userHandle = userHandleMatch[1];
+      if (userHandleMatch?.[1]) {
+        const userHandle = userHandleMatch[1]
 
         if (this.issue?.assignee?.login === userHandle) {
-          await this._remove_assignee();
-          core.setOutput('unassigned', 'yes');
-          core.setOutput('unassigned_issues', [this.issue?.number]);
+          await this._remove_assignee()
+          core.setOutput('unassigned', 'yes')
+          core.setOutput('unassigned_issues', [this.issue?.number])
           return core.info(
             `🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`,
-          );
+          )
         }
 
         // TODO: post a comment to the issue
-        core.setOutput('unassigned', 'no');
-        core.setOutput('unassigned_issues', []);
+        core.setOutput('unassigned', 'no')
+        core.setOutput('unassigned_issues', [])
         return core.info(
           `🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`,
-        );
+        )
       } else {
         // TODO: add a comment?
-        core.setOutput('unassigned', 'no');
-        core.setOutput('unassigned_issues', []);
-        return core.info(`No valid user handle found after /assign command`);
+        core.setOutput('unassigned', 'no')
+        core.setOutput('unassigned_issues', [])
+        return core.info(`No valid user handle found after /assign command`)
       }
     }
   }
@@ -578,7 +622,7 @@ export default class CommentHandler {
           },
         },
       ),
-    ]);
+    ])
   }
 
   private _remove_assignee() {
@@ -589,7 +633,7 @@ export default class CommentHandler {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: Number(this.issue?.number),
-          assignees: [this.issue?.assignee!.login],
+          assignees: [this.issue?.assignee?.login],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
@@ -631,7 +675,7 @@ export default class CommentHandler {
           },
         },
       ),
-    ]);
+    ])
   }
 
   //! this should calculate how many times is left before the current
@@ -670,7 +714,7 @@ export default class CommentHandler {
   // }
 
   private _create_comment<T>(input: INPUTS, options: T) {
-    const body = mustache.render(core.getInput(input), options);
+    const body = mustache.render(core.getInput(input), options)
 
     return this.octokit.request(
       'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
@@ -683,11 +727,11 @@ export default class CommentHandler {
           'X-GitHub-Api-Version': '2022-11-28',
         },
       },
-    );
+    )
   }
 
   private async _get_assignment_count(): Promise<number> {
-    const { owner, repo } = this.context.repo;
+    const { owner, repo } = this.context.repo
 
     // Use Issues List API instead of Search API to avoid permission issues
     // with external contributors who have privacy settings that block search
@@ -716,15 +760,15 @@ export default class CommentHandler {
   private async _get_assignment_count_per_label(
     labelsRaw: string,
   ): Promise<Map<string, number>> {
-    const { owner, repo } = this.context.repo;
+    const { owner, repo } = this.context.repo
     const labels = labelsRaw
       .split(',')
       .map((l) => l.trim())
-      .filter(Boolean);
+      .filter(Boolean)
 
-    const labelCounts = new Map<string, number>();
+    const labelCounts = new Map<string, number>()
 
-    if (labels.length === 0) return labelCounts;
+    if (labels.length === 0) return labelCounts
 
     // Use Issues List API instead of Search API to avoid permission issues
     // with external contributors who have privacy settings that block search
@@ -747,21 +791,21 @@ export default class CommentHandler {
       labelCounts.set(label, issues.data.length);
     }
 
-    return labelCounts;
+    return labelCounts
   }
 
   /**
    * Check if a user is a newcomer (has never opened a PR in this repo)
    */
   private async _is_newcomer(username: string): Promise<boolean> {
-    const { owner, repo } = this.context.repo;
+    const { owner, repo } = this.context.repo
 
     try {
       const query = [
         `repo:${owner}/${repo}`,
         'is:pr',
         `author:${username}`,
-      ].join(' ');
+      ].join(' ')
 
       const prs = await this.octokit.request('GET /search/issues', {
         q: query,
@@ -770,13 +814,13 @@ export default class CommentHandler {
         headers: {
           'X-GitHub-Api-Version': '2022-11-28',
         },
-      });
+      })
 
-      return prs.data.total_count === 0;
+      return prs.data.total_count === 0
     } catch (error) {
-      core.warning(`Failed to check PR history for @${username}: ${error}`);
+      core.warning(`Failed to check PR history for @${username}: ${error}`)
       // Default to not a newcomer if we can't check
-      return false;
+      return false
     }
   }
 
@@ -818,6 +862,6 @@ export default class CommentHandler {
       'Would like to work on this',
       'Would like to contribute',
       'Would love to work on this issue',
-    ];
+    ]
   }
 }
