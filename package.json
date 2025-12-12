@@ -4,22 +4,20 @@
   "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
     "node": "20.x",
-    "npm": "10.x"
+    "bun": "1.x"
   },
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "format": "prettier --write '**/*.ts'",
-    "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint . --ext .ts",
+    "format": "bunx biome format --write",
+    "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
     "tsup": "tsup src/index.ts --format esm",
-    "bundle": "npm run tsup && npm run build",
-    "all": "npm run format && npm run lint && npm run bundle",
-    "prepare": "husky",
-    "test:search": "node scripts/test-action.js search",
-    "test:unassign": "node scripts/test-action.js unassign",
-    "test:help": "node scripts/test-action.js help"
+    "bundle": "bun run tsup && bun run build",
+    "all": "bun run format && bun run lint && bun run bundle",
+    "test:search": "bun scripts/test-action.js search",
+    "test:unassign": "bun scripts/test-action.js unassign",
+    "test:help": "bun scripts/test-action.js help"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
@@ -49,25 +47,15 @@
   "devDependencies": {
     "@babel/preset-env": "7.28.0",
     "@babel/preset-typescript": "7.27.1",
+    "@biomejs/biome": "2.3.8",
     "@types/js-yaml": "4.0.9",
     "@types/mustache": "4.2.6",
     "@types/node": "20.14.8",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "8.38.0",
     "@vercel/ncc": "0.38.3",
-    "eslint": "9.32.0",
-    "eslint-plugin-github": "6.0.0",
-    "eslint-plugin-jest": "28.11.0",
-    "eslint-plugin-prettier": "^5.2.3",
-    "husky": "9.1.7",
     "js-yaml": "4.1.1",
-    "lint-staged": "15.5.2",
-    "prettier": "3.5.3",
     "tsup": "^8.4.0",
     "typescript": "5.8.3"
-  },
-  "lint-staged": {
-    "*.js": "eslint --cache --fix",
-    "*.ts": "prettier --write"
   }
 }
