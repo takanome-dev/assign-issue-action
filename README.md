@@ -83,6 +83,8 @@ Various inputs are defined in action.yml to let you configure the action:
 | `max_overall_assignment_count`    | The maximum number of issues a user can be assigned for each label in `max_overall_assignment_labels`. Each label has its own independent limit.                                                            | `2`                                                                              |
 | `max_overall_assignment_message`  | The message posted when a user has reached the per-label assignment limit.                                                                                                                                  | Customizable message encouraging progression to more advanced issues.            |
 | `self_assign_author_blocked_comment` | The message posted when an issue author tries to self-assign their own issue but `allow_self_assign_author` is `false`.                                                                                  | Customizable message explaining maintainer approval is needed.                   |
+| `ignored_users`                   | A comma-separated list of usernames that are ignored from using `/assign-me`. These users will not be able to self-assign issues.                                                                          | `''`                                                                             |
+| `ignored_message`                 | The message posted when an ignored user tries to use `/assign-me`.                                                                                                                                          | Customizable message explaining they cannot self-assign and to contact maintainers. |
 
 ## Outputs
 
