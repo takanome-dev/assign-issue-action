@@ -35,4 +35,7 @@ export enum INPUTS {
   MAX_OVERALL_ASSIGNMENT_MESSAGE = 'max_overall_assignment_message',
 
   SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT = 'self_assign_author_blocked_comment',
+
+  IGNORED_USERS = 'ignored_users',
+  IGNORED_MESSAGE = 'ignored_message',
 }
