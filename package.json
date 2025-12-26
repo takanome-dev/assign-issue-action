@@ -12,13 +12,14 @@
     "format": "bunx biome format --write",
     "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
-    "tsup": "tsup src/index.ts --format esm",
+    "tsup": "tsup index.ts --format esm",
     "bundle": "bun run tsup && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
     "test:help": "bun scripts/test-action.js help",
-    "test": "bun test"
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",
@@ -56,6 +57,7 @@
     "@typescript-eslint/parser": "8.38.0",
     "@vercel/ncc": "0.38.3",
     "js-yaml": "4.1.1",
+    "tsdown": "^0.18.3",
     "tsup": "^8.4.0",
     "typescript": "5.8.3"
   }

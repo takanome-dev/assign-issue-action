@@ -8,7 +8,7 @@ import jsYaml from 'js-yaml'
  */
 export function getDefaultValues() {
   const yaml = fs.readFileSync(
-    path.join(__dirname, '../../../action.yml'),
+    path.join(__dirname, '../../action.yml'),
     'utf8',
   )
 
