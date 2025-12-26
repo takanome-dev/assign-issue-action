@@ -362,98 +362,115 @@ async function testUserAssignments() {
 }
 
 async function testAssignmentCountFix() {
-  console.log('\n🧪 Testing assignment count fix (Search API vs Issues List API)...\n');
+  console.log(
+    '\n🧪 Testing assignment count fix (Search API vs Issues List API)...\n',
+  )
 
   if (!config.token) {
-    console.error('❌ GITHUB_TOKEN environment variable is required');
-    process.exit(1);
+    console.error('❌ GITHUB_TOKEN environment variable is required')
+    process.exit(1)
   }
 
   const octokit = new MyOctokit({
     auth: config.token,
     throttle: {
       onRateLimit: (retryAfter, options) => {
-        console.warn(`⚠️ Request quota exhausted for request ${options.method} ${options.url}`);
-        return true;
+        console.warn(
+          `⚠️ Request quota exhausted for request ${options.method} ${options.url}`,
+        )
+        return true
       },
       onSecondaryRateLimit: (retryAfter, options) => {
-        console.warn(`⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+        console.warn(
+          `⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+        )
       },
     },
-  });
+  })
 
-  const targetOwner = process.env.TEST_OWNER || 'JabRef';
-  const targetRepo = process.env.TEST_REPO || 'abbrv.jabref.org';
-  const targetUser = process.env.TEST_USER || 'ecjbg';
+  const targetOwner = process.env.TEST_OWNER || 'JabRef'
+  const targetRepo = process.env.TEST_REPO || 'abbrv.jabref.org'
+  const targetUser = process.env.TEST_USER || 'ecjbg'
 
-  console.log(`📊 Testing for user @${targetUser} in ${targetOwner}/${targetRepo}\n`);
+  console.log(
+    `📊 Testing for user @${targetUser} in ${targetOwner}/${targetRepo}\n`,
+  )
 
   // Test 1: OLD approach (Search API) - this is what was failing
-  console.log('─'.repeat(60));
-  console.log('❌ OLD APPROACH: Search API (GET /search/issues)');
-  console.log('─'.repeat(60));
-  
+  console.log('─'.repeat(60))
+  console.log('❌ OLD APPROACH: Search API (GET /search/issues)')
+  console.log('─'.repeat(60))
+
   try {
-    const query = `repo:${targetOwner}/${targetRepo} is:issue is:open assignee:${targetUser}`;
-    console.log(`   Query: ${query}`);
-    
+    const query = `repo:${targetOwner}/${targetRepo} is:issue is:open assignee:${targetUser}`
+    console.log(`   Query: ${query}`)
+
     const searchResult = await octokit.request('GET /search/issues', {
       q: query,
       per_page: 100,
       advanced_search: true,
       headers: { 'X-GitHub-Api-Version': '2022-11-28' },
-    });
-    
-    console.log(`   ✅ Success! Found ${searchResult.data.total_count} issues`);
+    })
+
+    console.log(`   ✅ Success! Found ${searchResult.data.total_count} issues`)
     if (searchResult.data.items.length > 0) {
-      searchResult.data.items.slice(0, 3).forEach(item => {
-        console.log(`      #${item.number}: ${item.title.substring(0, 50)}...`);
-      });
+      searchResult.data.items.slice(0, 3).forEach((item) => {
+        console.log(`      #${item.number}: ${item.title.substring(0, 50)}...`)
+      })
     }
   } catch (err) {
-    console.log(`   ❌ FAILED: ${err.message}`);
+    console.log(`   ❌ FAILED: ${err.message}`)
     if (err.response?.data) {
-      console.log(`   Response: ${JSON.stringify(err.response.data)}`);
+      console.log(`   Response: ${JSON.stringify(err.response.data)}`)
     }
   }
 
-  console.log('');
+  console.log('')
 
   // Test 2: NEW approach (Issues List API) - this should work
-  console.log('─'.repeat(60));
-  console.log('✅ NEW APPROACH: Issues List API (GET /repos/{owner}/{repo}/issues)');
-  console.log('─'.repeat(60));
-  
+  console.log('─'.repeat(60))
+  console.log(
+    '✅ NEW APPROACH: Issues List API (GET /repos/{owner}/{repo}/issues)',
+  )
+  console.log('─'.repeat(60))
+
   try {
-    console.log(`   Endpoint: GET /repos/${targetOwner}/${targetRepo}/issues?assignee=${targetUser}&state=open`);
-    
-    const listResult = await octokit.request('GET /repos/{owner}/{repo}/issues', {
-      owner: targetOwner,
-      repo: targetRepo,
-      assignee: targetUser,
-      state: 'open',
-      per_page: 100,
-      headers: { 'X-GitHub-Api-Version': '2022-11-28' },
-    });
-    
-    console.log(`   ✅ Success! Found ${listResult.data.length} issues`);
+    console.log(
+      `   Endpoint: GET /repos/${targetOwner}/${targetRepo}/issues?assignee=${targetUser}&state=open`,
+    )
+
+    const listResult = await octokit.request(
+      'GET /repos/{owner}/{repo}/issues',
+      {
+        owner: targetOwner,
+        repo: targetRepo,
+        assignee: targetUser,
+        state: 'open',
+        per_page: 100,
+        headers: { 'X-GitHub-Api-Version': '2022-11-28' },
+      },
+    )
+
+    console.log(`   ✅ Success! Found ${listResult.data.length} issues`)
     if (listResult.data.length > 0) {
-      listResult.data.slice(0, 3).forEach(item => {
-        console.log(`      #${item.number}: ${item.title.substring(0, 50)}...`);
-      });
+      listResult.data.slice(0, 3).forEach((item) => {
+        console.log(`      #${item.number}: ${item.title.substring(0, 50)}...`)
+      })
     }
   } catch (err) {
-    console.log(`   ❌ FAILED: ${err.message}`);
+    console.log(`   ❌ FAILED: ${err.message}`)
     if (err.response?.data) {
-      console.log(`   Response: ${JSON.stringify(err.response.data)}`);
+      console.log(`   Response: ${JSON.stringify(err.response.data)}`)
     }
   }
 
-  console.log('\n' + '─'.repeat(60));
-  console.log('📝 CONCLUSION:');
-  console.log('─'.repeat(60));
-  console.log('If the Search API failed but Issues List API succeeded,');
-  console.log('the fix in comment-handler.ts will resolve the assignment issue.');
+  console.log('\n' + '─'.repeat(60))
+  console.log('📝 CONCLUSION:')
+  console.log('─'.repeat(60))
+  console.log('If the Search API failed but Issues List API succeeded,')
+  console.log(
+    'the fix in comment-handler.ts will resolve the assignment issue.',
+  )
 }
 
 // CLI argument parsing
@@ -493,14 +510,14 @@ Environment Variables:
 Example:
   GITHUB_TOKEN=your_token node scripts/test-action.js search
   TEST_USER=ecjbg GITHUB_TOKEN=your_token node scripts/test-action.js test-fix
-      `);
-      break;
+      `)
+      break
     case 'check-user':
-      await testUserAssignments();
-      break;
+      await testUserAssignments()
+      break
     case 'test-fix':
-      await testAssignmentCountFix();
-      break;
+      await testAssignmentCountFix()
+      break
     default:
       console.error(`❌ Unknown command: ${command}`)
       console.log('Run "node scripts/test-action.js help" for usage')
