@@ -87,7 +87,9 @@ describe('IssueService', () => {
     it('should not throw when label does not exist', async () => {
       mockRequest.mockRejectedValueOnce(new Error('Label not found'))
 
-      await expect(service.removeLabel(123, 'nonexistent')).resolves.toBeUndefined()
+      await expect(
+        service.removeLabel(123, 'nonexistent'),
+      ).resolves.toBeUndefined()
     })
   })
 

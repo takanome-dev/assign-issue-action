@@ -66,7 +66,9 @@ export function loadConfig(): ActionConfig {
   }
 
   const maintainersInput = core.getInput(INPUTS.MAINTAINERS)
-  const maxOverallLabelsInput = core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS)
+  const maxOverallLabelsInput = core.getInput(
+    INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS,
+  )
 
   const reminderDaysInput = core.getInput(INPUTS.REMINDER_DAYS)
   let reminderDays: number | 'auto' = 'auto'
@@ -94,16 +96,26 @@ export function loadConfig(): ActionConfig {
     // Settings
     daysUntilUnassign: Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN)) || 14,
     maintainers: maintainersInput
-      ? maintainersInput.split(',').map((m) => m.trim()).filter(Boolean)
+      ? maintainersInput
+          .split(',')
+          .map((m) => m.trim())
+          .filter(Boolean)
       : [],
     enableAutoSuggestion: core.getBooleanInput(INPUTS.ENABLE_AUTO_SUGGESTION),
-    allowSelfAssignAuthor: core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false',
+    allowSelfAssignAuthor:
+      core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== 'false',
     blockAssignment: core.getInput('block_assignment') === 'true',
 
     // Assignment limits
-    maxAssignments: Number.parseInt(core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3', 10),
+    maxAssignments: Number.parseInt(
+      core.getInput(INPUTS.MAX_ASSIGNMENTS) || '3',
+      10,
+    ),
     maxOverallAssignmentLabels: maxOverallLabelsInput
-      ? maxOverallLabelsInput.split(',').map((l) => l.trim()).filter(Boolean)
+      ? maxOverallLabelsInput
+          .split(',')
+          .map((l) => l.trim())
+          .filter(Boolean)
       : [],
     maxOverallAssignmentCount: Number.parseInt(
       core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || '0',
@@ -119,13 +131,21 @@ export function loadConfig(): ActionConfig {
     assignedCommentNewcomer: core.getInput(INPUTS.ASSIGNED_COMMENT_NEWCOMER),
     unassignedComment: core.getInput(INPUTS.UNASSIGNED_COMMENT),
     alreadyAssignedComment: core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT),
-    alreadyAssignedCommentPinned: core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED),
-    assignmentSuggestionComment: core.getInput(INPUTS.ASSIGNMENT_SUGGESTION_COMMENT),
+    alreadyAssignedCommentPinned: core.getInput(
+      INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED,
+    ),
+    assignmentSuggestionComment: core.getInput(
+      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
+    ),
     blockAssignmentComment: core.getInput(INPUTS.BLOCK_ASSIGNMENT_COMMENT),
     reminderComment: core.getInput(INPUTS.REMINDER_COMMENT),
     maxAssignmentsMessage: core.getInput(INPUTS.MAX_ASSIGNMENTS_MESSAGE),
-    maxOverallAssignmentMessage: core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE),
-    selfAssignAuthorBlockedComment: core.getInput(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT),
+    maxOverallAssignmentMessage: core.getInput(
+      INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE,
+    ),
+    selfAssignAuthorBlockedComment: core.getInput(
+      INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT,
+    ),
   }
 }
 

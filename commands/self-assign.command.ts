@@ -13,7 +13,8 @@ export class SelfAssignCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, comment, config } = context
-    const { issueService, commentService, validator, newcomerChecker } = services
+    const { issueService, commentService, validator, newcomerChecker } =
+      services
     const username = comment?.user?.login
 
     core.info(
@@ -82,7 +83,8 @@ export class SelfAssignCommand implements Command {
           config.maxOverallAssignmentMessage,
           {
             handle: username,
-            max_overall_assignment_count: config.maxOverallAssignmentCount.toString(),
+            max_overall_assignment_count:
+              config.maxOverallAssignmentCount.toString(),
             label,
           },
         )
@@ -130,6 +132,9 @@ export class SelfAssignCommand implements Command {
     core.info(`🤖 Issue #${issue?.number} assigned!`)
     core.setOutput('assigned', 'yes')
 
-    return { success: true, message: `Assigned @${username} to issue #${issue?.number}` }
+    return {
+      success: true,
+      message: `Assigned @${username} to issue #${issue?.number}`,
+    }
   }
 }

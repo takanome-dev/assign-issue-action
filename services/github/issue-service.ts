@@ -92,7 +92,9 @@ export class IssueService {
     return response.data
   }
 
-  async searchIssues(query: string): Promise<{ total_count: number; items: unknown[] }> {
+  async searchIssues(
+    query: string,
+  ): Promise<{ total_count: number; items: unknown[] }> {
     const { owner, repo } = this.repoContext
     const fullQuery = `repo:${owner}/${repo} ${query}`
 
@@ -108,7 +110,9 @@ export class IssueService {
   }
 
   async getAssignmentCount(username: string): Promise<number> {
-    const result = await this.searchIssues(`is:issue is:open assignee:${username}`)
+    const result = await this.searchIssues(
+      `is:issue is:open assignee:${username}`,
+    )
     return result.items.length
   }
 

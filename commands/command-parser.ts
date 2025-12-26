@@ -126,7 +126,10 @@ export class CommandParser {
   /**
    * Extract @username from the text after a command
    */
-  private extractUsername(rawBody: string, command: string): string | undefined {
+  private extractUsername(
+    rawBody: string,
+    command: string,
+  ): string | undefined {
     const lowerBody = rawBody.toLowerCase()
     const idx = lowerBody.indexOf(command.toLowerCase())
 

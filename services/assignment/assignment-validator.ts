@@ -143,7 +143,8 @@ export class AssignmentValidator {
     username: string,
     issueLabels: Array<{ name?: string } | string>,
   ): Promise<ValidationResult> {
-    const { maxOverallAssignmentLabels, maxOverallAssignmentCount } = this.config
+    const { maxOverallAssignmentLabels, maxOverallAssignmentCount } =
+      this.config
 
     if (
       maxOverallAssignmentLabels.length === 0 ||
@@ -154,7 +155,7 @@ export class AssignmentValidator {
 
     // Get current issue's labels
     const currentLabels = issueLabels.map((l) =>
-      typeof l === 'string' ? l : l.name ?? '',
+      typeof l === 'string' ? l : (l.name ?? ''),
     )
 
     // Find which tracked labels are on this issue

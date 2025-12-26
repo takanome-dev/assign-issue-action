@@ -13,10 +13,7 @@ export class CommentService {
   /**
    * Create a comment on an issue with optional mustache templating
    */
-  async createComment(
-    issueNumber: number,
-    body: string,
-  ): Promise<void> {
+  async createComment(issueNumber: number, body: string): Promise<void> {
     await this.octokit.request(
       'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
       {

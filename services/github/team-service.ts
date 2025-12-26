@@ -55,7 +55,10 @@ export class TeamService {
   /**
    * Check if a user is in the maintainers list (resolving teams if needed)
    */
-  async isMaintainer(username: string, maintainers: string[]): Promise<boolean> {
+  async isMaintainer(
+    username: string,
+    maintainers: string[],
+  ): Promise<boolean> {
     const resolved = await this.resolveMaintainers(maintainers)
     return resolved.includes(username)
   }

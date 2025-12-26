@@ -6,14 +6,14 @@
     "node": "20.x",
     "bun": "1.x"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "type": "module",
   "scripts": {
     "format": "bunx biome format --write",
     "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
-    "tsup": "tsup index.ts --format esm",
-    "bundle": "bun run tsup && bun run build",
+    "tsdown": "tsdown index.ts --format cjs",
+    "bundle": "bun run tsdown && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
@@ -55,10 +55,9 @@
     "@types/node": "20.14.8",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "8.38.0",
-    "@vercel/ncc": "0.38.3",
+    "@vercel/ncc": "^0.38.4",
     "js-yaml": "4.1.1",
     "tsdown": "^0.18.3",
-    "tsup": "^8.4.0",
     "typescript": "5.8.3"
   }
 }

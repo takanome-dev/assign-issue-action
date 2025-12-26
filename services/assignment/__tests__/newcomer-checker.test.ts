@@ -15,7 +15,10 @@ describe('NewcomerChecker', () => {
 
   beforeEach(() => {
     mockIssueService.searchIssues.mockClear()
-    mockIssueService.searchIssues.mockResolvedValue({ total_count: 0, items: [] })
+    mockIssueService.searchIssues.mockResolvedValue({
+      total_count: 0,
+      items: [],
+    })
     checker = new NewcomerChecker(mockIssueService)
   })
 
@@ -46,7 +49,9 @@ describe('NewcomerChecker', () => {
     })
 
     it('should return false on error', async () => {
-      mockIssueService.searchIssues.mockRejectedValueOnce(new Error('API Error'))
+      mockIssueService.searchIssues.mockRejectedValueOnce(
+        new Error('API Error'),
+      )
 
       const result = await checker.isNewcomer('user')
 

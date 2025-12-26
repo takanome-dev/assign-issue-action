@@ -35,11 +35,11 @@ export class SelfUnassignCommand implements Command {
 
     // Unassign and post comment
     await Promise.all([
-      issueService.unassignWithLabels(
-        Number(issue?.number),
-        assigneeLogin,
-        [config.assignedLabel, config.pinLabel, '🔔 reminder-sent'],
-      ),
+      issueService.unassignWithLabels(Number(issue?.number), assigneeLogin, [
+        config.assignedLabel,
+        config.pinLabel,
+        '🔔 reminder-sent',
+      ]),
       commentService.createTemplatedComment(
         Number(issue?.number),
         config.unassignedComment,

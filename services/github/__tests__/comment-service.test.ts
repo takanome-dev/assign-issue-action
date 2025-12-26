@@ -72,10 +72,9 @@ describe('CommentService', () => {
 
   describe('renderTemplate', () => {
     it('should render template without posting', () => {
-      const result = service.renderTemplate(
-        'Hello {{name}}!',
-        { name: 'World' },
-      )
+      const result = service.renderTemplate('Hello {{name}}!', {
+        name: 'World',
+      })
 
       expect(result).toBe('Hello World!')
       expect(mockRequest).not.toHaveBeenCalled()
