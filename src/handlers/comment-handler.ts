@@ -1,12 +1,11 @@
 import * as core from '@actions/core'
+import { context } from '@actions/github'
+import type { WebhookPayload } from '@actions/github/lib/interfaces'
 import { Octokit } from '@octokit/core'
 import { throttling } from '@octokit/plugin-throttling'
-import { context } from '@actions/github'
-import mustache from 'mustache'
 import { add, format } from 'date-fns'
-
-import type { WebhookPayload } from '@actions/github/lib/interfaces'
-import type { GhIssue, GhComment } from '../types'
+import mustache from 'mustache'
+import type { GhComment, GhIssue } from '../types'
 import type {
   AlreadyAssignedCommentArg,
   AssignmentInterestCommentArg,
@@ -263,6 +262,26 @@ export default class CommentHandler {
       return core.info(
         `🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`,
       )
+    }
+
+    // Check if user is in the ignored users list
+    const ignoredUsersInput = core.getInput(INPUTS.IGNORED_USERS)
+    if (ignoredUsersInput) {
+      const ignoredUsers = ignoredUsersInput
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean)
+      const userHandle = this.comment?.user?.login
+
+      if (ignoredUsers.includes(userHandle)) {
+        await this._create_comment(INPUTS.IGNORED_MESSAGE, {
+          handle: userHandle,
+        })
+        core.setOutput('assigned', 'no')
+        return core.info(
+          `🤖 User @${userHandle} is in the ignored users list and cannot self-assign issue #${this.issue?.number}`,
+        )
+      }
     }
 
     const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN))
@@ -747,9 +766,9 @@ export default class CommentHandler {
           'X-GitHub-Api-Version': '2022-11-28',
         },
       },
-    );
+    )
 
-    return issues.data.length;
+    return issues.data.length
   }
 
   /**
@@ -786,9 +805,9 @@ export default class CommentHandler {
             'X-GitHub-Api-Version': '2022-11-28',
           },
         },
-      );
+      )
 
-      labelCounts.set(label, issues.data.length);
+      labelCounts.set(label, issues.data.length)
     }
 
     return labelCounts

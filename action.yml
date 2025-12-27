@@ -304,6 +304,20 @@ inputs:
       - Look for other existing issues to contribute to
       </details>
 
+  ignored_users:
+    description: >
+      A comma-separated list of usernames that are ignored from using `/assign-me`.
+      These users will not be able to self-assign issues.
+    required: false
+    default: ''
+  ignored_message:
+    description: Message shown when an ignored user tries to use `/assign-me`
+    required: false
+    default: |
+      ### ⚠️ Self-Assignment Not Allowed
+
+      Hi @{{ handle }}, you cannot self-assign issues. Please reach out to maintainers for the next steps.
+
 outputs:
   assigned:
     description: Boolean indicating if the issue was assigned (yes/no)
