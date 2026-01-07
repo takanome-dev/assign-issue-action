@@ -38777,1214 +38777,789 @@ mustache.Writer = Writer;
 
 /* harmony default export */ const mustache_mustache = (mustache);
 
-;// CONCATENATED MODULE: ./dist/index.js
-var __defProp = Object.defineProperty;
-var __defProps = Object.defineProperties;
-var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
-  for (var prop in b || (b = {}))
-    if (__hasOwnProp.call(b, prop))
-      __defNormalProp(a, prop, b[prop]);
-  if (__getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(b)) {
-      if (__propIsEnum.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    }
-  return a;
-};
-var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-var __objRest = (source, exclude) => {
-  var target = {};
-  for (var prop in source)
-    if (__hasOwnProp.call(source, prop) && exclude.indexOf(prop) < 0)
-      target[prop] = source[prop];
-  if (source != null && __getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(source)) {
-      if (exclude.indexOf(prop) < 0 && __propIsEnum.call(source, prop))
-        target[prop] = source[prop];
-    }
-  return target;
-};
-var __async = (__this, __arguments, generator) => {
-  return new Promise((resolve, reject) => {
-    var fulfilled = (value) => {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    };
-    var rejected = (value) => {
-      try {
-        step(generator.throw(value));
-      } catch (e) {
-        reject(e);
-      }
-    };
-    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-    step((generator = generator.apply(__this, __arguments)).next());
-  });
-};
-
-// src/index.ts
-
-
-
-// src/handlers/comment-handler.ts
+;// CONCATENATED MODULE: ./dist/index.mjs
 
 
 
 
 
 
-var MyOctokit = Octokit.plugin(throttling);
+
+//#region src/utils/lib/inputs.ts
+let INPUTS = /* @__PURE__ */ function(INPUTS$1) {
+	INPUTS$1["SELF_ASSIGN_CMD"] = "self_assign_cmd";
+	INPUTS$1["SELF_UNASSIGN_CMD"] = "self_unassign_cmd";
+	INPUTS$1["ASSIGN_USER_CMD"] = "assign_user_cmd";
+	INPUTS$1["UNASSIGN_USER_CMD"] = "unassign_user_cmd";
+	INPUTS$1["GITHUB_TOKEN"] = "github_token";
+	INPUTS$1["MAINTAINERS"] = "maintainers";
+	INPUTS$1["ENABLE_AUTO_SUGGESTION"] = "enable_auto_suggestion";
+	INPUTS$1["ALLOW_SELF_ASSIGN_AUTHOR"] = "allow_self_assign_author";
+	INPUTS$1["ASSIGNED_LABEL"] = "assigned_label";
+	INPUTS$1["REQUIRED_LABEL"] = "required_label";
+	INPUTS$1["PIN_LABEL"] = "pin_label";
+	INPUTS$1["DAYS_UNTIL_UNASSIGN"] = "days_until_unassign";
+	INPUTS$1["STALE_ASSIGNMENT_LABEL"] = "stale_assignment_label";
+	INPUTS$1["ASSIGNED_COMMENT"] = "assigned_comment";
+	INPUTS$1["ASSIGNED_COMMENT_NEWCOMER"] = "assigned_comment_newcomer";
+	INPUTS$1["UNASSIGNED_COMMENT"] = "unassigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT"] = "already_assigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT_PINNED"] = "already_assigned_comment_pinned";
+	INPUTS$1["ASSIGNMENT_SUGGESTION_COMMENT"] = "assignment_suggestion_comment";
+	INPUTS$1["BLOCK_ASSIGNMENT_COMMENT"] = "block_assignment_comment";
+	INPUTS$1["ENABLE_REMINDER"] = "enable_reminder";
+	INPUTS$1["REMINDER_DAYS"] = "reminder_days";
+	INPUTS$1["REMINDER_COMMENT"] = "reminder_comment";
+	INPUTS$1["MAX_ASSIGNMENTS"] = "max_assignments";
+	INPUTS$1["MAX_ASSIGNMENTS_MESSAGE"] = "max_assignments_message";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_LABELS"] = "max_overall_assignment_labels";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_COUNT"] = "max_overall_assignment_count";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_MESSAGE"] = "max_overall_assignment_message";
+	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
+	INPUTS$1["IGNORED_USERS"] = "ignored_users";
+	INPUTS$1["IGNORED_MESSAGE"] = "ignored_message";
+	return INPUTS$1;
+}({});
+
+//#endregion
+//#region src/handlers/comment-handler.ts
+const MyOctokit$1 = Octokit.plugin(throttling);
 var CommentHandler = class {
-  constructor() {
-    this.context = github.context;
-    this.issue = this.context.payload.issue;
-    this.comment = this.context.payload.comment;
-    this.token = core.getInput("github_token" /* GITHUB_TOKEN */);
-    this.octokit = new MyOctokit({
-      auth: this.token,
-      throttle: {
-        // @ts-expect-error it's fine buddy :)
-        onRateLimit: (retryAfter, options, _octokit, retryCount) => {
-          core.warning(
-            `Request quota exhausted for request ${options.method} ${options.url}`
-          );
-          if (retryCount < 1) {
-            core.warning(`Retrying after ${retryAfter} seconds!`);
-            return true;
-          }
-        },
-        onSecondaryRateLimit: (_retryAfter, options) => {
-          core.warning(
-            `SecondaryRateLimit detected for request ${options.method} ${options.url}`
-          );
-        }
-      }
-    });
-  }
-  handle_issue_comment() {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
-      core.info(
-        `\u{1F916} Checking commands in the issue (#${(_a = this.issue) == null ? void 0 : _a.number}) comments"`
-      );
-      if (!this.token) {
-        return core.setFailed(
-          `\u{1F6AB} Missing required input "token", received "${this.token}"`
-        );
-      }
-      const requiredLabel = core.getInput("required_label" /* REQUIRED_LABEL */);
-      if (requiredLabel) {
-        const hasLabel = (_c = (_b = this.issue) == null ? void 0 : _b.labels) == null ? void 0 : _c.find(
-          (label) => label.name === requiredLabel
-        );
-        if (!hasLabel) {
-          return core.setFailed(
-            `\u{1F6AB} Missing required label: "${core.getInput(
-              "required_label"
-            )}" not found in issue #${(_d = this.issue) == null ? void 0 : _d.number}.`
-          );
-        }
-      }
-      const selfAssignCmd = core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */);
-      const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
-      const assignCommenterCmd = core.getInput("assign_user_cmd" /* ASSIGN_USER_CMD */);
-      const unassignCommenterCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
-      const enableAutoSuggestion = core.getBooleanInput(
-        "enable_auto_suggestion" /* ENABLE_AUTO_SUGGESTION */
-      );
-      const maintainersInput = core.getInput("maintainers" /* MAINTAINERS */);
-      const maintainers = maintainersInput.split(",");
-      const rawBody = (_e = this.context.payload.comment) == null ? void 0 : _e.body;
-      const body = rawBody.replace(/^\\/, "/").toLowerCase();
-      if (body.trim().startsWith(">") || maintainers.includes((_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
-        core.info(
-          `\u{1F916} Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`
-        );
-        return;
-      }
-      if (enableAutoSuggestion && this._contribution_phrases().some(
-        (phrase) => body.toLowerCase().includes(phrase.toLowerCase())
-      )) {
-        core.info(`\u{1F916} Comment indicates interest in contribution: ${body}`);
-        return this.$_handle_assignment_interest();
-      }
-      if (body === selfAssignCmd || body.includes(selfAssignCmd)) {
-        return this.$_handle_self_assignment();
-      }
-      if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) {
-        return this.$_handle_self_unassignment();
-      }
-      if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
-        if (!maintainersInput) {
-          return core.info(
-            `\u{1F916} Ignoring maintainer command because the "maintainers" input is empty`
-          );
-        }
-        const resolvedMaintainers = yield this._resolve_maintainers(maintainersInput);
-        if (!resolvedMaintainers.includes((_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login)) {
-          return core.info(
-            `\u{1F916} Ignoring maintainer command because user @${(_k = (_j = this.comment) == null ? void 0 : _j.user) == null ? void 0 : _k.login} is not in the maintainers list`
-          );
-        }
-        if (body.includes(assignCommenterCmd)) {
-          return this.$_handle_user_assignment(assignCommenterCmd);
-        }
-        return this.$_handle_user_unassignment(unassignCommenterCmd);
-      }
-      return core.info(
-        `\u{1F916} Ignoring comment: ${(_l = this.context.payload.comment) == null ? void 0 : _l.id} because it does not contain a supported command.`
-      );
-    });
-  }
-  _resolve_maintainers(maintainersInput) {
-    return __async(this, null, function* () {
-      const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
-      const resolvedMaintainers = /* @__PURE__ */ new Set();
-      for (const maintainer of maintainers) {
-        if (maintainer.startsWith("@") && maintainer.includes("/")) {
-          const [org, team] = maintainer.substring(1).split("/");
-          const members = yield this._get_team_members(org, team);
-          for (const m of members) {
-            resolvedMaintainers.add(m);
-          }
-        } else {
-          resolvedMaintainers.add(maintainer);
-        }
-      }
-      return Array.from(resolvedMaintainers);
-    });
-  }
-  _get_team_members(org, team_slug) {
-    return __async(this, null, function* () {
-      try {
-        const response = yield this.octokit.request(
-          "GET /orgs/{org}/teams/{team_slug}/members",
-          {
-            org,
-            team_slug
-          }
-        );
-        return response.data.map((m) => m.login);
-      } catch (error) {
-        core.warning(
-          `Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`
-        );
-        return [];
-      }
-    });
-  }
-  _is_issue_pinned() {
-    var _a, _b;
-    const pinLabel = core.getInput("pin_label" /* PIN_LABEL */);
-    return ((_b = (_a = this.issue) == null ? void 0 : _a.labels) == null ? void 0 : _b.some(
-      (label) => label.name === pinLabel
-    )) || false;
-  }
-  $_handle_assignment_interest() {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
-      const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      if (((_a = this.issue) == null ? void 0 : _a.assignee) || (((_c = (_b = this.issue) == null ? void 0 : _b.assignees) == null ? void 0 : _c.length) || 0) > 0) {
-        const isPinned = this._is_issue_pinned();
-        const commentTemplate = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
-        yield this._create_comment(commentTemplate, {
-          total_days: String(daysUntilUnassign),
-          handle: (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login,
-          assignee: (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} Issue #${(_h = this.issue) == null ? void 0 : _h.number} is already assigned to @${(_j = (_i = this.issue) == null ? void 0 : _i.assignee) == null ? void 0 : _j.login}`
-        );
-      }
-      return this._create_comment(
-        "assignment_suggestion_comment" /* ASSIGNMENT_SUGGESTION_COMMENT */,
-        {
-          handle: (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login,
-          trigger: core.getInput("self_assign_cmd" /* SELF_ASSIGN_CMD */)
-        }
-      );
-    });
-  }
-  $_handle_self_assignment() {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X;
-      core.info(
-        `\u{1F916} Starting assignment for issue #${(_a = this.issue) == null ? void 0 : _a.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
-      );
-      const allowSelfAssignAuthor = core.getInput("allow_self_assign_author" /* ALLOW_SELF_ASSIGN_AUTHOR */) !== "false";
-      const isIssueAuthor = ((_c = (_b = this.issue) == null ? void 0 : _b.user) == null ? void 0 : _c.login) === ((_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login);
-      if (!allowSelfAssignAuthor && isIssueAuthor) {
-        yield this._create_comment("self_assign_author_blocked_comment" /* SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT */, {
-          handle: (_g = (_f = this.comment) == null ? void 0 : _f.user) == null ? void 0 : _g.login
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} User @${(_i = (_h = this.comment) == null ? void 0 : _h.user) == null ? void 0 : _i.login} cannot self-assign their own issue #${(_j = this.issue) == null ? void 0 : _j.number}`
-        );
-      }
-      const ignoredUsersInput = core.getInput("ignored_users" /* IGNORED_USERS */);
-      if (ignoredUsersInput) {
-        const ignoredUsers = ignoredUsersInput.split(",").map((u) => u.trim()).filter(Boolean);
-        const userHandle2 = (_l = (_k = this.comment) == null ? void 0 : _k.user) == null ? void 0 : _l.login;
-        if (ignoredUsers.includes(userHandle2)) {
-          yield this._create_comment("ignored_message" /* IGNORED_MESSAGE */, {
-            handle: userHandle2
-          });
-          core.setOutput("assigned", "no");
-          return core.info(
-            `\u{1F916} User @${userHandle2} is in the ignored users list and cannot self-assign issue #${(_m = this.issue) == null ? void 0 : _m.number}`
-          );
-        }
-      }
-      const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      const blockAssignment = core.getInput("block_assignment");
-      const comments = yield this.octokit.request(
-        "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_n = this.issue) == null ? void 0 : _n.number),
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      );
-      const unassignCmd = core.getInput("unassign_user_cmd" /* UNASSIGN_USER_CMD */);
-      const unassignedComment = core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */);
-      const userHandle = (_p = (_o = this.comment) == null ? void 0 : _o.user) == null ? void 0 : _p.login;
-      const wasUnassigned = comments.data.some((comment) => {
-        var _a2, _b2;
-        const hasManualUnassign = (_a2 = comment.body) == null ? void 0 : _a2.includes(
-          `${unassignCmd} @${userHandle}`
-        );
-        const hasAutoUnassign = (_b2 = comment.body) == null ? void 0 : _b2.includes(
-          mustache_mustache.render(unassignedComment, { handle: userHandle })
-        );
-        return hasManualUnassign || hasAutoUnassign;
-      });
-      if (blockAssignment === "true" && wasUnassigned) {
-        yield this._create_comment("block_assignment_comment" /* BLOCK_ASSIGNMENT_COMMENT */, {
-          handle: (_r = (_q = this.comment) == null ? void 0 : _q.user) == null ? void 0 : _r.login
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} User @${(_t = (_s = this.comment) == null ? void 0 : _s.user) == null ? void 0 : _t.login} was previously unassigned from issue #${(_u = this.issue) == null ? void 0 : _u.number}`
-        );
-      }
-      if ((_v = this.issue) == null ? void 0 : _v.assignee) {
-        const isPinned = this._is_issue_pinned();
-        const commentTemplate2 = isPinned ? "already_assigned_comment_pinned" /* ALREADY_ASSIGNED_COMMENT_PINNED */ : "already_assigned_comment" /* ALREADY_ASSIGNED_COMMENT */;
-        yield this._create_comment(commentTemplate2, {
-          total_days: String(daysUntilUnassign),
-          handle: (_x = (_w = this.comment) == null ? void 0 : _w.user) == null ? void 0 : _x.login,
-          assignee: (_z = (_y = this.issue) == null ? void 0 : _y.assignee) == null ? void 0 : _z.login
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} Issue #${(_A = this.issue) == null ? void 0 : _A.number} is already assigned to @${(_C = (_B = this.issue) == null ? void 0 : _B.assignee) == null ? void 0 : _C.login}`
-        );
-      }
-      const overallLabelsRaw = core.getInput("max_overall_assignment_labels" /* MAX_OVERALL_ASSIGNMENT_LABELS */);
-      const overallCountLimit = parseInt(
-        core.getInput("max_overall_assignment_count" /* MAX_OVERALL_ASSIGNMENT_COUNT */) || "0",
-        10
-      );
-      if (overallLabelsRaw && overallCountLimit > 0) {
-        const currentIssueLabels = ((_E = (_D = this.issue) == null ? void 0 : _D.labels) == null ? void 0 : _E.map(
-          (l) => typeof l === "string" ? l : l.name
-        )) || [];
-        const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
-        const matchingLabels = currentIssueLabels.filter(
-          (label) => trackedLabels.includes(label)
-        );
-        if (matchingLabels.length > 0) {
-          const labelCounts = yield this._get_assignment_count_per_label(overallLabelsRaw);
-          for (const label of matchingLabels) {
-            const count = labelCounts.get(label) || 0;
-            if (count >= overallCountLimit) {
-              yield this._create_comment("max_overall_assignment_message" /* MAX_OVERALL_ASSIGNMENT_MESSAGE */, {
-                handle: (_G = (_F = this.comment) == null ? void 0 : _F.user) == null ? void 0 : _G.login,
-                max_overall_assignment_count: overallCountLimit.toString(),
-                label
-              });
-              core.setOutput("assigned", "no");
-              return core.info(
-                `\u{1F916} User @${(_I = (_H = this.comment) == null ? void 0 : _H.user) == null ? void 0 : _I.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`
-              );
-            }
-          }
-        }
-      }
-      const maxAssignments = parseInt(
-        core.getInput("max_assignments" /* MAX_ASSIGNMENTS */) || "3",
-        10
-      );
-      const assignmentCount = yield this._get_assignment_count();
-      if (assignmentCount >= maxAssignments) {
-        yield this._create_comment("max_assignments_message" /* MAX_ASSIGNMENTS_MESSAGE */, {
-          handle: (_K = (_J = this.comment) == null ? void 0 : _J.user) == null ? void 0 : _K.login,
-          max_assignments: maxAssignments.toString()
-        });
-        core.setOutput("assigned", "no");
-        return core.info(
-          `\u{1F916} User @${(_M = (_L = this.comment) == null ? void 0 : _L.user) == null ? void 0 : _M.login} has reached the maximum number of assignments (${maxAssignments})`
-        );
-      }
-      core.info(
-        `\u{1F916} Assigning @${(_O = (_N = this.comment) == null ? void 0 : _N.user) == null ? void 0 : _O.login} to issue #${(_P = this.issue) == null ? void 0 : _P.number}`
-      );
-      core.info(`\u{1F916} Adding comment to issue #${(_Q = this.issue) == null ? void 0 : _Q.number}`);
-      const isNewcomer = yield this._is_newcomer((_S = (_R = this.comment) == null ? void 0 : _R.user) == null ? void 0 : _S.login);
-      const commentTemplate = isNewcomer ? "assigned_comment_newcomer" /* ASSIGNED_COMMENT_NEWCOMER */ : "assigned_comment" /* ASSIGNED_COMMENT */;
-      core.info(
-        `\u{1F916} User @${(_U = (_T = this.comment) == null ? void 0 : _T.user) == null ? void 0 : _U.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
-      );
-      yield Promise.all([
-        this._add_assignee(),
-        this._create_comment(commentTemplate, {
-          total_days: daysUntilUnassign,
-          unassigned_date: format(
-            add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-            "dd LLLL y"
-          ),
-          handle: (_W = (_V = this.comment) == null ? void 0 : _V.user) == null ? void 0 : _W.login,
-          pin_label: core.getInput("pin_label" /* PIN_LABEL */)
-        })
-      ]);
-      core.info(`\u{1F916} Issue #${(_X = this.issue) == null ? void 0 : _X.number} assigned!`);
-      return core.setOutput("assigned", "yes");
-    });
-  }
-  $_handle_self_unassignment() {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-      core.info(
-        `\u{1F916} Starting issue #${(_a = this.issue) == null ? void 0 : _a.number} unassignment for user @${(_c = (_b = this.issue) == null ? void 0 : _b.assignee) == null ? void 0 : _c.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`
-      );
-      const commenterLogin = (_e = (_d = this.comment) == null ? void 0 : _d.user) == null ? void 0 : _e.login;
-      const assigneeLogin = (_g = (_f = this.issue) == null ? void 0 : _f.assignee) == null ? void 0 : _g.login;
-      const selfUnassignCmd = core.getInput("self_unassign_cmd" /* SELF_UNASSIGN_CMD */);
-      const rawBody = (_h = this.context.payload.comment) == null ? void 0 : _h.body;
-      const body = rawBody.replace(/^\\/, "/").toLowerCase();
-      const idx = body.indexOf(selfUnassignCmd);
-      let targetUsername = null;
-      if (idx !== -1) {
-        const afterCmd = rawBody.slice(idx + selfUnassignCmd.length).trim();
-        const userHandleMatch = afterCmd.match(/@([a-zA-Z0-9-]{1,39})/i);
-        if (userHandleMatch == null ? void 0 : userHandleMatch[1]) {
-          targetUsername = userHandleMatch[1];
-        }
-      }
-      if (targetUsername && targetUsername.toLowerCase() !== (commenterLogin == null ? void 0 : commenterLogin.toLowerCase())) {
-        core.setOutput("unassigned", "no");
-        core.setOutput("unassigned_issues", []);
-        return core.info(
-          `\u{1F916} User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`
-        );
-      }
-      if (assigneeLogin === commenterLogin) {
-        yield Promise.all([
-          this._remove_assignee(),
-          this._create_comment(
-            "unassigned_comment" /* UNASSIGNED_COMMENT */,
-            {
-              handle: (_j = (_i = this.comment) == null ? void 0 : _i.user) == null ? void 0 : _j.login,
-              pin_label: core.getInput("pin_label" /* PIN_LABEL */)
-            }
-          )
-        ]);
-        core.info(`\u{1F916} Done issue unassignment!`);
-        core.setOutput("unassigned", "yes");
-        core.setOutput("unassigned_issues", [(_k = this.issue) == null ? void 0 : _k.number]);
-        return;
-      }
-      core.setOutput("unassigned", "no");
-      core.setOutput("unassigned_issues", []);
-      return core.info(`\u{1F916} Commenter is different from the assignee, ignoring...`);
-    });
-  }
-  $_handle_user_assignment(input) {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g;
-      core.info(`Starting issue assignment to user`);
-      const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
-      if (idx !== -1) {
-        const afterAssignCmd = (_c = (_b = this.comment) == null ? void 0 : _b.body) == null ? void 0 : _c.slice(idx + input.length).trim();
-        const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-        if (userHandleMatch == null ? void 0 : userHandleMatch[1]) {
-          const userHandle = userHandleMatch[1];
-          core.info(`\u{1F916} Assigning @${userHandle} to issue #${(_d = this.issue) == null ? void 0 : _d.number}`);
-          const daysUntilUnassign = Number(
-            core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */)
-          );
-          const isNewcomer = yield this._is_newcomer(userHandle);
-          const commentTemplate = isNewcomer ? "assigned_comment_newcomer" /* ASSIGNED_COMMENT_NEWCOMER */ : "assigned_comment" /* ASSIGNED_COMMENT */;
-          core.info(
-            `\u{1F916} User @${userHandle} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`
-          );
-          yield Promise.all([
-            this.octokit.request(
-              "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees",
-              {
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                issue_number: Number((_e = this.issue) == null ? void 0 : _e.number),
-                assignees: [userHandle.trim()],
-                headers: {
-                  "X-GitHub-Api-Version": "2022-11-28"
-                }
-              }
-            ),
-            this.octokit.request(
-              "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
-              {
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                issue_number: Number((_f = this.issue) == null ? void 0 : _f.number),
-                labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)],
-                headers: {
-                  "X-GitHub-Api-Version": "2022-11-28"
-                }
-              }
-            ),
-            this._create_comment(commentTemplate, {
-              total_days: daysUntilUnassign,
-              unassigned_date: format(
-                add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }),
-                "dd LLLL y"
-              ),
-              handle: userHandle,
-              pin_label: core.getInput("pin_label" /* PIN_LABEL */)
-            })
-          ]);
-          core.info(`\u{1F916} Issue #${(_g = this.issue) == null ? void 0 : _g.number} assigned!`);
-          return core.setOutput("assigned", "yes");
-        } else {
-          core.info(`No valid user handle found after /assign command`);
-          return core.setOutput("assigned", "no");
-        }
-      }
-    });
-  }
-  $_handle_user_unassignment(input) {
-    return __async(this, null, function* () {
-      var _a, _b, _c, _d, _e, _f, _g, _h;
-      core.info(`Starting issue unassignment to user`);
-      const idx = (_a = this.comment) == null ? void 0 : _a.body.indexOf(input);
-      if (idx !== -1) {
-        const afterAssignCmd = (_c = (_b = this.comment) == null ? void 0 : _b.body) == null ? void 0 : _c.slice(idx + input.length).trim();
-        const userHandleMatch = afterAssignCmd.match(/@([a-zA-Z0-9-]{1,39})/);
-        if (userHandleMatch == null ? void 0 : userHandleMatch[1]) {
-          const userHandle = userHandleMatch[1];
-          if (((_e = (_d = this.issue) == null ? void 0 : _d.assignee) == null ? void 0 : _e.login) === userHandle) {
-            yield this._remove_assignee();
-            core.setOutput("unassigned", "yes");
-            core.setOutput("unassigned_issues", [(_f = this.issue) == null ? void 0 : _f.number]);
-            return core.info(
-              `\u{1F916} User @${userHandle} is unassigned from the issue #${(_g = this.issue) == null ? void 0 : _g.number}`
-            );
-          }
-          core.setOutput("unassigned", "no");
-          core.setOutput("unassigned_issues", []);
-          return core.info(
-            `\u{1F916} User @${userHandle} is not assigned to the issue #${(_h = this.issue) == null ? void 0 : _h.number}`
-          );
-        } else {
-          core.setOutput("unassigned", "no");
-          core.setOutput("unassigned_issues", []);
-          return core.info(`No valid user handle found after /assign command`);
-        }
-      }
-    });
-  }
-  _add_assignee() {
-    var _a, _b, _c;
-    return Promise.all([
-      this.octokit.request(
-        "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
-          assignees: [(_b = this.comment) == null ? void 0 : _b.user.login],
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      ),
-      this.octokit.request(
-        "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_c = this.issue) == null ? void 0 : _c.number),
-          labels: [core.getInput("assigned_label" /* ASSIGNED_LABEL */)],
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      )
-    ]);
-  }
-  _remove_assignee() {
-    var _a, _b, _c, _d, _e, _f;
-    return Promise.allSettled([
-      this.octokit.request(
-        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
-          assignees: [(_c = (_b = this.issue) == null ? void 0 : _b.assignee) == null ? void 0 : _c.login],
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      ),
-      this.octokit.request(
-        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_d = this.issue) == null ? void 0 : _d.number),
-          name: core.getInput("assigned_label" /* ASSIGNED_LABEL */),
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      ),
-      this.octokit.request(
-        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_e = this.issue) == null ? void 0 : _e.number),
-          name: core.getInput("pin_label" /* PIN_LABEL */),
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      ),
-      this.octokit.request(
-        "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-        {
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: Number((_f = this.issue) == null ? void 0 : _f.number),
-          name: "\u{1F514} reminder-sent",
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      )
-    ]);
-  }
-  //! this should calculate how many times is left before the current
-  //! assignee get unassign by the action
-  // private async _already_assigned_comment(totalDays: number) {
-  //   const comments = await this.client.rest.issues.listComments({
-  //     ...this.context.repo,
-  //     issue_number: this.issue?.number!,
-  //   });
-  //   // TODO: should return the comments made by the assigned user to search which one contains the cmd
-  //   const assignedComment = comments.data.find(
-  //     (comment) => comment.user!.login === this.issue?.assignee?.login,
-  //   );
-  //   if (!assignedComment) {
-  //     // TODO: maybe post a comment here?
-  //     return core.info(
-  //       `🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`,
-  //     );
-  //   }
-  //   const daysUntilUnassign = formatDistanceStrict(
-  //     new Date(assignedComment?.created_at),
-  //     add(new Date(assignedComment.created_at), { days: totalDays }),
-  //   );
-  //   await this._create_comment<AlreadyAssignedCommentArg>(
-  //     INPUTS.ALREADY_ASSIGNED_COMMENT,
-  //     {
-  //       unassigned_date: daysUntilUnassign,
-  //       handle: this.comment?.user?.login,
-  //       assignee: this.issue?.assignee?.login,
-  //     },
-  //   );
-  // }
-  _create_comment(input, options) {
-    var _a;
-    const body = mustache_mustache.render(core.getInput(input), options);
-    return this.octokit.request(
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      {
-        owner: this.context.repo.owner,
-        repo: this.context.repo.repo,
-        issue_number: Number((_a = this.issue) == null ? void 0 : _a.number),
-        body,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
-      }
-    );
-  }
-  _get_assignment_count() {
-    return __async(this, null, function* () {
-      var _a, _b;
-      const { owner, repo } = this.context.repo;
-      const issues = yield this.octokit.request(
-        "GET /repos/{owner}/{repo}/issues",
-        {
-          owner,
-          repo,
-          assignee: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login,
-          state: "open",
-          per_page: 100,
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        }
-      );
-      return issues.data.length;
-    });
-  }
-  /**
-   * Count issues (open or closed) assigned to the current commenter for each label.
-   * `labelsRaw` is a comma-separated list of label names.
-   * Returns a Map of label -> count of issues with that label.
-   */
-  _get_assignment_count_per_label(labelsRaw) {
-    return __async(this, null, function* () {
-      var _a, _b;
-      const { owner, repo } = this.context.repo;
-      const labels = labelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
-      const labelCounts = /* @__PURE__ */ new Map();
-      if (labels.length === 0) return labelCounts;
-      for (const label of labels) {
-        const issues = yield this.octokit.request(
-          "GET /repos/{owner}/{repo}/issues",
-          {
-            owner,
-            repo,
-            assignee: (_b = (_a = this.comment) == null ? void 0 : _a.user) == null ? void 0 : _b.login,
-            labels: label,
-            state: "all",
-            per_page: 100,
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        );
-        labelCounts.set(label, issues.data.length);
-      }
-      return labelCounts;
-    });
-  }
-  /**
-   * Check if a user is a newcomer (has never opened a PR in this repo)
-   */
-  _is_newcomer(username) {
-    return __async(this, null, function* () {
-      const { owner, repo } = this.context.repo;
-      try {
-        const query = [
-          `repo:${owner}/${repo}`,
-          "is:pr",
-          `author:${username}`
-        ].join(" ");
-        const prs = yield this.octokit.request("GET /search/issues", {
-          q: query,
-          per_page: 1,
-          advanced_search: true,
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
-        });
-        return prs.data.total_count === 0;
-      } catch (error) {
-        core.warning(`Failed to check PR history for @${username}: ${error}`);
-        return false;
-      }
-    });
-  }
-  _contribution_phrases() {
-    return [
-      "asssign-me",
-      "Assign this issue to me",
-      "Assign it to me",
-      "Assign to me",
-      "Assign me",
-      "Assign me this issue",
-      "Assign this for me",
-      "Available to work on",
-      "Can I be assigned to this issue",
-      "can I kindly work on this issue",
-      "Can I take on this issue",
-      "Can I take this issue",
-      "Can I take up this issue",
-      "Can I work on it",
-      "Could I get assigned",
-      "I'd like to be assigned to",
-      "I'm keen to have a go",
-      "I am here to do a university assignment",
-      "I am interested in taking on this issue",
-      "I am interested in the issue",
-      "I am very interested in this issue",
-      "I hope to contribute to this issue",
-      "I would like to work on this issue",
-      "Interested to work",
-      "is this free to take",
-      "May I do this feature",
-      "May I take it",
-      "May I work on this issue",
-      "Please assign",
-      "Still open for contribution",
-      "Want to take this issue",
-      "Want to contribute",
-      "Would be happy to pick this up",
-      "Would like to work on this",
-      "Would like to contribute",
-      "Would love to work on this issue"
-    ];
-  }
+	constructor() {
+		this.context = github.context;
+		this.issue = this.context.payload.issue;
+		this.comment = this.context.payload.comment;
+		this.token = core.getInput(INPUTS.GITHUB_TOKEN);
+		this.octokit = new MyOctokit$1({
+			auth: this.token,
+			throttle: {
+				onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`Request quota exhausted for request ${options.method} ${options.url}`);
+					if (retryCount < 1) {
+						core.warning(`Retrying after ${retryAfter} seconds!`);
+						return true;
+					}
+				},
+				onSecondaryRateLimit: (_retryAfter, options) => {
+					core.warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+				}
+			}
+		});
+	}
+	async handle_issue_comment() {
+		core.info(`🤖 Checking commands in the issue (#${this.issue?.number}) comments"`);
+		if (!this.token) return core.setFailed(`🚫 Missing required input "token", received "${this.token}"`);
+		const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
+		if (requiredLabel) {
+			if (!this.issue?.labels?.find((label) => label.name === requiredLabel)) return core.setFailed(`🚫 Missing required label: "${core.getInput("required_label")}" not found in issue #${this.issue?.number}.`);
+		}
+		const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
+		const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+		const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
+		const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const enableAutoSuggestion = core.getBooleanInput(INPUTS.ENABLE_AUTO_SUGGESTION);
+		const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
+		const maintainers = maintainersInput.split(",");
+		const body = (this.context.payload.comment?.body).replace(/^\\/, "/").toLowerCase();
+		if (body.trim().startsWith(">") || maintainers.includes(this.comment?.user?.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+			core.info(`🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`);
+			return;
+		}
+		if (enableAutoSuggestion && this._contribution_phrases().some((phrase) => body.toLowerCase().includes(phrase.toLowerCase()))) {
+			core.info(`🤖 Comment indicates interest in contribution: ${body}`);
+			return this.$_handle_assignment_interest();
+		}
+		if (body === selfAssignCmd || body.includes(selfAssignCmd)) return this.$_handle_self_assignment();
+		if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) return this.$_handle_self_unassignment();
+		if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+			if (!maintainersInput) return core.info(`🤖 Ignoring maintainer command because the "maintainers" input is empty`);
+			if (!(await this._resolve_maintainers(maintainersInput)).includes(this.comment?.user?.login)) return core.info(`🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`);
+			if (body.includes(assignCommenterCmd)) return this.$_handle_user_assignment(assignCommenterCmd);
+			return this.$_handle_user_unassignment(unassignCommenterCmd);
+		}
+		return core.info(`🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`);
+	}
+	async _resolve_maintainers(maintainersInput) {
+		const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
+		const resolvedMaintainers = /* @__PURE__ */ new Set();
+		for (const maintainer of maintainers) if (maintainer.startsWith("@") && maintainer.includes("/")) {
+			const [org, team] = maintainer.substring(1).split("/");
+			const members = await this._get_team_members(org, team);
+			for (const m of members) resolvedMaintainers.add(m);
+		} else resolvedMaintainers.add(maintainer);
+		return Array.from(resolvedMaintainers);
+	}
+	async _get_team_members(org, team_slug) {
+		try {
+			return (await this.octokit.request("GET /orgs/{org}/teams/{team_slug}/members", {
+				org,
+				team_slug
+			})).data.map((m) => m.login);
+		} catch (error) {
+			core.warning(`Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`);
+			return [];
+		}
+	}
+	_is_issue_pinned() {
+		const pinLabel = core.getInput(INPUTS.PIN_LABEL);
+		return this.issue?.labels?.some((label) => label.name === pinLabel) || false;
+	}
+	async $_handle_assignment_interest() {
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+			const commentTemplate = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		return this._create_comment(INPUTS.ASSIGNMENT_SUGGESTION_COMMENT, {
+			handle: this.comment?.user?.login,
+			trigger: core.getInput(INPUTS.SELF_ASSIGN_CMD)
+		});
+	}
+	async $_handle_self_assignment() {
+		core.info(`🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		const allowSelfAssignAuthor = core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== "false";
+		const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+		if (!allowSelfAssignAuthor && isIssueAuthor) {
+			await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`);
+		}
+		const ignoredUsersInput = core.getInput(INPUTS.IGNORED_USERS);
+		if (ignoredUsersInput) {
+			const ignoredUsers = ignoredUsersInput.split(",").map((u) => u.trim()).filter(Boolean);
+			const userHandle$1 = this.comment?.user?.login;
+			if (ignoredUsers.includes(userHandle$1)) {
+				await this._create_comment(INPUTS.IGNORED_MESSAGE, { handle: userHandle$1 });
+				core.setOutput("assigned", "no");
+				return core.info(`🤖 User @${userHandle$1} is in the ignored users list and cannot self-assign issue #${this.issue?.number}`);
+			}
+		}
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		const blockAssignment = core.getInput("block_assignment");
+		const comments = await this.octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
+		const userHandle = this.comment?.user?.login;
+		const wasUnassigned = comments.data.some((comment) => {
+			const hasManualUnassign = comment.body?.includes(`${unassignCmd} @${userHandle}`);
+			const hasAutoUnassign = comment.body?.includes(mustache_mustache.render(unassignedComment, { handle: userHandle }));
+			return hasManualUnassign || hasAutoUnassign;
+		});
+		if (blockAssignment === "true" && wasUnassigned) {
+			await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`);
+		}
+		if (this.issue?.assignee) {
+			const commentTemplate$1 = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate$1, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		const overallLabelsRaw = core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS);
+		const overallCountLimit = parseInt(core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10);
+		if (overallLabelsRaw && overallCountLimit > 0) {
+			const currentIssueLabels = this.issue?.labels?.map((l) => typeof l === "string" ? l : l.name) || [];
+			const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+			const matchingLabels = currentIssueLabels.filter((label) => trackedLabels.includes(label));
+			if (matchingLabels.length > 0) {
+				const labelCounts = await this._get_assignment_count_per_label(overallLabelsRaw);
+				for (const label of matchingLabels) {
+					const count = labelCounts.get(label) || 0;
+					if (count >= overallCountLimit) {
+						await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
+							handle: this.comment?.user?.login,
+							max_overall_assignment_count: overallCountLimit.toString(),
+							label
+						});
+						core.setOutput("assigned", "no");
+						return core.info(`🤖 User @${this.comment?.user?.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`);
+					}
+				}
+			}
+		}
+		const maxAssignments = parseInt(core.getInput(INPUTS.MAX_ASSIGNMENTS) || "3", 10);
+		if (await this._get_assignment_count() >= maxAssignments) {
+			await this._create_comment(INPUTS.MAX_ASSIGNMENTS_MESSAGE, {
+				handle: this.comment?.user?.login,
+				max_assignments: maxAssignments.toString()
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} has reached the maximum number of assignments (${maxAssignments})`);
+		}
+		core.info(`🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`);
+		core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
+		const isNewcomer = await this._is_newcomer(this.comment?.user?.login);
+		const commentTemplate = isNewcomer ? INPUTS.ASSIGNED_COMMENT_NEWCOMER : INPUTS.ASSIGNED_COMMENT;
+		core.info(`🤖 User @${this.comment?.user?.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		await Promise.all([this._add_assignee(), this._create_comment(commentTemplate, {
+			total_days: daysUntilUnassign,
+			unassigned_date: format(add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }), "dd LLLL y"),
+			handle: this.comment?.user?.login,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		})]);
+		core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+		return core.setOutput("assigned", "yes");
+	}
+	async $_handle_self_unassignment() {
+		core.info(`🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee?.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		const commenterLogin = this.comment?.user?.login;
+		const assigneeLogin = this.issue?.assignee?.login;
+		const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+		const rawBody = this.context.payload.comment?.body;
+		const idx = rawBody.replace(/^\\/, "/").toLowerCase().indexOf(selfUnassignCmd);
+		let targetUsername = null;
+		if (idx !== -1) {
+			const userHandleMatch = rawBody.slice(idx + selfUnassignCmd.length).trim().match(/@([a-zA-Z0-9-]{1,39})/i);
+			if (userHandleMatch?.[1]) targetUsername = userHandleMatch[1];
+		}
+		if (targetUsername && targetUsername.toLowerCase() !== commenterLogin?.toLowerCase()) {
+			core.setOutput("unassigned", "no");
+			core.setOutput("unassigned_issues", []);
+			return core.info(`🤖 User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`);
+		}
+		if (assigneeLogin === commenterLogin) {
+			await Promise.all([this._remove_assignee(), this._create_comment(INPUTS.UNASSIGNED_COMMENT, {
+				handle: this.comment?.user?.login,
+				pin_label: core.getInput(INPUTS.PIN_LABEL)
+			})]);
+			core.info(`🤖 Done issue unassignment!`);
+			core.setOutput("unassigned", "yes");
+			core.setOutput("unassigned_issues", [this.issue?.number]);
+			return;
+		}
+		core.setOutput("unassigned", "no");
+		core.setOutput("unassigned_issues", []);
+		return core.info(`🤖 Commenter is different from the assignee, ignoring...`);
+	}
+	async $_handle_user_assignment(input) {
+		core.info(`Starting issue assignment to user`);
+		const idx = this.comment?.body.indexOf(input);
+		if (idx !== -1) {
+			const userHandleMatch = (this.comment?.body?.slice(idx + input.length).trim()).match(/@([a-zA-Z0-9-]{1,39})/);
+			if (userHandleMatch?.[1]) {
+				const userHandle = userHandleMatch[1];
+				core.info(`🤖 Assigning @${userHandle} to issue #${this.issue?.number}`);
+				const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+				const isNewcomer = await this._is_newcomer(userHandle);
+				const commentTemplate = isNewcomer ? INPUTS.ASSIGNED_COMMENT_NEWCOMER : INPUTS.ASSIGNED_COMMENT;
+				core.info(`🤖 User @${userHandle} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+				await Promise.all([
+					this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+						owner: this.context.repo.owner,
+						repo: this.context.repo.repo,
+						issue_number: Number(this.issue?.number),
+						assignees: [userHandle.trim()],
+						headers: { "X-GitHub-Api-Version": "2022-11-28" }
+					}),
+					this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+						owner: this.context.repo.owner,
+						repo: this.context.repo.repo,
+						issue_number: Number(this.issue?.number),
+						labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+						headers: { "X-GitHub-Api-Version": "2022-11-28" }
+					}),
+					this._create_comment(commentTemplate, {
+						total_days: daysUntilUnassign,
+						unassigned_date: format(add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }), "dd LLLL y"),
+						handle: userHandle,
+						pin_label: core.getInput(INPUTS.PIN_LABEL)
+					})
+				]);
+				core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+				return core.setOutput("assigned", "yes");
+			} else {
+				core.info(`No valid user handle found after /assign command`);
+				return core.setOutput("assigned", "no");
+			}
+		}
+	}
+	async $_handle_user_unassignment(input) {
+		core.info(`Starting issue unassignment to user`);
+		const idx = this.comment?.body.indexOf(input);
+		if (idx !== -1) {
+			const userHandleMatch = (this.comment?.body?.slice(idx + input.length).trim()).match(/@([a-zA-Z0-9-]{1,39})/);
+			if (userHandleMatch?.[1]) {
+				const userHandle = userHandleMatch[1];
+				if (this.issue?.assignee?.login === userHandle) {
+					await this._remove_assignee();
+					core.setOutput("unassigned", "yes");
+					core.setOutput("unassigned_issues", [this.issue?.number]);
+					return core.info(`🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`);
+				}
+				core.setOutput("unassigned", "no");
+				core.setOutput("unassigned_issues", []);
+				return core.info(`🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`);
+			} else {
+				core.setOutput("unassigned", "no");
+				core.setOutput("unassigned_issues", []);
+				return core.info(`No valid user handle found after /assign command`);
+			}
+		}
+	}
+	_add_assignee() {
+		return Promise.all([this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			assignees: [this.comment?.user.login],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		}), this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})]);
+	}
+	_remove_assignee() {
+		return Promise.allSettled([
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				assignees: [this.issue?.assignee?.login],
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: core.getInput(INPUTS.ASSIGNED_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: core.getInput(INPUTS.PIN_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: "🔔 reminder-sent",
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})
+		]);
+	}
+	//! this should calculate how many times is left before the current
+	//! assignee get unassign by the action
+	_create_comment(input, options) {
+		const body = mustache_mustache.render(core.getInput(input), options);
+		return this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			body,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+	}
+	async _get_assignment_count() {
+		const { owner, repo } = this.context.repo;
+		return (await this.octokit.request("GET /repos/{owner}/{repo}/issues", {
+			owner,
+			repo,
+			assignee: this.comment?.user?.login,
+			state: "open",
+			per_page: 100,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})).data.length;
+	}
+	/**
+	* Count issues (open or closed) assigned to the current commenter for each label.
+	* `labelsRaw` is a comma-separated list of label names.
+	* Returns a Map of label -> count of issues with that label.
+	*/
+	async _get_assignment_count_per_label(labelsRaw) {
+		const { owner, repo } = this.context.repo;
+		const labels = labelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+		const labelCounts = /* @__PURE__ */ new Map();
+		if (labels.length === 0) return labelCounts;
+		for (const label of labels) {
+			const issues = await this.octokit.request("GET /repos/{owner}/{repo}/issues", {
+				owner,
+				repo,
+				assignee: this.comment?.user?.login,
+				labels: label,
+				state: "all",
+				per_page: 100,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			});
+			labelCounts.set(label, issues.data.length);
+		}
+		return labelCounts;
+	}
+	/**
+	* Check if a user is a newcomer (has never opened a PR in this repo)
+	*/
+	async _is_newcomer(username) {
+		const { owner, repo } = this.context.repo;
+		try {
+			const query = [
+				`repo:${owner}/${repo}`,
+				"is:pr",
+				`author:${username}`
+			].join(" ");
+			return (await this.octokit.request("GET /search/issues", {
+				q: query,
+				per_page: 1,
+				advanced_search: true,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})).data.total_count === 0;
+		} catch (error) {
+			core.warning(`Failed to check PR history for @${username}: ${error}`);
+			return false;
+		}
+	}
+	_contribution_phrases() {
+		return [
+			"asssign-me",
+			"Assign this issue to me",
+			"Assign it to me",
+			"Assign to me",
+			"Assign me",
+			"Assign me this issue",
+			"Assign this for me",
+			"Available to work on",
+			"Can I be assigned to this issue",
+			"can I kindly work on this issue",
+			"Can I take on this issue",
+			"Can I take this issue",
+			"Can I take up this issue",
+			"Can I work on it",
+			"Could I get assigned",
+			"I'd like to be assigned to",
+			"I'm keen to have a go",
+			"I am here to do a university assignment",
+			"I am interested in taking on this issue",
+			"I am interested in the issue",
+			"I am very interested in this issue",
+			"I hope to contribute to this issue",
+			"I would like to work on this issue",
+			"Interested to work",
+			"is this free to take",
+			"May I do this feature",
+			"May I take it",
+			"May I work on this issue",
+			"Please assign",
+			"Still open for contribution",
+			"Want to take this issue",
+			"Want to contribute",
+			"Would be happy to pick this up",
+			"Would like to work on this",
+			"Would like to contribute",
+			"Would love to work on this issue"
+		];
+	}
 };
 
-// src/handlers/schedule-handler.ts
-
-
-
-
-
-
-// src/utils/helpers/common.ts
+//#endregion
+//#region src/utils/helpers/common.ts
+/**
+* Utility function to split array into chunks
+* @param array - The array to split
+* @param chunkSize - The size of each chunk
+* @returns An array of arrays
+*/
 function chunkArray(array, chunkSize) {
-  const chunks = [];
-  for (let i = 0; i < array.length; i += chunkSize) {
-    chunks.push(array.slice(i, i + chunkSize));
-  }
-  return chunks;
+	const chunks = [];
+	for (let i = 0; i < array.length; i += chunkSize) chunks.push(array.slice(i, i + chunkSize));
+	return chunks;
 }
+/**
+* Utility function to calculate days between dates
+* @param start - The start date
+* @param end - The end date
+* @returns The number of days between the two dates
+*/
 function getDaysBetween(start, end) {
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  return Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
+	const diffTime = Math.abs(end.getTime() - start.getTime());
+	return Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
 }
 
-// src/handlers/schedule-handler.ts
-var MyOctokit2 = Octokit.plugin(throttling);
+//#endregion
+//#region src/handlers/schedule-handler.ts
+const MyOctokit = Octokit.plugin(throttling);
 var ScheduleHandler = class {
-  constructor() {
-    this.context = github.context;
-    this.token = core.getInput("github_token" /* GITHUB_TOKEN */, { required: true });
-    this.assignedLabel = core.getInput("assigned_label" /* ASSIGNED_LABEL */);
-    this.exemptLabel = core.getInput("pin_label" /* PIN_LABEL */);
-    this.octokit = new MyOctokit2({
-      auth: this.token,
-      throttle: {
-        onRateLimit: (retryAfter, options, _octokit, retryCount) => {
-          core.warning(
-            `\u26A0\uFE0F Request quota exhausted for request ${options.method} ${options.url} \u26A0\uFE0F`
-          );
-          if (retryCount < 1) {
-            core.warning(`\u26A0\uFE0F Retrying after ${retryAfter} seconds! \u26A0\uFE0F`);
-            return true;
-          }
-          return false;
-        },
-        onSecondaryRateLimit: (retryAfter, options, _octokit, retryCount) => {
-          core.warning(
-            `\u26A0\uFE0F SecondaryRateLimit detected for request ${options.method} ${options.url} \u26A0\uFE0F`
-          );
-          if (retryCount < 2) {
-            core.warning(
-              `\u26A0\uFE0F Secondary rate limit hit. Retrying after ${retryAfter} seconds! \u26A0\uFE0F`
-            );
-            return true;
-          }
-          return false;
-        }
-      }
-    });
-  }
-  handle_unassignments() {
-    return __async(this, null, function* () {
-      const { unassignIssues, reminderIssues } = yield this._get_assigned_issues();
-      let processedUnassignments = [];
-      let processedReminders = [];
-      if (unassignIssues.length > 0) {
-        processedUnassignments = yield this._process_unassignments(unassignIssues);
-      }
-      const enableReminder = core.getInput("enable_reminder" /* ENABLE_REMINDER */);
-      if (enableReminder !== "true") {
-        yield this._generate_summary(processedUnassignments, processedReminders);
-        return;
-      }
-      if (reminderIssues.length > 0) {
-        processedReminders = yield this._process_reminders(reminderIssues);
-      }
-      yield this._generate_summary(processedUnassignments, processedReminders);
-    });
-  }
-  _get_assigned_issues() {
-    return __async(this, null, function* () {
-      var _a, _b;
-      const { owner, repo } = this.context.repo;
-      const daysUntilUnassign = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      let reminderDays;
-      const reminderDaysInput = core.getInput("reminder_days" /* REMINDER_DAYS */);
-      if (reminderDaysInput === "auto") {
-        reminderDays = Math.floor(daysUntilUnassign / 2);
-      } else {
-        reminderDays = parseInt(reminderDaysInput, 10);
-        if (Number.isNaN(reminderDays)) {
-          reminderDays = Math.floor(daysUntilUnassign / 2);
-        }
-      }
-      const {
-        data: { items: issues }
-      } = yield this.octokit.request("GET /search/issues", {
-        q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
-        per_page: 100,
-        advanced_search: true,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
-      });
-      const unassignIssues = [];
-      const reminderIssues = [];
-      const chunks = chunkArray(issues, 10);
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const results = chunk.map((issue) => ({
-          issue,
-          lastActivityDate: new Date(issue.updated_at),
-          daysSinceActivity: getDaysBetween(
-            new Date(issue.updated_at),
-            /* @__PURE__ */ new Date()
-          )
-        }));
-        for (const result of results.filter(Boolean)) {
-          const hasReminderLabel = (_b = (_a = result.issue) == null ? void 0 : _a.labels) == null ? void 0 : _b.some(
-            (label) => (label == null ? void 0 : label.name) === "\u{1F514} reminder-sent"
-          );
-          let shouldUnassign = result.daysSinceActivity >= daysUntilUnassign;
-          if (hasReminderLabel) {
-            shouldUnassign = shouldUnassign || // The last day of activity is (normally) the point in time where the reminder label was sent.
-            // Thus, reminderDays already passed of the number of daysUntilUnassign.
-            // Therefore, we substract reminderDays from daysUntilUnassign to know the "real" period to wait for.
-            result.daysSinceActivity >= daysUntilUnassign - reminderDays;
-          }
-          if (shouldUnassign) {
-            unassignIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
-            continue;
-          }
-          if (result.daysSinceActivity >= reminderDays) {
-            if (!hasReminderLabel) {
-              reminderIssues.push(__spreadProps(__spreadValues({}, result), { hasReminderLabel }));
-            }
-          }
-        }
-      }
-      core.info(`\u{1F4CB} Found ${unassignIssues.length} issues to unassign`);
-      core.info(`\u{1F514} Found ${reminderIssues.length} issues to send reminders for`);
-      return { unassignIssues, reminderIssues };
-    });
-  }
-  // fallback to using issue.updated_at instead of fetching timeline events
-  // private async _get_issue_activity(issue: Issue) {
-  //   try {
-  //     const { data: timelines } = await this.octokit.request(
-  //       'GET /repos/{owner}/{repo}/issues/{issue_number}/timeline',
-  //       {
-  //         owner: this.context.repo.owner,
-  //         repo: this.context.repo.repo,
-  //         issue_number: issue.number,
-  //         per_page: 100,
-  //         headers: {
-  //           'X-GitHub-Api-Version': '2022-11-28',
-  //         },
-  //       },
-  //     );
-  //     // Find the actual assignment event in the timeline
-  //     const assignmentEvent = timelines.find(
-  //       (event) =>
-  //         event.event === 'assigned' &&
-  //         // @ts-expect-error timeline events have event property but types are incomplete
-  //         event.assignee?.login === issue.assignee?.login,
-  //     );
-  //     // Use assignment date if found, otherwise fall back to issue creation date
-  //     const assignmentDate = assignmentEvent
-  //       ? // @ts-expect-error created_at exists on timeline events
-  //         new Date(assignmentEvent.created_at)
-  //       : new Date(issue.created_at);
-  //     // Find the most recent activity (last timeline event)
-  //     let lastActivityDate;
-  //     if (timelines.length > 0) {
-  //       // @ts-expect-error created_at exists on timeline events
-  //       lastActivityDate = new Date(timelines[timelines.length - 1].created_at);
-  //     } else {
-  //       // If no timeline events, use the assignment date as last activity
-  //       lastActivityDate = assignmentDate;
-  //     }
-  //     // Calculate days since last activity
-  //     const daysSinceActivity = getDaysBetween(lastActivityDate, new Date());
-  //     return {
-  //       assignmentDate,
-  //       lastActivityDate,
-  //       daysSinceActivity,
-  //     };
-  //   } catch (error) {
-  //     core.warning(
-  //       `⚠️ Error getting activity for issue #${issue.number}: ${error}`,
-  //     );
-  //     return null;
-  //   }
-  // }
-  _process_unassignments(arr) {
-    return __async(this, null, function* () {
-      const processedResults = [];
-      const unassignedIssueNumbers = [];
-      const chunks = chunkArray(arr, 5);
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const results = yield Promise.allSettled(
-          chunk.map((_a) => __async(this, null, function* () {
-            var _b = _a, { issue } = _b, rest = __objRest(_b, ["issue"]);
-            try {
-              yield this._unassign_issue(issue);
-              return __spreadValues({ issue }, rest);
-            } catch (_err) {
-              return __spreadValues({ issue }, rest);
-            }
-          }))
-        );
-        processedResults.push(
-          ...results.filter((r) => r.status === "fulfilled").map((r) => r.value)
-        );
-        unassignedIssueNumbers.push(
-          ...results.filter((r) => r.status === "fulfilled").map((r) => r.value.issue.number)
-        );
-        if (i < chunks.length - 1) {
-          yield new Promise((resolve) => setTimeout(resolve, 1e3));
-        }
-      }
-      core.setOutput("unassigned_issues", unassignedIssueNumbers);
-      return processedResults;
-    });
-  }
-  _process_reminders(arr) {
-    return __async(this, null, function* () {
-      const processedResults = [];
-      const chunks = chunkArray(arr, 5);
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const results = yield Promise.allSettled(
-          chunk.map((_a) => __async(this, null, function* () {
-            var _b = _a, { issue, daysSinceActivity } = _b, rest = __objRest(_b, ["issue", "daysSinceActivity"]);
-            try {
-              yield this._send_reminder_for_issue(issue, daysSinceActivity);
-              return __spreadValues({ issue, daysSinceActivity }, rest);
-            } catch (_err) {
-              return __spreadValues({ issue, daysSinceActivity }, rest);
-            }
-          }))
-        );
-        processedResults.push(
-          ...results.filter((r) => r.status === "fulfilled").map((r) => r.value)
-        );
-      }
-      return processedResults;
-    });
-  }
-  _unassign_issue(issue) {
-    return __async(this, null, function* () {
-      if (!issue.assignee) {
-        core.warning(`\u26A0\uFE0F Issue #${issue.number} has no assignee, skipping...`);
-        return;
-      }
-      const body = mustache_mustache.render(core.getInput("unassigned_comment" /* UNASSIGNED_COMMENT */), {
-        handle: issue.assignee.login,
-        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
-      });
-      return Promise.allSettled([
-        this.octokit.request(
-          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: issue.number,
-            assignees: [issue.assignee.login],
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        ),
-        this.octokit.request(
-          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: issue.number,
-            name: this.assignedLabel,
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        ),
-        this.octokit.request(
-          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: Number(issue == null ? void 0 : issue.number),
-            name: core.getInput("pin_label" /* PIN_LABEL */),
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        ),
-        this.octokit.request(
-          "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: Number(issue == null ? void 0 : issue.number),
-            name: "\u{1F514} reminder-sent",
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        ),
-        this.octokit.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: issue.number,
-            body,
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        )
-      ]);
-    });
-  }
-  _send_reminder_for_issue(issue, daysSinceActivity) {
-    return __async(this, null, function* () {
-      var _a;
-      const totalDays = Number(core.getInput("days_until_unassign" /* DAYS_UNTIL_UNASSIGN */));
-      const daysRemaining = Math.max(0, totalDays - daysSinceActivity);
-      const body = mustache_mustache.render(core.getInput("reminder_comment" /* REMINDER_COMMENT */), {
-        handle: (_a = issue.assignee) == null ? void 0 : _a.login,
-        days_remaining: daysRemaining,
-        pin_label: core.getInput("pin_label" /* PIN_LABEL */)
-      });
-      return Promise.all([
-        this.octokit.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: Number(issue == null ? void 0 : issue.number),
-            labels: ["\u{1F514} reminder-sent"],
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        ),
-        this.octokit.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: this.context.repo.owner,
-            repo: this.context.repo.repo,
-            issue_number: Number(issue == null ? void 0 : issue.number),
-            body,
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
-          }
-        )
-      ]);
-    });
-  }
-  _generate_summary(processedUnassignments, processedReminders) {
-    return __async(this, null, function* () {
-      if (processedUnassignments.length === 0 && processedReminders.length === 0) {
-        core.info("\u2705 No issues to summarize.");
-        return;
-      }
-      const unassignedTable = processedUnassignments.map(
-        ({ issue, daysSinceActivity }) => {
-          var _a;
-          return {
-            Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
-            Assignee: ((_a = issue.assignee) == null ? void 0 : _a.login) ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
-            "Days Since Activity": `${daysSinceActivity || "N/A"}`,
-            Status: "Unassigned"
-          };
-        }
-      );
-      const reminderTable = processedReminders.map(
-        ({ issue, daysSinceActivity }) => {
-          var _a;
-          return {
-            Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
-            Assignee: ((_a = issue.assignee) == null ? void 0 : _a.login) ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
-            "Days Since Activity": `${daysSinceActivity || "N/A"}`,
-            Status: "Reminder Sent"
-          };
-        }
-      );
-      const summary2 = [
-        "## \u{1F4CB} Summary of Processed Issues",
-        "",
-        `**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
-        `**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
-        "",
-        "### Unassigned Issues",
-        "",
-        unassignedTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
-|-------|----------|--------------------|--------|
-${unassignedTable.map(
-          (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
-        ).join("\n")}` : "No unassigned issues found.",
-        "",
-        "### Reminder Sent Issues",
-        "",
-        reminderTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
-|-------|----------|--------------------|--------|
-${reminderTable.map(
-          (row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`
-        ).join("\n")}` : "No reminder sent issues found.",
-        ""
-      ];
-      core.summary.addRaw(summary2.join("\n"));
-      yield core.summary.write();
-    });
-  }
+	constructor() {
+		this.context = github.context;
+		this.token = core.getInput(INPUTS.GITHUB_TOKEN, { required: true });
+		this.assignedLabel = core.getInput(INPUTS.ASSIGNED_LABEL);
+		this.exemptLabel = core.getInput(INPUTS.PIN_LABEL);
+		this.octokit = new MyOctokit({
+			auth: this.token,
+			throttle: {
+				onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`⚠️ Request quota exhausted for request ${options.method} ${options.url} ⚠️`);
+					if (retryCount < 1) {
+						core.warning(`⚠️ Retrying after ${retryAfter} seconds! ⚠️`);
+						return true;
+					}
+					return false;
+				},
+				onSecondaryRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url} ⚠️`);
+					if (retryCount < 2) {
+						core.warning(`⚠️ Secondary rate limit hit. Retrying after ${retryAfter} seconds! ⚠️`);
+						return true;
+					}
+					return false;
+				}
+			}
+		});
+	}
+	async handle_unassignments() {
+		const { unassignIssues, reminderIssues } = await this._get_assigned_issues();
+		let processedUnassignments = [];
+		let processedReminders = [];
+		if (unassignIssues.length > 0) processedUnassignments = await this._process_unassignments(unassignIssues);
+		if (core.getInput(INPUTS.ENABLE_REMINDER) !== "true") {
+			await this._generate_summary(processedUnassignments, processedReminders);
+			return;
+		}
+		if (reminderIssues.length > 0) processedReminders = await this._process_reminders(reminderIssues);
+		await this._generate_summary(processedUnassignments, processedReminders);
+	}
+	async _get_assigned_issues() {
+		const { owner, repo } = this.context.repo;
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		let reminderDays;
+		const reminderDaysInput = core.getInput(INPUTS.REMINDER_DAYS);
+		if (reminderDaysInput === "auto") reminderDays = Math.floor(daysUntilUnassign / 2);
+		else {
+			reminderDays = parseInt(reminderDaysInput, 10);
+			if (Number.isNaN(reminderDays)) reminderDays = Math.floor(daysUntilUnassign / 2);
+		}
+		const { data: { items: issues } } = await this.octokit.request("GET /search/issues", {
+			q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
+			per_page: 100,
+			advanced_search: true,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		const unassignIssues = [];
+		const reminderIssues = [];
+		const chunks = chunkArray(issues, 10);
+		for (let i = 0; i < chunks.length; i++) {
+			const results = chunks[i].map((issue) => ({
+				issue,
+				lastActivityDate: new Date(issue.updated_at),
+				daysSinceActivity: getDaysBetween(new Date(issue.updated_at), /* @__PURE__ */ new Date())
+			}));
+			for (const result of results.filter(Boolean)) {
+				const hasReminderLabel = result.issue?.labels?.some((label) => label?.name === "🔔 reminder-sent");
+				let shouldUnassign = result.daysSinceActivity >= daysUntilUnassign;
+				if (hasReminderLabel) shouldUnassign = shouldUnassign || result.daysSinceActivity >= daysUntilUnassign - reminderDays;
+				if (shouldUnassign) {
+					unassignIssues.push({
+						...result,
+						hasReminderLabel
+					});
+					continue;
+				}
+				if (result.daysSinceActivity >= reminderDays) {
+					if (!hasReminderLabel) reminderIssues.push({
+						...result,
+						hasReminderLabel
+					});
+				}
+			}
+		}
+		core.info(`📋 Found ${unassignIssues.length} issues to unassign`);
+		core.info(`🔔 Found ${reminderIssues.length} issues to send reminders for`);
+		return {
+			unassignIssues,
+			reminderIssues
+		};
+	}
+	async _process_unassignments(arr) {
+		const processedResults = [];
+		const unassignedIssueNumbers = [];
+		const chunks = chunkArray(arr, 5);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			const results = await Promise.allSettled(chunk.map(async ({ issue, ...rest }) => {
+				try {
+					await this._unassign_issue(issue);
+					return {
+						issue,
+						...rest
+					};
+				} catch (_err) {
+					return {
+						issue,
+						...rest
+					};
+				}
+			}));
+			processedResults.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value));
+			unassignedIssueNumbers.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value.issue.number));
+			if (i < chunks.length - 1) await new Promise((resolve) => setTimeout(resolve, 1e3));
+		}
+		core.setOutput("unassigned_issues", unassignedIssueNumbers);
+		return processedResults;
+	}
+	async _process_reminders(arr) {
+		const processedResults = [];
+		const chunks = chunkArray(arr, 5);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			const results = await Promise.allSettled(chunk.map(async ({ issue, daysSinceActivity, ...rest }) => {
+				try {
+					await this._send_reminder_for_issue(issue, daysSinceActivity);
+					return {
+						issue,
+						daysSinceActivity,
+						...rest
+					};
+				} catch (_err) {
+					return {
+						issue,
+						daysSinceActivity,
+						...rest
+					};
+				}
+			}));
+			processedResults.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value));
+		}
+		return processedResults;
+	}
+	async _unassign_issue(issue) {
+		if (!issue.assignee) {
+			core.warning(`⚠️ Issue #${issue.number} has no assignee, skipping...`);
+			return;
+		}
+		const body = mustache_mustache.render(core.getInput(INPUTS.UNASSIGNED_COMMENT), {
+			handle: issue.assignee.login,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		});
+		return Promise.allSettled([
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				assignees: [issue.assignee.login],
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				name: this.assignedLabel,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(issue?.number),
+				name: core.getInput(INPUTS.PIN_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(issue?.number),
+				name: "🔔 reminder-sent",
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				body,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})
+		]);
+	}
+	async _send_reminder_for_issue(issue, daysSinceActivity) {
+		const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		const daysRemaining = Math.max(0, totalDays - daysSinceActivity);
+		const body = mustache_mustache.render(core.getInput(INPUTS.REMINDER_COMMENT), {
+			handle: issue.assignee?.login,
+			days_remaining: daysRemaining,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		});
+		return Promise.all([this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(issue?.number),
+			labels: ["🔔 reminder-sent"],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		}), this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(issue?.number),
+			body,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})]);
+	}
+	async _generate_summary(processedUnassignments, processedReminders) {
+		if (processedUnassignments.length === 0 && processedReminders.length === 0) {
+			core.info("✅ No issues to summarize.");
+			return;
+		}
+		const unassignedTable = processedUnassignments.map(({ issue, daysSinceActivity }) => ({
+			Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+			Assignee: issue.assignee?.login ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
+			"Days Since Activity": `${daysSinceActivity || "N/A"}`,
+			Status: "Unassigned"
+		}));
+		const reminderTable = processedReminders.map(({ issue, daysSinceActivity }) => ({
+			Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+			Assignee: issue.assignee?.login ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
+			"Days Since Activity": `${daysSinceActivity || "N/A"}`,
+			Status: "Reminder Sent"
+		}));
+		const summary = [
+			"## 📋 Summary of Processed Issues",
+			"",
+			`**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
+			`**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
+			"",
+			"### Unassigned Issues",
+			"",
+			unassignedTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|\n${unassignedTable.map((row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`).join("\n")}` : "No unassigned issues found.",
+			"",
+			"### Reminder Sent Issues",
+			"",
+			reminderTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|\n${reminderTable.map((row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`).join("\n")}` : "No reminder sent issues found.",
+			""
+		];
+		core.summary.addRaw(summary.join("\n"));
+		await core.summary.write();
+	}
 };
 
-// src/index.ts
-(() => __async(void 0, null, function* () {
-  const event = github.context.eventName;
-  try {
-    if (event === "issue_comment") {
-      const cmtHandler = new CommentHandler();
-      yield cmtHandler.handle_issue_comment();
-    } else if (event === "workflow_dispatch" || event === "schedule") {
-      const scheduleHandler = new ScheduleHandler();
-      yield scheduleHandler.handle_unassignments();
-    } else {
-      return;
-    }
-  } catch (error) {
-    if (error instanceof Error) return core.setFailed(error.message);
-  }
-}))();
+//#endregion
+//#region src/index.ts
+(async () => {
+	const event = github.context.eventName;
+	try {
+		if (event === "issue_comment") await new CommentHandler().handle_issue_comment();
+		else if (event === "workflow_dispatch" || event === "schedule") await new ScheduleHandler().handle_unassignments();
+		else return;
+	} catch (error) {
+		if (error instanceof Error) return core.setFailed(error.message);
+	}
+})();
+
+//#endregion
 
