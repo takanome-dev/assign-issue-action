@@ -201,7 +201,7 @@ inputs:
     default: 'true'
 
   reminder_days:
-    description: Number of days before unassignment to send a reminder
+    description: Number of days after assignment the reminder should be sent
     default: 'auto'
 
   reminder_comment:
