@@ -13,7 +13,7 @@
     "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
     "tsdown": "tsdown src/index.ts --format esm",
-    "bundle": "bun run tsdown && bun run build",
+    "bundle": "bun run test && bun run tsdown && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
     "test": "tsc --noEmit",
     "tsc:build": "tsc --noEmit",
