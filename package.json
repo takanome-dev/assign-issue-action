@@ -1,20 +1,23 @@
 {
   "name": "assign-issue-action",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
     "node": "20.x",
     "bun": "1.x"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "type": "module",
   "scripts": {
     "format": "bunx biome format --write",
     "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
-    "tsup": "tsup src/index.ts --format esm",
-    "bundle": "bun run tsup && bun run build",
+    "tsdown": "tsdown src/index.ts --format esm",
+    "bundle": "bun run test && bun run tsdown && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
+    "test": "tsc --noEmit",
+    "tsc:build": "tsc --noEmit",
+    "ci": "bun run lint && bun run test",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
     "test:help": "bun scripts/test-action.js help"
@@ -55,7 +58,7 @@
     "@typescript-eslint/parser": "8.38.0",
     "@vercel/ncc": "0.38.3",
     "js-yaml": "4.1.1",
-    "tsup": "^8.4.0",
+    "tsdown": "^0.19.0-beta.4",
     "typescript": "5.8.3"
   }
 }

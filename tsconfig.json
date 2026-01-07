@@ -17,5 +17,5 @@
     "noImplicitThis": true,
     "skipLibCheck": true
   },
-  "exclude": ["coverage", "dist", "lib", "*.js", "__tests__", "__mocks__"]
+  "exclude": ["coverage", "dist", "lib", "*.js", "__tests__", "__mocks__", "scripts"]
 }
