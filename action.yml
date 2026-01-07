@@ -38,11 +38,19 @@ inputs:
   maintainers:
     description: >
       A list of maintainers authorized to use `/assign` and `/unassign` commands.
-      List the usernames with comma separated. If not set, the usage of those commands will be ignored.
-    default: '' # i.e: 'takanome-dev,octokit'
+      List the usernames or team slugs (e.g., `@org/team-name`) comma-separated.
+      
+      Note: To use team slugs, `github_token` must be a Personal Access Token (PAT) with `read:org` scope.
+    default: '' # i.e: 'takanome-dev,octokit,@my-org/core-team'
     required: true
   enable_auto_suggestion:
     description: A boolean input that controls whether the action should automatically check user comments for phrases signaling interest in issue assignment. Set to true by default.
+    default: 'true'
+  allow_self_assign_author:
+    description: >
+      Whether to allow the issue author to self-assign their own issue.
+      Set to 'false' to prevent users from creating issues and immediately assigning themselves.
+      This gives maintainers control over which issues get worked on.
     default: 'true'
   assigned_label:
     description: The label applied to issues when they are assigned by this action to track assignments.
@@ -59,7 +67,7 @@ inputs:
     description: A label that prevents automatic unassignment, typically for long-term issues.
   assigned_comment:
     description: >
-      The comment posted after a user has assigned themselves to an issue.
+      The comment posted after a returning contributor (has opened a PR before) has assigned themselves to an issue.
     default: |
       ### 🎉 Issue Assignment Confirmation
 
@@ -75,6 +83,39 @@ inputs:
       - You can unassign yourself at any time by commenting with `/unassign-me`
       - Updates and status reports are encouraged to show progress
       </details>
+
+  assigned_comment_newcomer:
+    description: >
+      The comment posted after a first-time contributor (has never opened a PR) has assigned themselves to an issue.
+      If not set, defaults to the `assigned_comment` message.
+    default: |
+      ### 🎉 Welcome to the Project!
+
+      Hey @{{ handle }}, thank you for your interest in this issue! 🎊
+
+      We're excited to have you on board. Start by exploring our [Contributing guidelines](CONTRIBUTING.md) and set up your local development workspace by following the steps in our documentation to get started smoothly.
+
+      > [!IMPORTANT]
+      > This issue will be automatically unassigned if idle for **{{ total_days }} days**.
+
+      <details>
+      <summary>ℹ️ Helpful resources for first-time contributors</summary>
+
+      - Check out the project's README for setup instructions
+      - Read through the codebase documentation if available
+      - Don't hesitate to ask questions here on GitHub
+      - Please open a (draft) pull request early to show the direction you're heading towards
+      </details>
+
+      <details>
+      <summary>📋 Assignment details</summary>
+
+      - To prevent automatic unassignment, a maintainer can add the **{{{ pin_label }}}** label
+      - You can unassign yourself at any time by commenting with `/unassign-me`
+      - Updates and status reports are encouraged to show progress
+      </details>
+
+      Happy coding! 🚀
 
   already_assigned_comment:
     description: >
@@ -207,6 +248,75 @@ inputs:
       - Use `/unassign-me` on an issue you're no longer working on
       - Ask a maintainer for an exception if this is a special case
       </details>
+
+  max_overall_assignment_labels:
+    description: >
+      A comma-separated list of labels which share a combined assignment limit.
+      For example: `good first issue,good second issue`.
+    required: false
+    default: 'good first issue,good second issue'
+  max_overall_assignment_count:
+    description: >
+      The maximum number of open (assigned) issues across the labels listed in
+      `max_overall_assignment_labels` that a single user can hold at once.
+    required: false
+    default: '2'
+  max_overall_assignment_message:
+    description: Message shown when a user has reached the overall assignment limit
+    required: false
+    default: |
+      ### ⚠️ Assignment Limit Reached for Beginner Issues
+
+      Hi @{{ handle }}, you've already reached the limit of **{{ max_overall_assignment_count }}** active assignments across the labels:
+      `{{ max_overall_assignment_labels }}`.
+
+      These labels are meant for **new contributors** to get started, so we encourage you to now explore more advanced issues.  
+      This helps new contributors take their first steps while you continue to grow with more challenging tasks 💪
+
+      ---
+      **What you can do next:**
+      - ✅ Finish one of your current beginner-labeled issues, then come back for another.
+      - 🔄 Use `/unassign-me` on an issue you're no longer working on.
+      - 🚀 Ask a maintainer for suggestions on "next-level" issues (e.g. `good second issue` or beyond).
+      - 🙋 Request an exception from a maintainer if there’s a special case.
+
+      > [!TIP]
+      > Moving to higher-level issues helps you deepen your skills and contribute more impactfully to the project.
+
+      Thanks for your great work and for helping keep the community open to newcomers! 💜
+
+  self_assign_author_blocked_comment:
+    description: Message shown when the issue author tries to self-assign their own issue but it's not allowed
+    required: false
+    default: |
+      ### ⚠️ Self-Assignment Not Allowed
+
+      Hi @{{ handle }}, you cannot self-assign an issue you created.
+
+      > [!NOTE]
+      > This project requires maintainer approval before working on self-created issues to ensure alignment with the project roadmap.
+
+      <details>
+      <summary>What you can do</summary>
+
+      - Wait for a maintainer to review and approve your issue
+      - Ask a maintainer to assign you if the issue is approved
+      - Look for other existing issues to contribute to
+      </details>
+
+  ignored_users:
+    description: >
+      A comma-separated list of usernames that are ignored from using `/assign-me`.
+      These users will not be able to self-assign issues.
+    required: false
+    default: ''
+  ignored_message:
+    description: Message shown when an ignored user tries to use `/assign-me`
+    required: false
+    default: |
+      ### ⚠️ Self-Assignment Not Allowed
+
+      Hi @{{ handle }}, you cannot self-assign issues. Please reach out to maintainers for the next steps.
 
 outputs:
   assigned:
