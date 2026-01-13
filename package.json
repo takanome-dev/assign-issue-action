@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
-    "node": "20.x",
+    "node": "24.x",
     "bun": "1.x"
   },
   "main": "dist/index.mjs",
