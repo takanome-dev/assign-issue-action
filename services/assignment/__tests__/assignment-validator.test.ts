@@ -39,6 +39,9 @@ const defaultConfig: ActionConfig = {
   maxAssignmentsMessage: '',
   maxOverallAssignmentMessage: '',
   selfAssignAuthorBlockedComment: '',
+  ignoredUsers: [],
+  ignoredMessage: '',
+  closedIssueAssignmentComment: '',
 }
 
 const mockIssue: IssueContext = {

@@ -25,6 +25,7 @@ export class SelfAssignCommand implements Command {
     const validation = await validator.validateAssignment(
       {
         number: Number(issue?.number),
+        state: issue?.state,
         assignee: issue?.assignee,
         assignees: issue?.assignees,
         user: issue?.user,
@@ -35,7 +36,21 @@ export class SelfAssignCommand implements Command {
 
     if (!validation.valid) {
       // Determine which comment to post based on the reason
-      if (validation.reason?.includes('cannot self-assign their own issue')) {
+      if (validation.reason?.includes('is closed')) {
+        await commentService.createTemplatedComment(
+          Number(issue?.number),
+          config.closedIssueAssignmentComment,
+          { handle: username },
+        )
+      } else if (validation.reason?.includes('ignored users list')) {
+        await commentService.createTemplatedComment(
+          Number(issue?.number),
+          config.ignoredMessage,
+          { handle: username },
+        )
+      } else if (
+        validation.reason?.includes('cannot self-assign their own issue')
+      ) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
           config.selfAssignAuthorBlockedComment,

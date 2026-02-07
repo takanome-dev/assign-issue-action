@@ -45,6 +45,13 @@ export interface ActionConfig {
   maxAssignmentsMessage: string
   maxOverallAssignmentMessage: string
   selfAssignAuthorBlockedComment: string
+
+  // Ignored users
+  ignoredUsers: string[]
+  ignoredMessage: string
+
+  // Closed issue handling
+  closedIssueAssignmentComment: string
 }
 
 let cachedConfig: ActionConfig | null = null
@@ -145,6 +152,21 @@ export function loadConfig(): ActionConfig {
     ),
     selfAssignAuthorBlockedComment: core.getInput(
       INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT,
+    ),
+
+    // Ignored users
+    ignoredUsers: core.getInput(INPUTS.IGNORED_USERS)
+      ? core
+          .getInput(INPUTS.IGNORED_USERS)
+          .split(',')
+          .map((u) => u.trim())
+          .filter(Boolean)
+      : [],
+    ignoredMessage: core.getInput(INPUTS.IGNORED_MESSAGE),
+
+    // Closed issue handling
+    closedIssueAssignmentComment: core.getInput(
+      INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT,
     ),
   }
 }

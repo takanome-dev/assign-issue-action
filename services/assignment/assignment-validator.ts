@@ -9,6 +9,7 @@ export interface ValidationResult {
 
 export interface IssueContext {
   number: number
+  state?: string
   assignee?: { login: string } | null
   assignees?: Array<{ login: string }> | null
   user?: { login: string } | null
@@ -188,12 +189,52 @@ export class AssignmentValidator {
   }
 
   /**
+   * Check if user is in the ignored users list
+   */
+  isUserIgnored(username: string): ValidationResult {
+    const { ignoredUsers } = this.config
+
+    if (ignoredUsers.length === 0) {
+      return { valid: true }
+    }
+
+    const isIgnored = ignoredUsers.includes(username)
+
+    return {
+      valid: !isIgnored,
+      reason: isIgnored
+        ? `User @${username} is in the ignored users list and cannot self-assign issues`
+        : undefined,
+    }
+  }
+
+  /**
+   * Check if issue is closed
+   */
+  isIssueClosed(issue: IssueContext): ValidationResult {
+    const isClosed = issue.state === 'closed'
+
+    return {
+      valid: !isClosed,
+      reason: isClosed
+        ? `Issue #${issue.number} is closed and cannot be assigned`
+        : undefined,
+    }
+  }
+
+  /**
    * Run all pre-assignment validations
    */
   async validateAssignment(
     issue: IssueContext,
     username: string,
   ): Promise<ValidationResult> {
+    // Check if issue is closed
+    const closedCheck = this.isIssueClosed(issue)
+    if (!closedCheck.valid) {
+      return closedCheck
+    }
+
     // Check if already assigned
     if (this.isAlreadyAssigned(issue)) {
       const assignee = issue.assignee?.login ?? 'unknown'
@@ -213,6 +254,12 @@ export class AssignmentValidator {
     const selfAssignCheck = this.canSelfAssignOwnIssue(issue, username)
     if (!selfAssignCheck.valid) {
       return selfAssignCheck
+    }
+
+    // Check if user is ignored
+    const ignoredCheck = this.isUserIgnored(username)
+    if (!ignoredCheck.valid) {
+      return ignoredCheck
     }
 
     // Check blocked from reassignment
