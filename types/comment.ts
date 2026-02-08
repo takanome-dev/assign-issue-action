@@ -1,5 +1,6 @@
 export interface AlreadyAssignedCommentArg {
   total_days: string
+  days_remaining: number
   handle: string
   assignee: string
 }

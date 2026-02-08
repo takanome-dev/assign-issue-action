@@ -12,7 +12,7 @@ export class SelfUnassignCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, comment, config } = context
-    const { issueService, commentService } = services
+    const { issueService, commentService, validator } = services
 
     const commenterLogin = comment?.user?.login
     const assigneeLogin = issue?.assignee?.login
@@ -33,6 +33,15 @@ export class SelfUnassignCommand implements Command {
       }
     }
 
+    // Generate unassign comment with hidden marker for tracking
+    const unassignBody = validator.getUnassignCommentBody(
+      config.unassignedComment,
+      {
+        handle: commenterLogin,
+        pin_label: config.pinLabel,
+      },
+    )
+
     // Unassign and post comment
     await Promise.all([
       issueService.unassignWithLabels(Number(issue?.number), assigneeLogin, [
@@ -40,14 +49,7 @@ export class SelfUnassignCommand implements Command {
         config.pinLabel,
         '🔔 reminder-sent',
       ]),
-      commentService.createTemplatedComment(
-        Number(issue?.number),
-        config.unassignedComment,
-        {
-          handle: commenterLogin,
-          pin_label: config.pinLabel,
-        },
-      ),
+      commentService.createComment(Number(issue?.number), unassignBody),
     ])
 
     core.info(`🤖 Done issue unassignment!`)

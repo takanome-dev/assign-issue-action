@@ -46,6 +46,9 @@ export default class ScheduleHandler {
   }
 
   async handle_unassignments(): Promise<void> {
+    // First, clean up orphaned assigned labels (issues with assigned label but no assignee)
+    await this._cleanup_orphaned_labels()
+
     // Get all assigned issues with their activity status in a single query
     const { unassignIssues, reminderIssues } = await this._get_assigned_issues()
 
@@ -70,6 +73,62 @@ export default class ScheduleHandler {
 
     // Generate the markdown summary
     await this._generate_summary(processedUnassignments, processedReminders)
+  }
+
+  /**
+   * Find issues with assigned label but no assignee and remove the label
+   * This handles cases where users were manually unassigned or deleted their profile
+   */
+  private async _cleanup_orphaned_labels(): Promise<void> {
+    const { owner, repo } = this.context.repo
+    const { assignedLabel, pinLabel } = this.config
+
+    // Fetch issues with assigned label but no assignee
+    const {
+      data: { items: orphanedIssues },
+    } = await this.octokit.request('GET /search/issues', {
+      q: `repo:${owner}/${repo} is:issue is:open label:"${assignedLabel}" -label:"${pinLabel}" no:assignee`,
+      per_page: 100,
+      advanced_search: 'true',
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+
+    if (orphanedIssues.length === 0) {
+      return
+    }
+
+    core.info(
+      `🧹 Found ${orphanedIssues.length} issues with orphaned assigned labels (no assignee)`,
+    )
+
+    // Process in chunks of 5
+    const chunks = chunkArray(orphanedIssues, 5)
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
+
+      await Promise.allSettled(
+        chunk.map(async (issue) => {
+          try {
+            await this.issueService.removeLabel(issue.number, assignedLabel)
+            core.info(
+              `🧹 Removed orphaned assigned label from issue #${issue.number}`,
+            )
+          } catch (err) {
+            core.warning(
+              `⚠️ Failed to remove label from issue #${issue.number}: ${err}`,
+            )
+          }
+        }),
+      )
+
+      // Add delay between chunks
+      if (i < chunks.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
+    }
   }
 
   private async _get_assigned_issues() {
@@ -122,15 +181,7 @@ export default class ScheduleHandler {
           (label) => label?.name === '🔔 reminder-sent',
         )
 
-        let shouldUnassign = result.daysSinceActivity >= daysUntilUnassign
-        if (hasReminderLabel) {
-          shouldUnassign =
-            shouldUnassign ||
-            // The last day of activity is (normally) the point in time where the reminder label was sent.
-            // Thus, reminderDays already passed of the number of daysUntilUnassign.
-            // Therefore, we substract reminderDays from daysUntilUnassign to know the "real" period to wait for.
-            result.daysSinceActivity >= daysUntilUnassign - reminderDays
-        }
+        const shouldUnassign = result.daysSinceActivity >= daysUntilUnassign
         if (shouldUnassign) {
           unassignIssues.push({ ...result, hasReminderLabel })
           continue
@@ -223,17 +274,19 @@ export default class ScheduleHandler {
 
   private async _unassign_issue(issue: Issue) {
     if (!issue.assignee) {
-      // well, this should never happen anyway :)
-      core.warning(`⚠️ Issue #${issue.number} has no assignee, skipping...`)
+      // Issue may have been manually unassigned since we fetched it
+      core.info(`📋 Issue #${issue.number} already unassigned, skipping...`)
       return
     }
 
     const { unassignedComment, pinLabel, assignedLabel } = this.config
 
-    const body = this.commentService.renderTemplate(unassignedComment, {
+    // Generate hidden marker for tracking this unassignment
+    const marker = `<!-- unassigned:${issue.assignee.login} -->`
+    const body = `${this.commentService.renderTemplate(unassignedComment, {
       handle: issue.assignee.login,
       pin_label: pinLabel,
-    })
+    })}\n${marker}`
 
     // Unassign and remove labels in parallel, then post comment
     await this.issueService.unassignWithLabels(
@@ -249,11 +302,19 @@ export default class ScheduleHandler {
     issue: Issue,
     daysSinceActivity: number,
   ) {
+    // Guard: Don't send reminder if issue was unassigned since we fetched it
+    if (!issue.assignee) {
+      core.info(
+        `🔔 Skipping reminder for issue #${issue.number} - no longer assigned`,
+      )
+      return
+    }
+
     const { daysUntilUnassign, reminderComment, pinLabel } = this.config
     const daysRemaining = Math.max(0, daysUntilUnassign - daysSinceActivity)
 
     const body = this.commentService.renderTemplate(reminderComment, {
-      handle: issue.assignee?.login,
+      handle: issue.assignee.login,
       days_remaining: daysRemaining,
       pin_label: pinLabel,
     })

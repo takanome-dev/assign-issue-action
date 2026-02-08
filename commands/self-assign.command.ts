@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { add, format } from 'date-fns'
+import { add, format, differenceInDays } from 'date-fns'
 import type {
   Command,
   CommandContext,
@@ -57,6 +57,20 @@ export class SelfAssignCommand implements Command {
           { handle: username },
         )
       } else if (validation.reason?.includes('already assigned')) {
+        const currentAssignee = issue?.assignee?.login
+
+        // If the user trying to assign is the current assignee, stay silent (issue #405)
+        if (currentAssignee === username) {
+          core.info(
+            `🤖 User @${username} is already assigned to issue #${issue?.number}, staying silent`,
+          )
+          core.setOutput('assigned', 'no')
+          return {
+            success: true,
+            message: `User @${username} is already assigned to issue #${issue?.number}`,
+          }
+        }
+
         const isPinned = validator.isIssuePinned({
           labels: issue?.labels,
           number: Number(issue?.number),
@@ -65,15 +79,41 @@ export class SelfAssignCommand implements Command {
           ? config.alreadyAssignedCommentPinned
           : config.alreadyAssignedComment
 
-        await commentService.createTemplatedComment(
+        // Check if we already posted an "already assigned" comment recently
+        const hasRecentComment = await this._hasRecentAlreadyAssignedComment(
+          issueService,
           Number(issue?.number),
+          username,
           template,
-          {
-            total_days: String(config.daysUntilUnassign),
-            handle: username,
-            assignee: issue?.assignee?.login,
-          },
         )
+
+        if (!hasRecentComment) {
+          // Calculate remaining days based on last activity
+          // Issue updated_at reflects last comment/activity
+          const lastActivity = issue?.updated_at
+            ? new Date(issue.updated_at)
+            : new Date()
+          const daysSinceActivity = differenceInDays(new Date(), lastActivity)
+          const daysRemaining = Math.max(
+            0,
+            config.daysUntilUnassign - daysSinceActivity,
+          )
+
+          await commentService.createTemplatedComment(
+            Number(issue?.number),
+            template,
+            {
+              total_days: String(config.daysUntilUnassign),
+              days_remaining: daysRemaining,
+              handle: username,
+              assignee: currentAssignee,
+            },
+          )
+        } else {
+          core.info(
+            `🤖 Skipping "already assigned" comment - already posted recently for issue #${issue?.number}`,
+          )
+        }
       } else if (validation.reason?.includes('was previously unassigned')) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
@@ -150,6 +190,49 @@ export class SelfAssignCommand implements Command {
     return {
       success: true,
       message: `Assigned @${username} to issue #${issue?.number}`,
+    }
+  }
+
+  /**
+   * Check if we already posted an "already assigned" comment recently
+   * to avoid repetitive comments when users keep trying to assign themselves
+   */
+  private async _hasRecentAlreadyAssignedComment(
+    issueService: CommandServices['issueService'],
+    issueNumber: number,
+    username: string,
+    template: string,
+  ): Promise<boolean> {
+    try {
+      const comments = await issueService.getComments(issueNumber)
+
+      // Look for a recent comment from the bot mentioning this user and "already assigned"
+      const recentThreshold = new Date()
+      recentThreshold.setDate(recentThreshold.getDate() - 1) // Within last 24 hours
+
+      return comments.some((comment) => {
+        const commentDate = comment.body?.includes('already assigned')
+          ? new Date(comment.created_at || Date.now())
+          : null
+        if (!commentDate) return false
+
+        // Check if comment is recent and mentions this user
+        const isRecent = commentDate > recentThreshold
+        const mentionsUser = comment.body?.includes(`@${username}`)
+        const isAlreadyAssignedComment =
+          comment.body?.includes('already assigned') ||
+          template
+            .split('\n')[0]
+            .trim()
+            .split(' ')
+            .slice(0, 3)
+            .every((word) => comment.body?.includes(word))
+
+        return isRecent && mentionsUser && isAlreadyAssignedComment
+      })
+    } catch {
+      // If we can't fetch comments, assume no recent comment to be safe
+      return false
     }
   }
 }

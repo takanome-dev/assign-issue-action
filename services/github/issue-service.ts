@@ -77,7 +77,9 @@ export class IssueService {
     }
   }
 
-  async getComments(issueNumber: number): Promise<Array<{ body?: string }>> {
+  async getComments(
+    issueNumber: number,
+  ): Promise<Array<{ body?: string; created_at?: string }>> {
     const response = await this.octokit.request(
       'GET /repos/{owner}/{repo}/issues/{issue_number}/comments',
       {
