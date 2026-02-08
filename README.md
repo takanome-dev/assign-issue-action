@@ -1,6 +1,21 @@
 <h2 align="center">💬 Assign Issue Action ✋</h2>
 
-<p align="center"><a href="https://github.com/takanome-dev/assign-issue-action"><img alt="Licence Badge" src="https://img.shields.io/github/license/takanome-dev/assign-issue-action?color=%2330C151"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="Release Badge" src="https://img.shields.io/github/release/takanome-dev/assign-issue-action?color=%2330C151"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/development.yml/badge.svg"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/codeql-analysis.yml/badge.svg"></a> <a href="https://codecov.io/gh/takanome-dev/assign-issue-action"><img src="https://codecov.io/gh/takanome-dev/assign-issue-action/branch/beta/graph/badge.svg?token=MX3SB0GFB3" /></a></p>
+<p align="center">
+    <a href="https://github.com/takanome-dev/assign-issue-action">
+        <img alt="Licence Badge" src="https://img.shields.io/github/license/takanome-dev/assign-issue-action?color=%2330C151">
+    </a>
+    <a href="https://github.com/takanome-dev/assign-issue-action">
+        <img alt="Release Badge" src="https://img.shields.io/github/release/takanome-dev/assign-issue-action?color=%2330C151"></a>
+    <a href="https://github.com/takanome-dev/assign-issue-action">
+        <img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/development.yml/badge.svg">
+    </a>
+    <a href="https://github.com/takanome-dev/assign-issue-action">
+        <img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a>
+    <a href="https://codecov.io/gh/takanome-dev/assign-issue-action" >
+     <img src="https://codecov.io/gh/takanome-dev/assign-issue-action/branch/edge/graph/badge.svg?token=MX3SB0GFB3"/>
+     </a>
+</p>
 
 <p align="center">
   <img src="public/og.png" alt="Assign Issue Action" width="1200" />
