@@ -58370,11 +58370,12 @@ var SelfAssignCommand = class {
 					labels: issue?.labels,
 					number: Number(issue?.number)
 				}) ? config.alreadyAssignedCommentPinned : config.alreadyAssignedComment;
-				await commentService.createTemplatedComment(Number(issue?.number), template, {
+				if (!await this._hasRecentAlreadyAssignedComment(issueService, Number(issue?.number), username, template)) await commentService.createTemplatedComment(Number(issue?.number), template, {
 					total_days: String(config.daysUntilUnassign),
 					handle: username,
 					assignee: issue?.assignee?.login
 				});
+				else _actions_core.info(`🤖 Skipping "already assigned" comment - already posted recently for issue #${issue?.number}`);
 			} else if (validation.reason?.includes("was previously unassigned")) await commentService.createTemplatedComment(Number(issue?.number), config.blockAssignmentComment, { handle: username });
 			else if (validation.reason?.includes("maximum number of assignments")) await commentService.createTemplatedComment(Number(issue?.number), config.maxAssignmentsMessage, {
 				handle: username,
@@ -58411,6 +58412,27 @@ var SelfAssignCommand = class {
 			success: true,
 			message: `Assigned @${username} to issue #${issue?.number}`
 		};
+	}
+	/**
+	* Check if we already posted an "already assigned" comment recently
+	* to avoid repetitive comments when users keep trying to assign themselves
+	*/
+	async _hasRecentAlreadyAssignedComment(issueService, issueNumber, username, template) {
+		try {
+			const comments = await issueService.getComments(issueNumber);
+			const recentThreshold = /* @__PURE__ */ new Date();
+			recentThreshold.setDate(recentThreshold.getDate() - 1);
+			return comments.some((comment) => {
+				const commentDate = comment.body?.includes("already assigned") ? new Date(comment.created_at || Date.now()) : null;
+				if (!commentDate) return false;
+				const isRecent = commentDate > recentThreshold;
+				const mentionsUser = comment.body?.includes(`@${username}`);
+				const isAlreadyAssignedComment = comment.body?.includes("already assigned") || template.split("\n")[0].trim().split(" ").slice(0, 3).every((word) => comment.body?.includes(word));
+				return isRecent && mentionsUser && isAlreadyAssignedComment;
+			});
+		} catch {
+			return false;
+		}
 	}
 };
 
@@ -59066,6 +59088,7 @@ var ScheduleHandler = class {
 		this.commentService = new CommentService(this.octokit, repoContext);
 	}
 	async handle_unassignments() {
+		await this._cleanup_orphaned_labels();
 		const { unassignIssues, reminderIssues } = await this._get_assigned_issues();
 		let processedUnassignments = [];
 		let processedReminders = [];
@@ -59076,6 +59099,35 @@ var ScheduleHandler = class {
 		}
 		if (reminderIssues.length > 0) processedReminders = await this._process_reminders(reminderIssues);
 		await this._generate_summary(processedUnassignments, processedReminders);
+	}
+	/**
+	* Find issues with assigned label but no assignee and remove the label
+	* This handles cases where users were manually unassigned or deleted their profile
+	*/
+	async _cleanup_orphaned_labels() {
+		const { owner, repo } = this.context.repo;
+		const { assignedLabel, pinLabel } = this.config;
+		const { data: { items: orphanedIssues } } = await this.octokit.request("GET /search/issues", {
+			q: `repo:${owner}/${repo} is:issue is:open label:"${assignedLabel}" -label:"${pinLabel}" no:assignee`,
+			per_page: 100,
+			advanced_search: "true",
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		if (orphanedIssues.length === 0) return;
+		_actions_core.info(`🧹 Found ${orphanedIssues.length} issues with orphaned assigned labels (no assignee)`);
+		const chunks = chunkArray(orphanedIssues, 5);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			await Promise.allSettled(chunk.map(async (issue) => {
+				try {
+					await this.issueService.removeLabel(issue.number, assignedLabel);
+					_actions_core.info(`🧹 Removed orphaned assigned label from issue #${issue.number}`);
+				} catch (err) {
+					_actions_core.warning(`⚠️ Failed to remove label from issue #${issue.number}: ${err}`);
+				}
+			}));
+			if (i < chunks.length - 1) await new Promise((resolve) => setTimeout(resolve, 1e3));
+		}
 	}
 	async _get_assigned_issues() {
 		const { owner, repo } = this.context.repo;

@@ -46,6 +46,9 @@ export default class ScheduleHandler {
   }
 
   async handle_unassignments(): Promise<void> {
+    // First, clean up orphaned assigned labels (issues with assigned label but no assignee)
+    await this._cleanup_orphaned_labels()
+
     // Get all assigned issues with their activity status in a single query
     const { unassignIssues, reminderIssues } = await this._get_assigned_issues()
 
@@ -70,6 +73,62 @@ export default class ScheduleHandler {
 
     // Generate the markdown summary
     await this._generate_summary(processedUnassignments, processedReminders)
+  }
+
+  /**
+   * Find issues with assigned label but no assignee and remove the label
+   * This handles cases where users were manually unassigned or deleted their profile
+   */
+  private async _cleanup_orphaned_labels(): Promise<void> {
+    const { owner, repo } = this.context.repo
+    const { assignedLabel, pinLabel } = this.config
+
+    // Fetch issues with assigned label but no assignee
+    const {
+      data: { items: orphanedIssues },
+    } = await this.octokit.request('GET /search/issues', {
+      q: `repo:${owner}/${repo} is:issue is:open label:"${assignedLabel}" -label:"${pinLabel}" no:assignee`,
+      per_page: 100,
+      advanced_search: 'true',
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+
+    if (orphanedIssues.length === 0) {
+      return
+    }
+
+    core.info(
+      `🧹 Found ${orphanedIssues.length} issues with orphaned assigned labels (no assignee)`,
+    )
+
+    // Process in chunks of 5
+    const chunks = chunkArray(orphanedIssues, 5)
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
+
+      await Promise.allSettled(
+        chunk.map(async (issue) => {
+          try {
+            await this.issueService.removeLabel(issue.number, assignedLabel)
+            core.info(
+              `🧹 Removed orphaned assigned label from issue #${issue.number}`,
+            )
+          } catch (err) {
+            core.warning(
+              `⚠️ Failed to remove label from issue #${issue.number}: ${err}`,
+            )
+          }
+        }),
+      )
+
+      // Add delay between chunks
+      if (i < chunks.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
+    }
   }
 
   private async _get_assigned_issues() {
