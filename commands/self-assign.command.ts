@@ -13,8 +13,13 @@ export class SelfAssignCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, comment, config } = context
-    const { issueService, commentService, validator, newcomerChecker } =
-      services
+    const {
+      issueService,
+      commentService,
+      validator,
+      newcomerChecker,
+      statsService,
+    } = services
     const username = comment?.user?.login
 
     core.info(
@@ -162,6 +167,12 @@ export class SelfAssignCommand implements Command {
       `🤖 User @${username} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
     )
 
+    // Fetch PR stats for the contributor
+    const stats = await statsService.getContributorStats(username)
+    core.info(
+      `🤖 @${username} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`,
+    )
+
     // Assign and post comment
     await Promise.all([
       issueService.assignWithLabel(
@@ -180,6 +191,10 @@ export class SelfAssignCommand implements Command {
           ),
           handle: username,
           pin_label: config.pinLabel,
+          prs_total: stats.prs_total,
+          prs_merged: stats.prs_merged,
+          prs_unmerged: stats.prs_unmerged,
+          prs_merged_percentage: stats.prs_merged_percentage,
         },
       ),
     ])

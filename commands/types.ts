@@ -7,6 +7,7 @@ import type {
 import type {
   CommentService,
   IssueService,
+  StatsService,
   TeamService,
 } from '../services/github'
 import type { GhComment, GhIssue } from '../types'
@@ -36,6 +37,7 @@ export interface CommandServices {
   issueService: IssueService
   commentService: CommentService
   teamService: TeamService
+  statsService: StatsService
   validator: AssignmentValidator
   newcomerChecker: NewcomerChecker
 }
