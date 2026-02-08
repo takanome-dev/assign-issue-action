@@ -158,6 +158,60 @@ describe('AssignmentValidator', () => {
       const result = await validator.wasBlockedFromReassignment(123, 'user1')
       expect(result.valid).toBe(false)
     })
+
+    it('should return invalid when hidden marker exists (issue #410)', async () => {
+      config.blockAssignment = true
+      validator = new AssignmentValidator(mockIssueService, config)
+
+      // Hidden marker format (new, more reliable)
+      mockIssueService.getComments.mockResolvedValueOnce([
+        { body: 'Some comment\n<!-- unassigned:user1 -->' },
+      ])
+
+      const result = await validator.wasBlockedFromReassignment(123, 'user1')
+      expect(result.valid).toBe(false)
+    })
+
+    it('should NOT block User B when User A was unassigned (issue #410)', async () => {
+      config.blockAssignment = true
+      validator = new AssignmentValidator(mockIssueService, config)
+
+      // User A was unassigned
+      mockIssueService.getComments.mockResolvedValueOnce([
+        { body: 'Unassigned @userA' },
+      ])
+
+      // User B tries to assign - should be allowed
+      const result = await validator.wasBlockedFromReassignment(123, 'userB')
+      expect(result.valid).toBe(true)
+    })
+
+    it('should NOT block User B when User A has hidden marker (issue #410)', async () => {
+      config.blockAssignment = true
+      validator = new AssignmentValidator(mockIssueService, config)
+
+      // User A was unassigned with hidden marker
+      mockIssueService.getComments.mockResolvedValueOnce([
+        { body: 'Some comment\n<!-- unassigned:userA -->' },
+      ])
+
+      // User B tries to assign - should be allowed
+      const result = await validator.wasBlockedFromReassignment(123, 'userB')
+      expect(result.valid).toBe(true)
+    })
+
+    it('should detect manual unassign command', async () => {
+      config.blockAssignment = true
+      config.unassignUserCmd = '/unassign'
+      validator = new AssignmentValidator(mockIssueService, config)
+
+      mockIssueService.getComments.mockResolvedValueOnce([
+        { body: '/unassign @user1' },
+      ])
+
+      const result = await validator.wasBlockedFromReassignment(123, 'user1')
+      expect(result.valid).toBe(false)
+    })
   })
 
   describe('hasReachedMaxAssignments', () => {

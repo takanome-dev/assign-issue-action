@@ -283,10 +283,12 @@ export default class ScheduleHandler {
 
     const { unassignedComment, pinLabel, assignedLabel } = this.config
 
-    const body = this.commentService.renderTemplate(unassignedComment, {
+    // Generate hidden marker for tracking this unassignment
+    const marker = `<!-- unassigned:${issue.assignee.login} -->`
+    const body = `${this.commentService.renderTemplate(unassignedComment, {
       handle: issue.assignee.login,
       pin_label: pinLabel,
-    })
+    })}\n${marker}`
 
     // Unassign and remove labels in parallel, then post comment
     await this.issueService.unassignWithLabels(

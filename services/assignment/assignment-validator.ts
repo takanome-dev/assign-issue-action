@@ -89,6 +89,14 @@ export class AssignmentValidator {
   }
 
   /**
+   * Generate hidden HTML comment marker for unassignment tracking
+   * This survives template customizations and is machine-readable
+   */
+  private getUnassignMarker(username: string): string {
+    return `<!-- unassigned:${username} -->`
+  }
+
+  /**
    * Check if user was previously unassigned and is blocked from reassignment
    */
   async wasBlockedFromReassignment(
@@ -103,14 +111,21 @@ export class AssignmentValidator {
 
     const comments = await this.issueService.getComments(issueNumber)
 
+    // Look for the hidden HTML marker or other indicators
+    const marker = this.getUnassignMarker(username)
     const wasUnassigned = comments.some((comment) => {
+      // Check 1: Hidden HTML marker (most reliable, new format)
+      const hasMarker = comment.body?.includes(marker)
+      // Check 2: Manual unassign command
       const hasManualUnassign = comment.body?.includes(
         `${unassignUserCmd} @${username}`,
       )
-      const hasAutoUnassign = comment.body?.includes(
+      // Check 3: Backward compatibility - check if rendered template with handle exists
+      // This handles old comments that don't have the hidden marker
+      const hasRenderedComment = comment.body?.includes(
         mustache.render(unassignedComment, { handle: username }),
       )
-      return hasManualUnassign || hasAutoUnassign
+      return hasMarker || hasManualUnassign || hasRenderedComment
     })
 
     return {
@@ -119,6 +134,18 @@ export class AssignmentValidator {
         ? `User @${username} was previously unassigned from issue #${issueNumber}`
         : undefined,
     }
+  }
+
+  /**
+   * Get the unassign comment body with hidden marker for tracking
+   */
+  getUnassignCommentBody(
+    template: string,
+    data: { handle: string; pin_label: string },
+  ): string {
+    const marker = this.getUnassignMarker(data.handle)
+    const renderedComment = mustache.render(template, data)
+    return `${renderedComment}\n${marker}`
   }
 
   /**
