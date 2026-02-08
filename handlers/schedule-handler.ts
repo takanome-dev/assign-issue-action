@@ -275,9 +275,7 @@ export default class ScheduleHandler {
   private async _unassign_issue(issue: Issue) {
     if (!issue.assignee) {
       // Issue may have been manually unassigned since we fetched it
-      core.info(
-        `📋 Issue #${issue.number} already unassigned, skipping...`,
-      )
+      core.info(`📋 Issue #${issue.number} already unassigned, skipping...`)
       return
     }
 

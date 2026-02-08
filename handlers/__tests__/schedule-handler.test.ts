@@ -23,7 +23,8 @@ describe('ScheduleHandler reminder logic', () => {
       // The BUGGY logic (old implementation):
       const shouldUnassignBuggy =
         daysSinceActivity >= daysUntilUnassign ||
-        (hasReminderLabel && daysSinceActivity >= daysUntilUnassign - reminderDays)
+        (hasReminderLabel &&
+          daysSinceActivity >= daysUntilUnassign - reminderDays)
 
       // This incorrectly returns true (23 >= 23)
       expect(shouldUnassignBuggy).toBe(true)

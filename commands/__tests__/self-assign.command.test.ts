@@ -6,7 +6,9 @@ const mockAssignWithLabel = mock(() => Promise.resolve())
 const mockGetComments = mock(() => Promise.resolve([]))
 const mockGetAssignmentCount = mock(() => Promise.resolve(0))
 const mockGetAssignmentCountPerLabel = mock(() => Promise.resolve(new Map()))
-const mockSearchIssues = mock(() => Promise.resolve({ total_count: 0, items: [] }))
+const mockSearchIssues = mock(() =>
+  Promise.resolve({ total_count: 0, items: [] }),
+)
 const mockIsNewcomer = mock(() => Promise.resolve(false))
 const mockInfo = mock(() => {})
 const mockSetOutput = mock(() => {})
@@ -91,7 +93,9 @@ describe('SelfAssignCommand', () => {
         commentService: {
           createTemplatedComment: mockCreateComment,
           renderTemplate: (template: string, data: Record<string, unknown>) =>
-            template.replace(/\{\{(\w+)\}\}/g, (_, key) => String(data[key] || '')),
+            template.replace(/\{\{(\w+)\}\}/g, (_, key) =>
+              String(data[key] || ''),
+            ),
         },
         teamService: {} as any,
         validator: {
@@ -128,7 +132,9 @@ describe('SelfAssignCommand', () => {
           assignees: [{ login: 'user2' }],
           user: { login: 'issue-author' },
           labels: [],
-          updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+          updated_at: new Date(
+            Date.now() - 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 7 days ago
         },
         comment: { user: { login: 'user1' } },
         config: {
@@ -181,7 +187,9 @@ describe('SelfAssignCommand', () => {
         commentService: {
           createTemplatedComment: mockCreateComment,
           renderTemplate: (template: string, data: Record<string, unknown>) =>
-            template.replace(/\{\{(\w+)\}\}/g, (_, key) => String(data[key] || '')),
+            template.replace(/\{\{(\w+)\}\}/g, (_, key) =>
+              String(data[key] || ''),
+            ),
         },
         teamService: {} as any,
         validator: {
