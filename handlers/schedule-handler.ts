@@ -94,7 +94,7 @@ export default class ScheduleHandler {
     } = await this.octokit.request('GET /search/issues', {
       q: `repo:${owner}/${repo} is:issue is:open label:"${assignedLabel}" -label:"${pinLabel}" assignee:*`,
       per_page: 100,
-      advanced_search: true,
+      advanced_search: 'true',
       headers: {
         'X-GitHub-Api-Version': '2022-11-28',
       },

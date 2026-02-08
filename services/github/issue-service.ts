@@ -100,7 +100,7 @@ export class IssueService {
 
     const response = await this.octokit.request('GET /search/issues', {
       q: fullQuery,
-      advanced_search: true,
+      advanced_search: 'true',
       headers: {
         'X-GitHub-Api-Version': API_VERSION,
       },
