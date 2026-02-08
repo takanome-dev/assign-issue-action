@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
-import { loadConfig, resetConfig } from '../config'
+import { getConfig, loadConfig, resetConfig } from '../config'
 
 // Mock @actions/core
 const mockGetInput = mock((name: string) => {
@@ -123,6 +123,69 @@ describe('config', () => {
       })
 
       expect(() => loadConfig()).toThrow('Missing required input: github_token')
+    })
+  })
+
+  describe('reminderDays edge cases', () => {
+    it('should default to "auto" when reminder_days is not set', () => {
+      mockGetInput.mockImplementation((name: string) => {
+        if (name === 'reminder_days') return ''
+        if (name === 'github_token') return 'test-token'
+        return 'some-value'
+      })
+
+      const config = loadConfig()
+      expect(config.reminderDays).toBe('auto')
+    })
+
+    it('should handle "auto" string value for reminder_days', () => {
+      mockGetInput.mockImplementation((name: string) => {
+        if (name === 'reminder_days') return 'auto'
+        if (name === 'github_token') return 'test-token'
+        return 'some-value'
+      })
+
+      const config = loadConfig()
+      expect(config.reminderDays).toBe('auto')
+    })
+
+    it('should handle invalid numeric string for reminder_days', () => {
+      mockGetInput.mockImplementation((name: string) => {
+        if (name === 'reminder_days') return 'not-a-number'
+        if (name === 'github_token') return 'test-token'
+        return 'some-value'
+      })
+
+      const config = loadConfig()
+      expect(config.reminderDays).toBe('auto')
+    })
+  })
+
+  describe('getConfig caching', () => {
+    it('should return cached config on subsequent calls', () => {
+      resetConfig() // Start fresh
+      mockGetInput.mockClear()
+
+      const config1 = getConfig()
+      const config2 = getConfig()
+
+      expect(config1).toBe(config2) // Same reference due to caching
+      // After resetConfig, the first getConfig() calls loadConfig which calls getInput many times
+      // But subsequent getConfig() calls should not trigger getInput again
+      const callCountAfterFirstGet = mockGetInput.mock.calls.length
+
+      // Trigger another getConfig() - should not increase call count
+      getConfig()
+      expect(mockGetInput.mock.calls.length).toBe(callCountAfterFirstGet)
+    })
+
+    it('should return new config after resetConfig', () => {
+      resetConfig()
+      const config1 = getConfig()
+      resetConfig()
+      const config2 = getConfig()
+
+      expect(config1).not.toBe(config2)
     })
   })
 })

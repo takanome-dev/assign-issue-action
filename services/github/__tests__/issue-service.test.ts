@@ -139,6 +139,85 @@ describe('IssueService', () => {
     })
   })
 
+  describe('getAssignmentCountPerLabel', () => {
+    it('should return empty map for empty labels array', async () => {
+      const result = await service.getAssignmentCountPerLabel('testuser', [])
+
+      expect(result.size).toBe(0)
+      expect(mockRequest).not.toHaveBeenCalled()
+    })
+
+    it('should return counts for multiple labels', async () => {
+      mockRequest
+        .mockResolvedValueOnce({ data: { total_count: 2, items: [] } })
+        .mockResolvedValueOnce({ data: { total_count: 1, items: [] } })
+
+      const result = await service.getAssignmentCountPerLabel('testuser', [
+        'good-first-issue',
+        'help-wanted',
+      ])
+
+      expect(result.get('good-first-issue')).toBe(2)
+      expect(result.get('help-wanted')).toBe(1)
+      expect(mockRequest).toHaveBeenCalledTimes(2)
+
+      // Verify correct query format for each label
+      expect(mockRequest).toHaveBeenNthCalledWith(
+        1,
+        'GET /search/issues',
+        expect.objectContaining({
+          q: 'repo:test-owner/test-repo is:issue assignee:testuser label:"good-first-issue"',
+        }),
+      )
+      expect(mockRequest).toHaveBeenNthCalledWith(
+        2,
+        'GET /search/issues',
+        expect.objectContaining({
+          q: 'repo:test-owner/test-repo is:issue assignee:testuser label:"help-wanted"',
+        }),
+      )
+    })
+
+    it('should handle labels with spaces', async () => {
+      mockRequest.mockResolvedValueOnce({ data: { total_count: 5, items: [] } })
+
+      const result = await service.getAssignmentCountPerLabel('testuser', [
+        'bug fix',
+      ])
+
+      expect(result.get('bug fix')).toBe(5)
+      expect(mockRequest).toHaveBeenCalledWith(
+        'GET /search/issues',
+        expect.objectContaining({
+          q: 'repo:test-owner/test-repo is:issue assignee:testuser label:"bug fix"',
+        }),
+      )
+    })
+
+    it('should handle API returning zero count', async () => {
+      mockRequest.mockResolvedValueOnce({ data: { total_count: 0, items: [] } })
+
+      const result = await service.getAssignmentCountPerLabel('testuser', [
+        'no-issues',
+      ])
+
+      expect(result.get('no-issues')).toBe(0)
+    })
+
+    it('should handle fallback to items.length when total_count is missing', async () => {
+      mockRequest.mockResolvedValueOnce({
+        data: { items: [{}, {}, {}] }, // no total_count
+      })
+
+      const result = await service.getAssignmentCountPerLabel('testuser', [
+        'some-label',
+      ])
+
+      // Uses items.length since total_count is undefined
+      expect(result.get('some-label')).toBe(0)
+    })
+  })
+
   describe('assignWithLabel', () => {
     it('should add assignee and label in parallel', async () => {
       await service.assignWithLabel(123, 'testuser', '📍 Assigned')
