@@ -318,6 +318,25 @@ inputs:
 
       Hi @{{ handle }}, you cannot self-assign issues. Please reach out to maintainers for the next steps.
 
+  closed_issue_assignment_comment:
+    description: Message shown when a user tries to assign themselves to a closed issue
+    required: false
+    default: |
+      ### ⚠️ Assignment Not Possible
+
+      Hi @{{ handle }}, you cannot assign yourself to a closed issue.
+
+      > [!NOTE]
+      > Assignment is only available for open issues.
+
+      <details>
+      <summary>What you can do</summary>
+
+      - Search for open issues in the repository
+      - Ask a maintainer if the issue should be reopened
+      - Look for similar open issues to contribute to
+      </details>
+
 outputs:
   assigned:
     description: Boolean indicating if the issue was assigned (yes/no)

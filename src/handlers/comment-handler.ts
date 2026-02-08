@@ -10,6 +10,7 @@ import type {
   AlreadyAssignedCommentArg,
   AssignmentInterestCommentArg,
   AssignUserCommentArg,
+  ClosedIssueAssignmentCommentArg,
   UnAssignUserCommentArg,
 } from '../types/comment'
 
@@ -248,6 +249,20 @@ export default class CommentHandler {
     core.info(
       `🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`,
     )
+
+    // Check if issue is closed
+    if (this.issue?.state === 'closed') {
+      await this._create_comment<ClosedIssueAssignmentCommentArg>(
+        INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT,
+        {
+          handle: this.comment?.user?.login,
+        },
+      )
+      core.setOutput('assigned', 'no')
+      return core.info(
+        `[CLOSED ISSUE] User @${this.comment?.user?.login} tried to assign themselves to closed issue #${this.issue?.number}`,
+      )
+    }
 
     // Check if author self-assignment is allowed
     const allowSelfAssignAuthor =

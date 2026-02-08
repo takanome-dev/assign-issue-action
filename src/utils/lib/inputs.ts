@@ -38,4 +38,6 @@ export enum INPUTS {
 
   IGNORED_USERS = 'ignored_users',
   IGNORED_MESSAGE = 'ignored_message',
+
+  CLOSED_ISSUE_ASSIGNMENT_COMMENT = 'closed_issue_assignment_comment',
 }

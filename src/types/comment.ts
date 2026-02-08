@@ -20,3 +20,7 @@ export interface UnAssignUserCommentArg {
   handle: string
   pin_label: string
 }
+
+export interface ClosedIssueAssignmentCommentArg {
+  handle: string
+}

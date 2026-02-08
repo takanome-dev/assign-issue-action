@@ -38818,6 +38818,7 @@ let INPUTS = /* @__PURE__ */ function(INPUTS$1) {
 	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
 	INPUTS$1["IGNORED_USERS"] = "ignored_users";
 	INPUTS$1["IGNORED_MESSAGE"] = "ignored_message";
+	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_COMMENT"] = "closed_issue_assignment_comment";
 	return INPUTS$1;
 }({});
 
@@ -38923,6 +38924,11 @@ var CommentHandler = class {
 	}
 	async $_handle_self_assignment() {
 		core.info(`🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		if (this.issue?.state === "closed") {
+			await this._create_comment(INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`[CLOSED ISSUE] User @${this.comment?.user?.login} tried to assign themselves to closed issue #${this.issue?.number}`);
+		}
 		const allowSelfAssignAuthor = core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== "false";
 		const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
 		if (!allowSelfAssignAuthor && isIssueAuthor) {
