@@ -274,8 +274,10 @@ export default class ScheduleHandler {
 
   private async _unassign_issue(issue: Issue) {
     if (!issue.assignee) {
-      // well, this should never happen anyway :)
-      core.warning(`⚠️ Issue #${issue.number} has no assignee, skipping...`)
+      // Issue may have been manually unassigned since we fetched it
+      core.info(
+        `📋 Issue #${issue.number} already unassigned, skipping...`,
+      )
       return
     }
 
@@ -300,11 +302,19 @@ export default class ScheduleHandler {
     issue: Issue,
     daysSinceActivity: number,
   ) {
+    // Guard: Don't send reminder if issue was unassigned since we fetched it
+    if (!issue.assignee) {
+      core.info(
+        `🔔 Skipping reminder for issue #${issue.number} - no longer assigned`,
+      )
+      return
+    }
+
     const { daysUntilUnassign, reminderComment, pinLabel } = this.config
     const daysRemaining = Math.max(0, daysUntilUnassign - daysSinceActivity)
 
     const body = this.commentService.renderTemplate(reminderComment, {
-      handle: issue.assignee?.login,
+      handle: issue.assignee.login,
       days_remaining: daysRemaining,
       pin_label: pinLabel,
     })
