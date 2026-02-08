@@ -1,0 +1,7 @@
+[test]
+# Always enable coverage
+coverage = true
+# To require 90% line-level and function-level coverage
+coverageThreshold = 0.9
+coverageReporter = ["text", "lcov"]  # default ["text"]
+coverageDir = "coverage"    # default "coverage"
