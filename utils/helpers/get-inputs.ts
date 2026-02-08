@@ -1,7 +1,24 @@
 import { getInput } from '@actions/core'
 import { INPUTS } from '../lib/inputs'
 
-export function getInputs() {
+type Inputs = {
+  assigned_label: string
+  required_label: string
+  pin_label: string
+  days_until_unassign: number
+  stale_assignment_label: string
+  assigned_comment: string
+  assignment_suggestion_comment: string
+  github_token: string
+  maintainers: string
+  enable_auto_suggestion: string
+  self_assign_cmd: string
+  self_unassign_cmd: string
+  assign_user_cmd: string
+  unassign_user_cmd: string
+}
+
+export function getInputs(): Inputs {
   return {
     assigned_label: getInput(INPUTS.ASSIGNED_LABEL),
     required_label: getInput(INPUTS.REQUIRED_LABEL),

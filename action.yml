@@ -12,7 +12,7 @@ description: >
 
 runs:
   using: node20
-  main: dist/index.mjs
+  main: dist/index.cjs
 
 branding:
   icon: activity
@@ -39,29 +39,29 @@ inputs:
     description: >
       A list of maintainers authorized to use `/assign` and `/unassign` commands.
       List the usernames or team slugs (e.g., `@org/team-name`) comma-separated.
-      
+
       Note: To use team slugs, `github_token` must be a Personal Access Token (PAT) with `read:org` scope.
-    default: '' # i.e: 'takanome-dev,octokit,@my-org/core-team'
+    default: "" # i.e: 'takanome-dev,octokit,@my-org/core-team'
     required: true
   enable_auto_suggestion:
     description: A boolean input that controls whether the action should automatically check user comments for phrases signaling interest in issue assignment. Set to true by default.
-    default: 'true'
+    default: "true"
   allow_self_assign_author:
     description: >
       Whether to allow the issue author to self-assign their own issue.
       Set to 'false' to prevent users from creating issues and immediately assigning themselves.
       This gives maintainers control over which issues get worked on.
-    default: 'true'
+    default: "true"
   assigned_label:
     description: The label applied to issues when they are assigned by this action to track assignments.
     default: 📍 Assigned
   required_label:
     description: If set, the issue must have this label in order for users to self-assign it.
     required: false
-    default: ''
+    default: ""
   days_until_unassign:
     description: The number of days after assignment before the user is automatically unassigned (if the issue remains open).
-    default: '7'
+    default: "7"
   pin_label:
     default: 📌 Pinned
     description: A label that prevents automatic unassignment, typically for long-term issues.
@@ -183,7 +183,7 @@ inputs:
       Once assigned, you can start working on it right away. We appreciate your contribution!
   block_assignment:
     description: Whether to block self-assignment after unassignment
-    default: 'true'
+    default: "true"
   block_assignment_comment:
     description: Message shown when blocked from self-assignment
     default: |
@@ -198,11 +198,11 @@ inputs:
 
   enable_reminder:
     description: Whether to send a reminder before unassignment
-    default: 'true'
+    default: "true"
 
   reminder_days:
     description: Number of days after assignment the reminder should be sent
-    default: 'auto'
+    default: "auto"
 
   reminder_comment:
     description: >
@@ -227,11 +227,11 @@ inputs:
       We appreciate your contribution and are here to help if needed!
 
   max_assignments:
-    description: 'Maximum number of issues a user can be assigned to at once'
+    description: "Maximum number of issues a user can be assigned to at once"
     required: false
-    default: '3'
+    default: "3"
   max_assignments_message:
-    description: 'Message to display when a user has reached their maximum assignments'
+    description: "Message to display when a user has reached their maximum assignments"
     required: false
     default: |
       ### ⚠️ Assignment Limit Reached
@@ -254,13 +254,13 @@ inputs:
       A comma-separated list of labels which share a combined assignment limit.
       For example: `good first issue,good second issue`.
     required: false
-    default: 'good first issue,good second issue'
+    default: "good first issue,good second issue"
   max_overall_assignment_count:
     description: >
       The maximum number of open (assigned) issues across the labels listed in
       `max_overall_assignment_labels` that a single user can hold at once.
     required: false
-    default: '2'
+    default: "2"
   max_overall_assignment_message:
     description: Message shown when a user has reached the overall assignment limit
     required: false
@@ -270,7 +270,7 @@ inputs:
       Hi @{{ handle }}, you've already reached the limit of **{{ max_overall_assignment_count }}** active assignments across the labels:
       `{{ max_overall_assignment_labels }}`.
 
-      These labels are meant for **new contributors** to get started, so we encourage you to now explore more advanced issues.  
+      These labels are meant for **new contributors** to get started, so we encourage you to now explore more advanced issues.
       This helps new contributors take their first steps while you continue to grow with more challenging tasks 💪
 
       ---
@@ -278,7 +278,7 @@ inputs:
       - ✅ Finish one of your current beginner-labeled issues, then come back for another.
       - 🔄 Use `/unassign-me` on an issue you're no longer working on.
       - 🚀 Ask a maintainer for suggestions on "next-level" issues (e.g. `good second issue` or beyond).
-      - 🙋 Request an exception from a maintainer if there’s a special case.
+      - 🙋 Request an exception from a maintainer if there's a special case.
 
       > [!TIP]
       > Moving to higher-level issues helps you deepen your skills and contribute more impactfully to the project.
@@ -309,7 +309,7 @@ inputs:
       A comma-separated list of usernames that are ignored from using `/assign-me`.
       These users will not be able to self-assign issues.
     required: false
-    default: ''
+    default: ""
   ignored_message:
     description: Message shown when an ignored user tries to use `/assign-me`
     required: false
