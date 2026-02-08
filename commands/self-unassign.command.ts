@@ -21,21 +21,51 @@ export class SelfUnassignCommand implements Command {
       `🤖 Starting issue #${issue?.number} unassignment for user @${assigneeLogin} in repo "${context.repoOwner}/${context.repoName}"`,
     )
 
-    // Check if commenter is the assignee
-    if (assigneeLogin !== commenterLogin) {
+    // Check if issue is assigned to anyone
+    if (!assigneeLogin) {
       core.setOutput('unassigned', 'no')
       core.setOutput('unassigned_issues', [])
-      core.info(`🤖 Commenter is different from the assignee, ignoring...`)
+      core.info(`🤖 Issue is not assigned to anyone, ignoring...`)
       return {
         success: false,
-        message: 'Commenter is not the assignee',
+        message: 'Issue is not assigned to anyone',
+        output: { unassigned: 'no', unassigned_issues: [] },
+      }
+    }
+
+    // Check if commenter is the assignee
+    if (assigneeLogin !== commenterLogin) {
+      // Issue is assigned to someone else - show "already assigned" message (issue #326)
+      core.info(
+        `🤖 Commenter @${commenterLogin} is different from the assignee @${assigneeLogin}, showing "already assigned" message`,
+      )
+
+      const isPinned = validator.isIssuePinned({
+        labels: issue?.labels,
+        number: Number(issue?.number),
+      })
+      const template = isPinned
+        ? config.alreadyAssignedCommentPinned
+        : config.alreadyAssignedComment
+
+      await commentService.createTemplatedComment(Number(issue?.number), template, {
+        handle: commenterLogin,
+        assignee: assigneeLogin,
+      })
+
+      core.setOutput('unassigned', 'no')
+      core.setOutput('unassigned_issues', [])
+
+      return {
+        success: false,
+        message: `Commenter @${commenterLogin} is not the assignee @${assigneeLogin}`,
         output: { unassigned: 'no', unassigned_issues: [] },
       }
     }
 
     // Generate unassign comment with hidden marker for tracking
     const unassignBody = validator.getUnassignCommentBody(
-      config.unassignedComment,
+      config.selfUnassignedComment,
       {
         handle: commenterLogin,
         pin_label: config.pinLabel,

@@ -37,6 +37,7 @@ export interface ActionConfig {
   assignedComment: string
   assignedCommentNewcomer: string
   unassignedComment: string
+  selfUnassignedComment: string
   alreadyAssignedComment: string
   alreadyAssignedCommentPinned: string
   assignmentSuggestionComment: string
@@ -137,6 +138,7 @@ export function loadConfig(): ActionConfig {
     assignedComment: core.getInput(INPUTS.ASSIGNED_COMMENT),
     assignedCommentNewcomer: core.getInput(INPUTS.ASSIGNED_COMMENT_NEWCOMER),
     unassignedComment: core.getInput(INPUTS.UNASSIGNED_COMMENT),
+    selfUnassignedComment: core.getInput(INPUTS.SELF_UNASSIGNED_COMMENT) || core.getInput(INPUTS.UNASSIGNED_COMMENT),
     alreadyAssignedComment: core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT),
     alreadyAssignedCommentPinned: core.getInput(
       INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED,

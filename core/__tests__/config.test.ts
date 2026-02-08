@@ -26,6 +26,7 @@ const mockGetInput = mock((name: string) => {
     assigned_comment: 'Assigned to {{handle}}',
     assigned_comment_newcomer: 'Welcome {{handle}}!',
     unassigned_comment: 'Unassigned {{handle}}',
+    self_unassigned_comment: 'Self-unassigned {{handle}}',
     already_assigned_comment: 'Already assigned',
     already_assigned_comment_pinned: 'Pinned and assigned',
     assignment_suggestion_comment: 'Use /assign-me',
@@ -112,6 +113,21 @@ describe('config', () => {
 
       expect(config.assignedComment).toBe('Assigned to {{handle}}')
       expect(config.assignedCommentNewcomer).toBe('Welcome {{handle}}!')
+      expect(config.unassignedComment).toBe('Unassigned {{handle}}')
+      expect(config.selfUnassignedComment).toBe('Self-unassigned {{handle}}')
+    })
+
+    it('should default selfUnassignedComment to unassignedComment when not set', () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          github_token: 'test-token',
+          unassigned_comment: 'Default unassigned message',
+        }
+        return inputs[name] ?? ''
+      })
+
+      const config = loadConfig()
+      expect(config.selfUnassignedComment).toBe('Default unassigned message')
     })
   })
 

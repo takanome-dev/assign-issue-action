@@ -31,6 +31,7 @@ const defaultConfig: ActionConfig = {
   assignedComment: '',
   assignedCommentNewcomer: '',
   unassignedComment: 'Unassigned @{{handle}}',
+  selfUnassignedComment: 'Self-unassigned @{{handle}}',
   alreadyAssignedComment: '',
   alreadyAssignedCommentPinned: '',
   assignmentSuggestionComment: '',
