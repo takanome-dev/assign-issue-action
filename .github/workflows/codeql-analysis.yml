@@ -2,7 +2,7 @@ name: 'CodeQL'
 
 on:
   pull_request:
-    branches: [main, beta]
+    branches: [main, beta, edge]
 
 jobs:
   analyze:
@@ -18,16 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js v${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build files
-        run: npm run tsup
+        run: bun run tsdown
 
       - name: Setup CodeQL
         uses: github/codeql-action/init@v3

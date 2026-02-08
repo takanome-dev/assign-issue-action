@@ -201,7 +201,7 @@ inputs:
     default: "true"
 
   reminder_days:
-    description: Number of days before unassignment to send a reminder
+    description: Number of days after assignment the reminder should be sent
     default: "auto"
 
   reminder_comment:
@@ -278,7 +278,7 @@ inputs:
       - ✅ Finish one of your current beginner-labeled issues, then come back for another.
       - 🔄 Use `/unassign-me` on an issue you're no longer working on.
       - 🚀 Ask a maintainer for suggestions on "next-level" issues (e.g. `good second issue` or beyond).
-      - 🙋 Request an exception from a maintainer if there’s a special case.
+      - 🙋 Request an exception from a maintainer if there's a special case.
 
       > [!TIP]
       > Moving to higher-level issues helps you deepen your skills and contribute more impactfully to the project.

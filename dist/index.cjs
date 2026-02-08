@@ -2071,8 +2071,8 @@ const Context = __importStar(__nccwpck_require__(1648));
 const Utils = __importStar(__nccwpck_require__(5156));
 // octokit + plugins
 const core_1 = __nccwpck_require__(8452);
-const plugin_rest_endpoint_methods_1 = __nccwpck_require__(4935);
-const plugin_paginate_rest_1 = __nccwpck_require__(8082);
+const plugin_rest_endpoint_methods_1 = __nccwpck_require__(5726);
+const plugin_paginate_rest_1 = __nccwpck_require__(7731);
 exports.context = new Context.Context();
 const baseUrl = Utils.getApiBaseUrl();
 exports.defaults = {
@@ -3433,6 +3433,7 @@ exports.getUserAgent = getUserAgent;
 
 /***/ }),
 
+<<<<<<<< HEAD:dist/index.cjs
 /***/ 4552:
 /***/ (function(__unused_webpack_module, exports) {
 
@@ -4779,6 +4780,9 @@ function copyFile(srcFile, destFile, force) {
 /***/ }),
 
 /***/ 8082:
+========
+/***/ 7731:
+>>>>>>>> edge:dist/index.mjs
 /***/ ((module) => {
 
 "use strict";
@@ -5179,7 +5183,7 @@ paginateRest.VERSION = VERSION;
 
 /***/ }),
 
-/***/ 4935:
+/***/ 5726:
 /***/ ((module) => {
 
 "use strict";
@@ -7346,6 +7350,1346 @@ legacyRestEndpointMethods.VERSION = VERSION;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
 
+
+/***/ }),
+
+/***/ 4552:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PersonalAccessTokenCredentialHandler = exports.BearerCredentialHandler = exports.BasicCredentialHandler = void 0;
+class BasicCredentialHandler {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+    }
+    prepareRequest(options) {
+        if (!options.headers) {
+            throw Error('The request has no headers');
+        }
+        options.headers['Authorization'] = `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication() {
+        return false;
+    }
+    handleAuthentication() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('not implemented');
+        });
+    }
+}
+exports.BasicCredentialHandler = BasicCredentialHandler;
+class BearerCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        if (!options.headers) {
+            throw Error('The request has no headers');
+        }
+        options.headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication() {
+        return false;
+    }
+    handleAuthentication() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('not implemented');
+        });
+    }
+}
+exports.BearerCredentialHandler = BearerCredentialHandler;
+class PersonalAccessTokenCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        if (!options.headers) {
+            throw Error('The request has no headers');
+        }
+        options.headers['Authorization'] = `Basic ${Buffer.from(`PAT:${this.token}`).toString('base64')}`;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication() {
+        return false;
+    }
+    handleAuthentication() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('not implemented');
+        });
+    }
+}
+exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
+//# sourceMappingURL=auth.js.map
+
+/***/ }),
+
+/***/ 4844:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HttpClient = exports.isHttps = exports.HttpClientResponse = exports.HttpClientError = exports.getProxyUrl = exports.MediaTypes = exports.Headers = exports.HttpCodes = void 0;
+const http = __importStar(__nccwpck_require__(8611));
+const https = __importStar(__nccwpck_require__(5692));
+const pm = __importStar(__nccwpck_require__(4988));
+const tunnel = __importStar(__nccwpck_require__(770));
+const undici_1 = __nccwpck_require__(6752);
+var HttpCodes;
+(function (HttpCodes) {
+    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+})(HttpCodes || (exports.HttpCodes = HttpCodes = {}));
+var Headers;
+(function (Headers) {
+    Headers["Accept"] = "accept";
+    Headers["ContentType"] = "content-type";
+})(Headers || (exports.Headers = Headers = {}));
+var MediaTypes;
+(function (MediaTypes) {
+    MediaTypes["ApplicationJson"] = "application/json";
+})(MediaTypes || (exports.MediaTypes = MediaTypes = {}));
+/**
+ * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+ * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+ */
+function getProxyUrl(serverUrl) {
+    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+    return proxyUrl ? proxyUrl.href : '';
+}
+exports.getProxyUrl = getProxyUrl;
+const HttpRedirectCodes = [
+    HttpCodes.MovedPermanently,
+    HttpCodes.ResourceMoved,
+    HttpCodes.SeeOther,
+    HttpCodes.TemporaryRedirect,
+    HttpCodes.PermanentRedirect
+];
+const HttpResponseRetryCodes = [
+    HttpCodes.BadGateway,
+    HttpCodes.ServiceUnavailable,
+    HttpCodes.GatewayTimeout
+];
+const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+const ExponentialBackoffCeiling = 10;
+const ExponentialBackoffTimeSlice = 5;
+class HttpClientError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.name = 'HttpClientError';
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, HttpClientError.prototype);
+    }
+}
+exports.HttpClientError = HttpClientError;
+class HttpClientResponse {
+    constructor(message) {
+        this.message = message;
+    }
+    readBody() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                let output = Buffer.alloc(0);
+                this.message.on('data', (chunk) => {
+                    output = Buffer.concat([output, chunk]);
+                });
+                this.message.on('end', () => {
+                    resolve(output.toString());
+                });
+            }));
+        });
+    }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
+}
+exports.HttpClientResponse = HttpClientResponse;
+function isHttps(requestUrl) {
+    const parsedUrl = new URL(requestUrl);
+    return parsedUrl.protocol === 'https:';
+}
+exports.isHttps = isHttps;
+class HttpClient {
+    constructor(userAgent, handlers, requestOptions) {
+        this._ignoreSslError = false;
+        this._allowRedirects = true;
+        this._allowRedirectDowngrade = false;
+        this._maxRedirects = 50;
+        this._allowRetries = false;
+        this._maxRetries = 1;
+        this._keepAlive = false;
+        this._disposed = false;
+        this.userAgent = userAgent;
+        this.handlers = handlers || [];
+        this.requestOptions = requestOptions;
+        if (requestOptions) {
+            if (requestOptions.ignoreSslError != null) {
+                this._ignoreSslError = requestOptions.ignoreSslError;
+            }
+            this._socketTimeout = requestOptions.socketTimeout;
+            if (requestOptions.allowRedirects != null) {
+                this._allowRedirects = requestOptions.allowRedirects;
+            }
+            if (requestOptions.allowRedirectDowngrade != null) {
+                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+            }
+            if (requestOptions.maxRedirects != null) {
+                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+            }
+            if (requestOptions.keepAlive != null) {
+                this._keepAlive = requestOptions.keepAlive;
+            }
+            if (requestOptions.allowRetries != null) {
+                this._allowRetries = requestOptions.allowRetries;
+            }
+            if (requestOptions.maxRetries != null) {
+                this._maxRetries = requestOptions.maxRetries;
+            }
+        }
+    }
+    options(requestUrl, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    get(requestUrl, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('GET', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    del(requestUrl, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    post(requestUrl, data, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('POST', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    patch(requestUrl, data, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    put(requestUrl, data, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    head(requestUrl, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    sendStream(verb, requestUrl, stream, additionalHeaders) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.request(verb, requestUrl, stream, additionalHeaders);
+        });
+    }
+    /**
+     * Gets a typed object from an endpoint
+     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+     */
+    getJson(requestUrl, additionalHeaders = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            const res = yield this.get(requestUrl, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    postJson(requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+            const res = yield this.post(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    putJson(requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+            const res = yield this.put(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    patchJson(requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+            const res = yield this.patch(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    /**
+     * Makes a raw http request.
+     * All other methods such as get, post, patch, and request ultimately call this.
+     * Prefer get, del, post and patch
+     */
+    request(verb, requestUrl, data, headers) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this._disposed) {
+                throw new Error('Client has already been disposed.');
+            }
+            const parsedUrl = new URL(requestUrl);
+            let info = this._prepareRequest(verb, parsedUrl, headers);
+            // Only perform retries on reads since writes may not be idempotent.
+            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+                ? this._maxRetries + 1
+                : 1;
+            let numTries = 0;
+            let response;
+            do {
+                response = yield this.requestRaw(info, data);
+                // Check if it's an authentication challenge
+                if (response &&
+                    response.message &&
+                    response.message.statusCode === HttpCodes.Unauthorized) {
+                    let authenticationHandler;
+                    for (const handler of this.handlers) {
+                        if (handler.canHandleAuthentication(response)) {
+                            authenticationHandler = handler;
+                            break;
+                        }
+                    }
+                    if (authenticationHandler) {
+                        return authenticationHandler.handleAuthentication(this, info, data);
+                    }
+                    else {
+                        // We have received an unauthorized response but have no handlers to handle it.
+                        // Let the response return to the caller.
+                        return response;
+                    }
+                }
+                let redirectsRemaining = this._maxRedirects;
+                while (response.message.statusCode &&
+                    HttpRedirectCodes.includes(response.message.statusCode) &&
+                    this._allowRedirects &&
+                    redirectsRemaining > 0) {
+                    const redirectUrl = response.message.headers['location'];
+                    if (!redirectUrl) {
+                        // if there's no location to redirect to, we won't
+                        break;
+                    }
+                    const parsedRedirectUrl = new URL(redirectUrl);
+                    if (parsedUrl.protocol === 'https:' &&
+                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+                        !this._allowRedirectDowngrade) {
+                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+                    }
+                    // we need to finish reading the response before reassigning response
+                    // which will leak the open socket.
+                    yield response.readBody();
+                    // strip authorization header if redirected to a different hostname
+                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+                        for (const header in headers) {
+                            // header names are case insensitive
+                            if (header.toLowerCase() === 'authorization') {
+                                delete headers[header];
+                            }
+                        }
+                    }
+                    // let's make the request with the new redirectUrl
+                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+                    response = yield this.requestRaw(info, data);
+                    redirectsRemaining--;
+                }
+                if (!response.message.statusCode ||
+                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+                    // If not a retry code, return immediately instead of retrying
+                    return response;
+                }
+                numTries += 1;
+                if (numTries < maxTries) {
+                    yield response.readBody();
+                    yield this._performExponentialBackoff(numTries);
+                }
+            } while (numTries < maxTries);
+            return response;
+        });
+    }
+    /**
+     * Needs to be called if keepAlive is set to true in request options.
+     */
+    dispose() {
+        if (this._agent) {
+            this._agent.destroy();
+        }
+        this._disposed = true;
+    }
+    /**
+     * Raw request.
+     * @param info
+     * @param data
+     */
+    requestRaw(info, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                function callbackForResult(err, res) {
+                    if (err) {
+                        reject(err);
+                    }
+                    else if (!res) {
+                        // If `err` is not passed, then `res` must be passed.
+                        reject(new Error('Unknown error'));
+                    }
+                    else {
+                        resolve(res);
+                    }
+                }
+                this.requestRawWithCallback(info, data, callbackForResult);
+            });
+        });
+    }
+    /**
+     * Raw request with callback.
+     * @param info
+     * @param data
+     * @param onResult
+     */
+    requestRawWithCallback(info, data, onResult) {
+        if (typeof data === 'string') {
+            if (!info.options.headers) {
+                info.options.headers = {};
+            }
+            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+        }
+        let callbackCalled = false;
+        function handleResult(err, res) {
+            if (!callbackCalled) {
+                callbackCalled = true;
+                onResult(err, res);
+            }
+        }
+        const req = info.httpModule.request(info.options, (msg) => {
+            const res = new HttpClientResponse(msg);
+            handleResult(undefined, res);
+        });
+        let socket;
+        req.on('socket', sock => {
+            socket = sock;
+        });
+        // If we ever get disconnected, we want the socket to timeout eventually
+        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+            if (socket) {
+                socket.end();
+            }
+            handleResult(new Error(`Request timeout: ${info.options.path}`));
+        });
+        req.on('error', function (err) {
+            // err has statusCode property
+            // res should have headers
+            handleResult(err);
+        });
+        if (data && typeof data === 'string') {
+            req.write(data, 'utf8');
+        }
+        if (data && typeof data !== 'string') {
+            data.on('close', function () {
+                req.end();
+            });
+            data.pipe(req);
+        }
+        else {
+            req.end();
+        }
+    }
+    /**
+     * Gets an http agent. This function is useful when you need an http agent that handles
+     * routing through a proxy server - depending upon the url and proxy environment variables.
+     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+     */
+    getAgent(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        return this._getAgent(parsedUrl);
+    }
+    getAgentDispatcher(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (!useProxy) {
+            return;
+        }
+        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+    }
+    _prepareRequest(method, requestUrl, headers) {
+        const info = {};
+        info.parsedUrl = requestUrl;
+        const usingSsl = info.parsedUrl.protocol === 'https:';
+        info.httpModule = usingSsl ? https : http;
+        const defaultPort = usingSsl ? 443 : 80;
+        info.options = {};
+        info.options.host = info.parsedUrl.hostname;
+        info.options.port = info.parsedUrl.port
+            ? parseInt(info.parsedUrl.port)
+            : defaultPort;
+        info.options.path =
+            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+        info.options.method = method;
+        info.options.headers = this._mergeHeaders(headers);
+        if (this.userAgent != null) {
+            info.options.headers['user-agent'] = this.userAgent;
+        }
+        info.options.agent = this._getAgent(info.parsedUrl);
+        // gives handlers an opportunity to participate
+        if (this.handlers) {
+            for (const handler of this.handlers) {
+                handler.prepareRequest(info.options);
+            }
+        }
+        return info;
+    }
+    _mergeHeaders(headers) {
+        if (this.requestOptions && this.requestOptions.headers) {
+            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+        }
+        return lowercaseKeys(headers || {});
+    }
+    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+        }
+        return additionalHeaders[header] || clientHeader || _default;
+    }
+    _getAgent(parsedUrl) {
+        let agent;
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (this._keepAlive && useProxy) {
+            agent = this._proxyAgent;
+        }
+        if (!useProxy) {
+            agent = this._agent;
+        }
+        // if agent is already assigned use that agent.
+        if (agent) {
+            return agent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        let maxSockets = 100;
+        if (this.requestOptions) {
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+        }
+        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+        if (proxyUrl && proxyUrl.hostname) {
+            const agentOptions = {
+                maxSockets,
+                keepAlive: this._keepAlive,
+                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+            };
+            let tunnelAgent;
+            const overHttps = proxyUrl.protocol === 'https:';
+            if (usingSsl) {
+                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+            }
+            else {
+                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+            }
+            agent = tunnelAgent(agentOptions);
+            this._proxyAgent = agent;
+        }
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
+            const options = { keepAlive: this._keepAlive, maxSockets };
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+            this._agent = agent;
+        }
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            agent.options = Object.assign(agent.options || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return agent;
+    }
+    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+        let proxyAgent;
+        if (this._keepAlive) {
+            proxyAgent = this._proxyAgentDispatcher;
+        }
+        // if agent is already assigned use that agent.
+        if (proxyAgent) {
+            return proxyAgent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
+        })));
+        this._proxyAgentDispatcher = proxyAgent;
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return proxyAgent;
+    }
+    _performExponentialBackoff(retryNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+            return new Promise(resolve => setTimeout(() => resolve(), ms));
+        });
+    }
+    _processResponse(res, options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                const statusCode = res.message.statusCode || 0;
+                const response = {
+                    statusCode,
+                    result: null,
+                    headers: {}
+                };
+                // not found leads to null obj returned
+                if (statusCode === HttpCodes.NotFound) {
+                    resolve(response);
+                }
+                // get the result from the body
+                function dateTimeDeserializer(key, value) {
+                    if (typeof value === 'string') {
+                        const a = new Date(value);
+                        if (!isNaN(a.valueOf())) {
+                            return a;
+                        }
+                    }
+                    return value;
+                }
+                let obj;
+                let contents;
+                try {
+                    contents = yield res.readBody();
+                    if (contents && contents.length > 0) {
+                        if (options && options.deserializeDates) {
+                            obj = JSON.parse(contents, dateTimeDeserializer);
+                        }
+                        else {
+                            obj = JSON.parse(contents);
+                        }
+                        response.result = obj;
+                    }
+                    response.headers = res.message.headers;
+                }
+                catch (err) {
+                    // Invalid resource (contents not json);  leaving result obj null
+                }
+                // note that 3xx redirects are handled by the http layer.
+                if (statusCode > 299) {
+                    let msg;
+                    // if exception/error in body, attempt to get better error
+                    if (obj && obj.message) {
+                        msg = obj.message;
+                    }
+                    else if (contents && contents.length > 0) {
+                        // it may be the case that the exception is in the body message as string
+                        msg = contents;
+                    }
+                    else {
+                        msg = `Failed request: (${statusCode})`;
+                    }
+                    const err = new HttpClientError(msg, statusCode);
+                    err.result = response.result;
+                    reject(err);
+                }
+                else {
+                    resolve(response);
+                }
+            }));
+        });
+    }
+}
+exports.HttpClient = HttpClient;
+const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 4988:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkBypass = exports.getProxyUrl = void 0;
+function getProxyUrl(reqUrl) {
+    const usingSsl = reqUrl.protocol === 'https:';
+    if (checkBypass(reqUrl)) {
+        return undefined;
+    }
+    const proxyVar = (() => {
+        if (usingSsl) {
+            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+        }
+        else {
+            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+        }
+    })();
+    if (proxyVar) {
+        try {
+            return new DecodedURL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new DecodedURL(`http://${proxyVar}`);
+        }
+    }
+    else {
+        return undefined;
+    }
+}
+exports.getProxyUrl = getProxyUrl;
+function checkBypass(reqUrl) {
+    if (!reqUrl.hostname) {
+        return false;
+    }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
+    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+    if (!noProxy) {
+        return false;
+    }
+    // Determine the request port
+    let reqPort;
+    if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+    }
+    else if (reqUrl.protocol === 'http:') {
+        reqPort = 80;
+    }
+    else if (reqUrl.protocol === 'https:') {
+        reqPort = 443;
+    }
+    // Format the request hostname and hostname with port
+    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+    if (typeof reqPort === 'number') {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+    }
+    // Compare request host against noproxy
+    for (const upperNoProxyItem of noProxy
+        .split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
+class DecodedURL extends URL {
+    constructor(url, base) {
+        super(url, base);
+        this._decodedUsername = decodeURIComponent(super.username);
+        this._decodedPassword = decodeURIComponent(super.password);
+    }
+    get username() {
+        return this._decodedUsername;
+    }
+    get password() {
+        return this._decodedPassword;
+    }
+}
+//# sourceMappingURL=proxy.js.map
+
+/***/ }),
+
+/***/ 5207:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
+const fs = __importStar(__nccwpck_require__(9896));
+const path = __importStar(__nccwpck_require__(6928));
+_a = fs.promises
+// export const {open} = 'fs'
+, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+// export const {open} = 'fs'
+exports.IS_WINDOWS = process.platform === 'win32';
+// See https://github.com/nodejs/node/blob/d0153aee367422d0858105abec186da4dff0a0c5/deps/uv/include/uv/win.h#L691
+exports.UV_FS_O_EXLOCK = 0x10000000;
+exports.READONLY = fs.constants.O_RDONLY;
+function exists(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield exports.stat(fsPath);
+        }
+        catch (err) {
+            if (err.code === 'ENOENT') {
+                return false;
+            }
+            throw err;
+        }
+        return true;
+    });
+}
+exports.exists = exists;
+function isDirectory(fsPath, useStat = false) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
+        return stats.isDirectory();
+    });
+}
+exports.isDirectory = isDirectory;
+/**
+ * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+ * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+ */
+function isRooted(p) {
+    p = normalizeSeparators(p);
+    if (!p) {
+        throw new Error('isRooted() parameter "p" cannot be empty');
+    }
+    if (exports.IS_WINDOWS) {
+        return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
+        ); // e.g. C: or C:\hello
+    }
+    return p.startsWith('/');
+}
+exports.isRooted = isRooted;
+/**
+ * Best effort attempt to determine whether a file exists and is executable.
+ * @param filePath    file path to check
+ * @param extensions  additional file extensions to try
+ * @return if file exists and is executable, returns the file path. otherwise empty string.
+ */
+function tryGetExecutablePath(filePath, extensions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let stats = undefined;
+        try {
+            // test file exists
+            stats = yield exports.stat(filePath);
+        }
+        catch (err) {
+            if (err.code !== 'ENOENT') {
+                // eslint-disable-next-line no-console
+                console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+            }
+        }
+        if (stats && stats.isFile()) {
+            if (exports.IS_WINDOWS) {
+                // on Windows, test for valid extension
+                const upperExt = path.extname(filePath).toUpperCase();
+                if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
+                    return filePath;
+                }
+            }
+            else {
+                if (isUnixExecutable(stats)) {
+                    return filePath;
+                }
+            }
+        }
+        // try each extension
+        const originalFilePath = filePath;
+        for (const extension of extensions) {
+            filePath = originalFilePath + extension;
+            stats = undefined;
+            try {
+                stats = yield exports.stat(filePath);
+            }
+            catch (err) {
+                if (err.code !== 'ENOENT') {
+                    // eslint-disable-next-line no-console
+                    console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+                }
+            }
+            if (stats && stats.isFile()) {
+                if (exports.IS_WINDOWS) {
+                    // preserve the case of the actual file (since an extension was appended)
+                    try {
+                        const directory = path.dirname(filePath);
+                        const upperName = path.basename(filePath).toUpperCase();
+                        for (const actualName of yield exports.readdir(directory)) {
+                            if (upperName === actualName.toUpperCase()) {
+                                filePath = path.join(directory, actualName);
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        // eslint-disable-next-line no-console
+                        console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+                    }
+                    return filePath;
+                }
+                else {
+                    if (isUnixExecutable(stats)) {
+                        return filePath;
+                    }
+                }
+            }
+        }
+        return '';
+    });
+}
+exports.tryGetExecutablePath = tryGetExecutablePath;
+function normalizeSeparators(p) {
+    p = p || '';
+    if (exports.IS_WINDOWS) {
+        // convert slashes on Windows
+        p = p.replace(/\//g, '\\');
+        // remove redundant slashes
+        return p.replace(/\\\\+/g, '\\');
+    }
+    // remove redundant slashes
+    return p.replace(/\/\/+/g, '/');
+}
+// on Mac/Linux, test the execute bit
+//     R   W  X  R  W X R W X
+//   256 128 64 32 16 8 4 2 1
+function isUnixExecutable(stats) {
+    return ((stats.mode & 1) > 0 ||
+        ((stats.mode & 8) > 0 && stats.gid === process.getgid()) ||
+        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
+}
+// Get the path of cmd.exe in windows
+function getCmdPath() {
+    var _a;
+    return (_a = process.env['COMSPEC']) !== null && _a !== void 0 ? _a : `cmd.exe`;
+}
+exports.getCmdPath = getCmdPath;
+//# sourceMappingURL=io-util.js.map
+
+/***/ }),
+
+/***/ 4994:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.findInPath = exports.which = exports.mkdirP = exports.rmRF = exports.mv = exports.cp = void 0;
+const assert_1 = __nccwpck_require__(2613);
+const path = __importStar(__nccwpck_require__(6928));
+const ioUtil = __importStar(__nccwpck_require__(5207));
+/**
+ * Copies a file or folder.
+ * Based off of shelljs - https://github.com/shelljs/shelljs/blob/9237f66c52e5daa40458f94f9565e18e8132f5a6/src/cp.js
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See CopyOptions.
+ */
+function cp(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { force, recursive, copySourceDirectory } = readCopyOptions(options);
+        const destStat = (yield ioUtil.exists(dest)) ? yield ioUtil.stat(dest) : null;
+        // Dest is an existing file, but not forcing
+        if (destStat && destStat.isFile() && !force) {
+            return;
+        }
+        // If dest is an existing directory, should copy inside.
+        const newDest = destStat && destStat.isDirectory() && copySourceDirectory
+            ? path.join(dest, path.basename(source))
+            : dest;
+        if (!(yield ioUtil.exists(source))) {
+            throw new Error(`no such file or directory: ${source}`);
+        }
+        const sourceStat = yield ioUtil.stat(source);
+        if (sourceStat.isDirectory()) {
+            if (!recursive) {
+                throw new Error(`Failed to copy. ${source} is a directory, but tried to copy without recursive flag.`);
+            }
+            else {
+                yield cpDirRecursive(source, newDest, 0, force);
+            }
+        }
+        else {
+            if (path.relative(source, newDest) === '') {
+                // a file cannot be copied to itself
+                throw new Error(`'${newDest}' and '${source}' are the same file`);
+            }
+            yield copyFile(source, newDest, force);
+        }
+    });
+}
+exports.cp = cp;
+/**
+ * Moves a path.
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See MoveOptions.
+ */
+function mv(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield ioUtil.exists(dest)) {
+            let destExists = true;
+            if (yield ioUtil.isDirectory(dest)) {
+                // If dest is directory copy src into dest
+                dest = path.join(dest, path.basename(source));
+                destExists = yield ioUtil.exists(dest);
+            }
+            if (destExists) {
+                if (options.force == null || options.force) {
+                    yield rmRF(dest);
+                }
+                else {
+                    throw new Error('Destination already exists');
+                }
+            }
+        }
+        yield mkdirP(path.dirname(dest));
+        yield ioUtil.rename(source, dest);
+    });
+}
+exports.mv = mv;
+/**
+ * Remove a path recursively with force
+ *
+ * @param inputPath path to remove
+ */
+function rmRF(inputPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (ioUtil.IS_WINDOWS) {
+            // Check for invalid characters
+            // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+            if (/[*"<>|]/.test(inputPath)) {
+                throw new Error('File path must not contain `*`, `"`, `<`, `>` or `|` on Windows');
+            }
+        }
+        try {
+            // note if path does not exist, error is silent
+            yield ioUtil.rm(inputPath, {
+                force: true,
+                maxRetries: 3,
+                recursive: true,
+                retryDelay: 300
+            });
+        }
+        catch (err) {
+            throw new Error(`File was unable to be removed ${err}`);
+        }
+    });
+}
+exports.rmRF = rmRF;
+/**
+ * Make a directory.  Creates the full path with folders in between
+ * Will throw if it fails
+ *
+ * @param   fsPath        path to create
+ * @returns Promise<void>
+ */
+function mkdirP(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        assert_1.ok(fsPath, 'a path argument must be provided');
+        yield ioUtil.mkdir(fsPath, { recursive: true });
+    });
+}
+exports.mkdirP = mkdirP;
+/**
+ * Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+ * If you check and the tool does not exist, it will throw.
+ *
+ * @param     tool              name of the tool
+ * @param     check             whether to check if tool exists
+ * @returns   Promise<string>   path to tool
+ */
+function which(tool, check) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // recursive when check=true
+        if (check) {
+            const result = yield which(tool, false);
+            if (!result) {
+                if (ioUtil.IS_WINDOWS) {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+                }
+                else {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+                }
+            }
+            return result;
+        }
+        const matches = yield findInPath(tool);
+        if (matches && matches.length > 0) {
+            return matches[0];
+        }
+        return '';
+    });
+}
+exports.which = which;
+/**
+ * Returns a list of all occurrences of the given tool on the system path.
+ *
+ * @returns   Promise<string[]>  the paths of the tool
+ */
+function findInPath(tool) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // build the list of extensions to try
+        const extensions = [];
+        if (ioUtil.IS_WINDOWS && process.env['PATHEXT']) {
+            for (const extension of process.env['PATHEXT'].split(path.delimiter)) {
+                if (extension) {
+                    extensions.push(extension);
+                }
+            }
+        }
+        // if it's rooted, return it if exists. otherwise return empty.
+        if (ioUtil.isRooted(tool)) {
+            const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
+            if (filePath) {
+                return [filePath];
+            }
+            return [];
+        }
+        // if any path separators, return empty
+        if (tool.includes(path.sep)) {
+            return [];
+        }
+        // build the list of directories
+        //
+        // Note, technically "where" checks the current directory on Windows. From a toolkit perspective,
+        // it feels like we should not do this. Checking the current directory seems like more of a use
+        // case of a shell, and the which() function exposed by the toolkit should strive for consistency
+        // across platforms.
+        const directories = [];
+        if (process.env.PATH) {
+            for (const p of process.env.PATH.split(path.delimiter)) {
+                if (p) {
+                    directories.push(p);
+                }
+            }
+        }
+        // find all matches
+        const matches = [];
+        for (const directory of directories) {
+            const filePath = yield ioUtil.tryGetExecutablePath(path.join(directory, tool), extensions);
+            if (filePath) {
+                matches.push(filePath);
+            }
+        }
+        return matches;
+    });
+}
+exports.findInPath = findInPath;
+function readCopyOptions(options) {
+    const force = options.force == null ? true : options.force;
+    const recursive = Boolean(options.recursive);
+    const copySourceDirectory = options.copySourceDirectory == null
+        ? true
+        : Boolean(options.copySourceDirectory);
+    return { force, recursive, copySourceDirectory };
+}
+function cpDirRecursive(sourceDir, destDir, currentDepth, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Ensure there is not a run away recursive copy
+        if (currentDepth >= 255)
+            return;
+        currentDepth++;
+        yield mkdirP(destDir);
+        const files = yield ioUtil.readdir(sourceDir);
+        for (const fileName of files) {
+            const srcFile = `${sourceDir}/${fileName}`;
+            const destFile = `${destDir}/${fileName}`;
+            const srcFileStat = yield ioUtil.lstat(srcFile);
+            if (srcFileStat.isDirectory()) {
+                // Recurse
+                yield cpDirRecursive(srcFile, destFile, currentDepth, force);
+            }
+            else {
+                yield copyFile(srcFile, destFile, force);
+            }
+        }
+        // Change the mode for the newly created directory
+        yield ioUtil.chmod(destDir, (yield ioUtil.stat(sourceDir)).mode);
+    });
+}
+// Buffered file copy
+function copyFile(srcFile, destFile, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if ((yield ioUtil.lstat(srcFile)).isSymbolicLink()) {
+            // unlink/re-link it
+            try {
+                yield ioUtil.lstat(destFile);
+                yield ioUtil.unlink(destFile);
+            }
+            catch (e) {
+                // Try to override file permission
+                if (e.code === 'EPERM') {
+                    yield ioUtil.chmod(destFile, '0666');
+                    yield ioUtil.unlink(destFile);
+                }
+                // other errors = it doesn't exist, no work to do
+            }
+            // Copy over symlink
+            const symlinkFull = yield ioUtil.readlink(srcFile);
+            yield ioUtil.symlink(symlinkFull, destFile, ioUtil.IS_WINDOWS ? 'junction' : null);
+        }
+        else if (!(yield ioUtil.exists(destFile)) || force) {
+            yield ioUtil.copyFile(srcFile, destFile);
+        }
+    });
+}
+//# sourceMappingURL=io.js.map
 
 /***/ }),
 
@@ -57402,6 +58746,7 @@ throttling.VERSION = VERSION;
 throttling.triggersNotification = triggersNotification;
 
 
+<<<<<<<< HEAD:dist/index.cjs
 
 /***/ })
 
@@ -58584,14 +59929,4908 @@ var ScheduleHandler = class {
 //#region index.ts
 (async () => {
 	const event = _actions_github.context.eventName;
+========
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US/_lib/formatDistance.js
+const formatDistanceLocale = {
+  lessThanXSeconds: {
+    one: "less than a second",
+    other: "less than {{count}} seconds",
+  },
+
+  xSeconds: {
+    one: "1 second",
+    other: "{{count}} seconds",
+  },
+
+  halfAMinute: "half a minute",
+
+  lessThanXMinutes: {
+    one: "less than a minute",
+    other: "less than {{count}} minutes",
+  },
+
+  xMinutes: {
+    one: "1 minute",
+    other: "{{count}} minutes",
+  },
+
+  aboutXHours: {
+    one: "about 1 hour",
+    other: "about {{count}} hours",
+  },
+
+  xHours: {
+    one: "1 hour",
+    other: "{{count}} hours",
+  },
+
+  xDays: {
+    one: "1 day",
+    other: "{{count}} days",
+  },
+
+  aboutXWeeks: {
+    one: "about 1 week",
+    other: "about {{count}} weeks",
+  },
+
+  xWeeks: {
+    one: "1 week",
+    other: "{{count}} weeks",
+  },
+
+  aboutXMonths: {
+    one: "about 1 month",
+    other: "about {{count}} months",
+  },
+
+  xMonths: {
+    one: "1 month",
+    other: "{{count}} months",
+  },
+
+  aboutXYears: {
+    one: "about 1 year",
+    other: "about {{count}} years",
+  },
+
+  xYears: {
+    one: "1 year",
+    other: "{{count}} years",
+  },
+
+  overXYears: {
+    one: "over 1 year",
+    other: "over {{count}} years",
+  },
+
+  almostXYears: {
+    one: "almost 1 year",
+    other: "almost {{count}} years",
+  },
+};
+
+const formatDistance = (token, count, options) => {
+  let result;
+
+  const tokenValue = formatDistanceLocale[token];
+  if (typeof tokenValue === "string") {
+    result = tokenValue;
+  } else if (count === 1) {
+    result = tokenValue.one;
+  } else {
+    result = tokenValue.other.replace("{{count}}", count.toString());
+  }
+
+  if (options?.addSuffix) {
+    if (options.comparison && options.comparison > 0) {
+      return "in " + result;
+    } else {
+      return result + " ago";
+    }
+  }
+
+  return result;
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/_lib/buildFormatLongFn.js
+function buildFormatLongFn(args) {
+  return (options = {}) => {
+    // TODO: Remove String()
+    const width = options.width ? String(options.width) : args.defaultWidth;
+    const format = args.formats[width] || args.formats[args.defaultWidth];
+    return format;
+  };
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US/_lib/formatLong.js
+
+
+const dateFormats = {
+  full: "EEEE, MMMM do, y",
+  long: "MMMM do, y",
+  medium: "MMM d, y",
+  short: "MM/dd/yyyy",
+};
+
+const timeFormats = {
+  full: "h:mm:ss a zzzz",
+  long: "h:mm:ss a z",
+  medium: "h:mm:ss a",
+  short: "h:mm a",
+};
+
+const dateTimeFormats = {
+  full: "{{date}} 'at' {{time}}",
+  long: "{{date}} 'at' {{time}}",
+  medium: "{{date}}, {{time}}",
+  short: "{{date}}, {{time}}",
+};
+
+const formatLong = {
+  date: buildFormatLongFn({
+    formats: dateFormats,
+    defaultWidth: "full",
+  }),
+
+  time: buildFormatLongFn({
+    formats: timeFormats,
+    defaultWidth: "full",
+  }),
+
+  dateTime: buildFormatLongFn({
+    formats: dateTimeFormats,
+    defaultWidth: "full",
+  }),
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US/_lib/formatRelative.js
+const formatRelativeLocale = {
+  lastWeek: "'last' eeee 'at' p",
+  yesterday: "'yesterday at' p",
+  today: "'today at' p",
+  tomorrow: "'tomorrow at' p",
+  nextWeek: "eeee 'at' p",
+  other: "P",
+};
+
+const formatRelative = (token, _date, _baseDate, _options) =>
+  formatRelativeLocale[token];
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/_lib/buildLocalizeFn.js
+/**
+ * The localize function argument callback which allows to convert raw value to
+ * the actual type.
+ *
+ * @param value - The value to convert
+ *
+ * @returns The converted value
+ */
+
+/**
+ * The map of localized values for each width.
+ */
+
+/**
+ * The index type of the locale unit value. It types conversion of units of
+ * values that don't start at 0 (i.e. quarters).
+ */
+
+/**
+ * Converts the unit value to the tuple of values.
+ */
+
+/**
+ * The tuple of localized era values. The first element represents BC,
+ * the second element represents AD.
+ */
+
+/**
+ * The tuple of localized quarter values. The first element represents Q1.
+ */
+
+/**
+ * The tuple of localized day values. The first element represents Sunday.
+ */
+
+/**
+ * The tuple of localized month values. The first element represents January.
+ */
+
+function buildLocalizeFn(args) {
+  return (value, options) => {
+    const context = options?.context ? String(options.context) : "standalone";
+
+    let valuesArray;
+    if (context === "formatting" && args.formattingValues) {
+      const defaultWidth = args.defaultFormattingWidth || args.defaultWidth;
+      const width = options?.width ? String(options.width) : defaultWidth;
+
+      valuesArray =
+        args.formattingValues[width] || args.formattingValues[defaultWidth];
+    } else {
+      const defaultWidth = args.defaultWidth;
+      const width = options?.width ? String(options.width) : args.defaultWidth;
+
+      valuesArray = args.values[width] || args.values[defaultWidth];
+    }
+    const index = args.argumentCallback ? args.argumentCallback(value) : value;
+
+    // @ts-expect-error - For some reason TypeScript just don't want to match it, no matter how hard we try. I challenge you to try to remove it!
+    return valuesArray[index];
+  };
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US/_lib/localize.js
+
+
+const eraValues = {
+  narrow: ["B", "A"],
+  abbreviated: ["BC", "AD"],
+  wide: ["Before Christ", "Anno Domini"],
+};
+
+const quarterValues = {
+  narrow: ["1", "2", "3", "4"],
+  abbreviated: ["Q1", "Q2", "Q3", "Q4"],
+  wide: ["1st quarter", "2nd quarter", "3rd quarter", "4th quarter"],
+};
+
+// Note: in English, the names of days of the week and months are capitalized.
+// If you are making a new locale based on this one, check if the same is true for the language you're working on.
+// Generally, formatted dates should look like they are in the middle of a sentence,
+// e.g. in Spanish language the weekdays and months should be in the lowercase.
+const monthValues = {
+  narrow: ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"],
+  abbreviated: [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ],
+
+  wide: [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ],
+};
+
+const dayValues = {
+  narrow: ["S", "M", "T", "W", "T", "F", "S"],
+  short: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+  abbreviated: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  wide: [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ],
+};
+
+const dayPeriodValues = {
+  narrow: {
+    am: "a",
+    pm: "p",
+    midnight: "mi",
+    noon: "n",
+    morning: "morning",
+    afternoon: "afternoon",
+    evening: "evening",
+    night: "night",
+  },
+  abbreviated: {
+    am: "AM",
+    pm: "PM",
+    midnight: "midnight",
+    noon: "noon",
+    morning: "morning",
+    afternoon: "afternoon",
+    evening: "evening",
+    night: "night",
+  },
+  wide: {
+    am: "a.m.",
+    pm: "p.m.",
+    midnight: "midnight",
+    noon: "noon",
+    morning: "morning",
+    afternoon: "afternoon",
+    evening: "evening",
+    night: "night",
+  },
+};
+
+const formattingDayPeriodValues = {
+  narrow: {
+    am: "a",
+    pm: "p",
+    midnight: "mi",
+    noon: "n",
+    morning: "in the morning",
+    afternoon: "in the afternoon",
+    evening: "in the evening",
+    night: "at night",
+  },
+  abbreviated: {
+    am: "AM",
+    pm: "PM",
+    midnight: "midnight",
+    noon: "noon",
+    morning: "in the morning",
+    afternoon: "in the afternoon",
+    evening: "in the evening",
+    night: "at night",
+  },
+  wide: {
+    am: "a.m.",
+    pm: "p.m.",
+    midnight: "midnight",
+    noon: "noon",
+    morning: "in the morning",
+    afternoon: "in the afternoon",
+    evening: "in the evening",
+    night: "at night",
+  },
+};
+
+const ordinalNumber = (dirtyNumber, _options) => {
+  const number = Number(dirtyNumber);
+
+  // If ordinal numbers depend on context, for example,
+  // if they are different for different grammatical genders,
+  // use `options.unit`.
+  //
+  // `unit` can be 'year', 'quarter', 'month', 'week', 'date', 'dayOfYear',
+  // 'day', 'hour', 'minute', 'second'.
+
+  const rem100 = number % 100;
+  if (rem100 > 20 || rem100 < 10) {
+    switch (rem100 % 10) {
+      case 1:
+        return number + "st";
+      case 2:
+        return number + "nd";
+      case 3:
+        return number + "rd";
+    }
+  }
+  return number + "th";
+};
+
+const localize = {
+  ordinalNumber,
+
+  era: buildLocalizeFn({
+    values: eraValues,
+    defaultWidth: "wide",
+  }),
+
+  quarter: buildLocalizeFn({
+    values: quarterValues,
+    defaultWidth: "wide",
+    argumentCallback: (quarter) => quarter - 1,
+  }),
+
+  month: buildLocalizeFn({
+    values: monthValues,
+    defaultWidth: "wide",
+  }),
+
+  day: buildLocalizeFn({
+    values: dayValues,
+    defaultWidth: "wide",
+  }),
+
+  dayPeriod: buildLocalizeFn({
+    values: dayPeriodValues,
+    defaultWidth: "wide",
+    formattingValues: formattingDayPeriodValues,
+    defaultFormattingWidth: "wide",
+  }),
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/_lib/buildMatchFn.js
+function buildMatchFn(args) {
+  return (string, options = {}) => {
+    const width = options.width;
+
+    const matchPattern =
+      (width && args.matchPatterns[width]) ||
+      args.matchPatterns[args.defaultMatchWidth];
+    const matchResult = string.match(matchPattern);
+
+    if (!matchResult) {
+      return null;
+    }
+    const matchedString = matchResult[0];
+
+    const parsePatterns =
+      (width && args.parsePatterns[width]) ||
+      args.parsePatterns[args.defaultParseWidth];
+
+    const key = Array.isArray(parsePatterns)
+      ? findIndex(parsePatterns, (pattern) => pattern.test(matchedString))
+      : // [TODO] -- I challenge you to fix the type
+        findKey(parsePatterns, (pattern) => pattern.test(matchedString));
+
+    let value;
+
+    value = args.valueCallback ? args.valueCallback(key) : key;
+    value = options.valueCallback
+      ? // [TODO] -- I challenge you to fix the type
+        options.valueCallback(value)
+      : value;
+
+    const rest = string.slice(matchedString.length);
+
+    return { value, rest };
+  };
+}
+
+function findKey(object, predicate) {
+  for (const key in object) {
+    if (
+      Object.prototype.hasOwnProperty.call(object, key) &&
+      predicate(object[key])
+    ) {
+      return key;
+    }
+  }
+  return undefined;
+}
+
+function findIndex(array, predicate) {
+  for (let key = 0; key < array.length; key++) {
+    if (predicate(array[key])) {
+      return key;
+    }
+  }
+  return undefined;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/_lib/buildMatchPatternFn.js
+function buildMatchPatternFn(args) {
+  return (string, options = {}) => {
+    const matchResult = string.match(args.matchPattern);
+    if (!matchResult) return null;
+    const matchedString = matchResult[0];
+
+    const parseResult = string.match(args.parsePattern);
+    if (!parseResult) return null;
+    let value = args.valueCallback
+      ? args.valueCallback(parseResult[0])
+      : parseResult[0];
+
+    // [TODO] I challenge you to fix the type
+    value = options.valueCallback ? options.valueCallback(value) : value;
+
+    const rest = string.slice(matchedString.length);
+
+    return { value, rest };
+  };
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US/_lib/match.js
+
+
+
+const matchOrdinalNumberPattern = /^(\d+)(th|st|nd|rd)?/i;
+const parseOrdinalNumberPattern = /\d+/i;
+
+const matchEraPatterns = {
+  narrow: /^(b|a)/i,
+  abbreviated: /^(b\.?\s?c\.?|b\.?\s?c\.?\s?e\.?|a\.?\s?d\.?|c\.?\s?e\.?)/i,
+  wide: /^(before christ|before common era|anno domini|common era)/i,
+};
+const parseEraPatterns = {
+  any: [/^b/i, /^(a|c)/i],
+};
+
+const matchQuarterPatterns = {
+  narrow: /^[1234]/i,
+  abbreviated: /^q[1234]/i,
+  wide: /^[1234](th|st|nd|rd)? quarter/i,
+};
+const parseQuarterPatterns = {
+  any: [/1/i, /2/i, /3/i, /4/i],
+};
+
+const matchMonthPatterns = {
+  narrow: /^[jfmasond]/i,
+  abbreviated: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i,
+  wide: /^(january|february|march|april|may|june|july|august|september|october|november|december)/i,
+};
+const parseMonthPatterns = {
+  narrow: [
+    /^j/i,
+    /^f/i,
+    /^m/i,
+    /^a/i,
+    /^m/i,
+    /^j/i,
+    /^j/i,
+    /^a/i,
+    /^s/i,
+    /^o/i,
+    /^n/i,
+    /^d/i,
+  ],
+
+  any: [
+    /^ja/i,
+    /^f/i,
+    /^mar/i,
+    /^ap/i,
+    /^may/i,
+    /^jun/i,
+    /^jul/i,
+    /^au/i,
+    /^s/i,
+    /^o/i,
+    /^n/i,
+    /^d/i,
+  ],
+};
+
+const matchDayPatterns = {
+  narrow: /^[smtwf]/i,
+  short: /^(su|mo|tu|we|th|fr|sa)/i,
+  abbreviated: /^(sun|mon|tue|wed|thu|fri|sat)/i,
+  wide: /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i,
+};
+const parseDayPatterns = {
+  narrow: [/^s/i, /^m/i, /^t/i, /^w/i, /^t/i, /^f/i, /^s/i],
+  any: [/^su/i, /^m/i, /^tu/i, /^w/i, /^th/i, /^f/i, /^sa/i],
+};
+
+const matchDayPeriodPatterns = {
+  narrow: /^(a|p|mi|n|(in the|at) (morning|afternoon|evening|night))/i,
+  any: /^([ap]\.?\s?m\.?|midnight|noon|(in the|at) (morning|afternoon|evening|night))/i,
+};
+const parseDayPeriodPatterns = {
+  any: {
+    am: /^a/i,
+    pm: /^p/i,
+    midnight: /^mi/i,
+    noon: /^no/i,
+    morning: /morning/i,
+    afternoon: /afternoon/i,
+    evening: /evening/i,
+    night: /night/i,
+  },
+};
+
+const match = {
+  ordinalNumber: buildMatchPatternFn({
+    matchPattern: matchOrdinalNumberPattern,
+    parsePattern: parseOrdinalNumberPattern,
+    valueCallback: (value) => parseInt(value, 10),
+  }),
+
+  era: buildMatchFn({
+    matchPatterns: matchEraPatterns,
+    defaultMatchWidth: "wide",
+    parsePatterns: parseEraPatterns,
+    defaultParseWidth: "any",
+  }),
+
+  quarter: buildMatchFn({
+    matchPatterns: matchQuarterPatterns,
+    defaultMatchWidth: "wide",
+    parsePatterns: parseQuarterPatterns,
+    defaultParseWidth: "any",
+    valueCallback: (index) => index + 1,
+  }),
+
+  month: buildMatchFn({
+    matchPatterns: matchMonthPatterns,
+    defaultMatchWidth: "wide",
+    parsePatterns: parseMonthPatterns,
+    defaultParseWidth: "any",
+  }),
+
+  day: buildMatchFn({
+    matchPatterns: matchDayPatterns,
+    defaultMatchWidth: "wide",
+    parsePatterns: parseDayPatterns,
+    defaultParseWidth: "any",
+  }),
+
+  dayPeriod: buildMatchFn({
+    matchPatterns: matchDayPeriodPatterns,
+    defaultMatchWidth: "any",
+    parsePatterns: parseDayPeriodPatterns,
+    defaultParseWidth: "any",
+  }),
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/locale/en-US.js
+
+
+
+
+
+
+/**
+ * @category Locales
+ * @summary English locale (United States).
+ * @language English
+ * @iso-639-2 eng
+ * @author Sasha Koss [@kossnocorp](https://github.com/kossnocorp)
+ * @author Lesha Koss [@leshakoss](https://github.com/leshakoss)
+ */
+const enUS = {
+  code: "en-US",
+  formatDistance: formatDistance,
+  formatLong: formatLong,
+  formatRelative: formatRelative,
+  localize: localize,
+  match: match,
+  options: {
+    weekStartsOn: 0 /* Sunday */,
+    firstWeekContainsDate: 1,
+  },
+};
+
+// Fallback for modularized imports:
+/* harmony default export */ const en_US = ((/* unused pure expression or super */ null && (enUS)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/defaultOptions.js
+let defaultOptions = {};
+
+function getDefaultOptions() {
+  return defaultOptions;
+}
+
+function setDefaultOptions(newOptions) {
+  defaultOptions = newOptions;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/constants.js
+/**
+ * @module constants
+ * @summary Useful constants
+ * @description
+ * Collection of useful date constants.
+ *
+ * The constants could be imported from `date-fns/constants`:
+ *
+ * ```ts
+ * import { maxTime, minTime } from "./constants/date-fns/constants";
+ *
+ * function isAllowedTime(time) {
+ *   return time <= maxTime && time >= minTime;
+ * }
+ * ```
+ */
+
+/**
+ * @constant
+ * @name daysInWeek
+ * @summary Days in 1 week.
+ */
+const daysInWeek = 7;
+
+/**
+ * @constant
+ * @name daysInYear
+ * @summary Days in 1 year.
+ *
+ * @description
+ * How many days in a year.
+ *
+ * One years equals 365.2425 days according to the formula:
+ *
+ * > Leap year occurs every 4 years, except for years that are divisible by 100 and not divisible by 400.
+ * > 1 mean year = (365+1/4-1/100+1/400) days = 365.2425 days
+ */
+const daysInYear = 365.2425;
+
+/**
+ * @constant
+ * @name maxTime
+ * @summary Maximum allowed time.
+ *
+ * @example
+ * import { maxTime } from "./constants/date-fns/constants";
+ *
+ * const isValid = 8640000000000001 <= maxTime;
+ * //=> false
+ *
+ * new Date(8640000000000001);
+ * //=> Invalid Date
+ */
+const maxTime = Math.pow(10, 8) * 24 * 60 * 60 * 1000;
+
+/**
+ * @constant
+ * @name minTime
+ * @summary Minimum allowed time.
+ *
+ * @example
+ * import { minTime } from "./constants/date-fns/constants";
+ *
+ * const isValid = -8640000000000001 >= minTime;
+ * //=> false
+ *
+ * new Date(-8640000000000001)
+ * //=> Invalid Date
+ */
+const minTime = -maxTime;
+
+/**
+ * @constant
+ * @name millisecondsInWeek
+ * @summary Milliseconds in 1 week.
+ */
+const millisecondsInWeek = 604800000;
+
+/**
+ * @constant
+ * @name millisecondsInDay
+ * @summary Milliseconds in 1 day.
+ */
+const millisecondsInDay = 86400000;
+
+/**
+ * @constant
+ * @name millisecondsInMinute
+ * @summary Milliseconds in 1 minute
+ */
+const millisecondsInMinute = 60000;
+
+/**
+ * @constant
+ * @name millisecondsInHour
+ * @summary Milliseconds in 1 hour
+ */
+const millisecondsInHour = 3600000;
+
+/**
+ * @constant
+ * @name millisecondsInSecond
+ * @summary Milliseconds in 1 second
+ */
+const millisecondsInSecond = 1000;
+
+/**
+ * @constant
+ * @name minutesInYear
+ * @summary Minutes in 1 year.
+ */
+const minutesInYear = 525600;
+
+/**
+ * @constant
+ * @name minutesInMonth
+ * @summary Minutes in 1 month.
+ */
+const minutesInMonth = 43200;
+
+/**
+ * @constant
+ * @name minutesInDay
+ * @summary Minutes in 1 day.
+ */
+const minutesInDay = 1440;
+
+/**
+ * @constant
+ * @name minutesInHour
+ * @summary Minutes in 1 hour.
+ */
+const minutesInHour = 60;
+
+/**
+ * @constant
+ * @name monthsInQuarter
+ * @summary Months in 1 quarter.
+ */
+const monthsInQuarter = 3;
+
+/**
+ * @constant
+ * @name monthsInYear
+ * @summary Months in 1 year.
+ */
+const monthsInYear = 12;
+
+/**
+ * @constant
+ * @name quartersInYear
+ * @summary Quarters in 1 year
+ */
+const quartersInYear = 4;
+
+/**
+ * @constant
+ * @name secondsInHour
+ * @summary Seconds in 1 hour.
+ */
+const secondsInHour = 3600;
+
+/**
+ * @constant
+ * @name secondsInMinute
+ * @summary Seconds in 1 minute.
+ */
+const secondsInMinute = 60;
+
+/**
+ * @constant
+ * @name secondsInDay
+ * @summary Seconds in 1 day.
+ */
+const secondsInDay = secondsInHour * 24;
+
+/**
+ * @constant
+ * @name secondsInWeek
+ * @summary Seconds in 1 week.
+ */
+const secondsInWeek = secondsInDay * 7;
+
+/**
+ * @constant
+ * @name secondsInYear
+ * @summary Seconds in 1 year.
+ */
+const secondsInYear = secondsInDay * daysInYear;
+
+/**
+ * @constant
+ * @name secondsInMonth
+ * @summary Seconds in 1 month
+ */
+const secondsInMonth = secondsInYear / 12;
+
+/**
+ * @constant
+ * @name secondsInQuarter
+ * @summary Seconds in 1 quarter.
+ */
+const secondsInQuarter = secondsInMonth * 3;
+
+/**
+ * @constant
+ * @name constructFromSymbol
+ * @summary Symbol enabling Date extensions to inherit properties from the reference date.
+ *
+ * The symbol is used to enable the `constructFrom` function to construct a date
+ * using a reference date and a value. It allows to transfer extra properties
+ * from the reference date to the new date. It's useful for extensions like
+ * [`TZDate`](https://github.com/date-fns/tz) that accept a time zone as
+ * a constructor argument.
+ */
+const constructFromSymbol = Symbol.for("constructDateFrom");
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/constructFrom.js
+
+
+/**
+ * @name constructFrom
+ * @category Generic Helpers
+ * @summary Constructs a date using the reference date and the value
+ *
+ * @description
+ * The function constructs a new date using the constructor from the reference
+ * date and the given value. It helps to build generic functions that accept
+ * date extensions.
+ *
+ * It defaults to `Date` if the passed reference date is a number or a string.
+ *
+ * Starting from v3.7.0, it allows to construct a date using `[Symbol.for("constructDateFrom")]`
+ * enabling to transfer extra properties from the reference date to the new date.
+ * It's useful for extensions like [`TZDate`](https://github.com/date-fns/tz)
+ * that accept a time zone as a constructor argument.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ *
+ * @param date - The reference date to take constructor from
+ * @param value - The value to create the date
+ *
+ * @returns Date initialized using the given date and value
+ *
+ * @example
+ * import { constructFrom } from "./constructFrom/date-fns";
+ *
+ * // A function that clones a date preserving the original type
+ * function cloneDate<DateType extends Date>(date: DateType): DateType {
+ *   return constructFrom(
+ *     date, // Use constructor from the given date
+ *     date.getTime() // Use the date value to create a new date
+ *   );
+ * }
+ */
+function constructFrom(date, value) {
+  if (typeof date === "function") return date(value);
+
+  if (date && typeof date === "object" && constructFromSymbol in date)
+    return date[constructFromSymbol](value);
+
+  if (date instanceof Date) return new date.constructor(value);
+
+  return new Date(value);
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_constructFrom = ((/* unused pure expression or super */ null && (constructFrom)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/toDate.js
+
+
+/**
+ * @name toDate
+ * @category Common Helpers
+ * @summary Convert the given argument to an instance of Date.
+ *
+ * @description
+ * Convert the given argument to an instance of Date.
+ *
+ * If the argument is an instance of Date, the function returns its clone.
+ *
+ * If the argument is a number, it is treated as a timestamp.
+ *
+ * If the argument is none of the above, the function returns Invalid Date.
+ *
+ * Starting from v3.7.0, it clones a date using `[Symbol.for("constructDateFrom")]`
+ * enabling to transfer extra properties from the reference date to the new date.
+ * It's useful for extensions like [`TZDate`](https://github.com/date-fns/tz)
+ * that accept a time zone as a constructor argument.
+ *
+ * **Note**: *all* Date arguments passed to any *date-fns* function is processed by `toDate`.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param argument - The value to convert
+ *
+ * @returns The parsed date in the local time zone
+ *
+ * @example
+ * // Clone the date:
+ * const result = toDate(new Date(2014, 1, 11, 11, 30, 30))
+ * //=> Tue Feb 11 2014 11:30:30
+ *
+ * @example
+ * // Convert the timestamp to date:
+ * const result = toDate(1392098430000)
+ * //=> Tue Feb 11 2014 11:30:30
+ */
+function toDate(argument, context) {
+  // [TODO] Get rid of `toDate` or `constructFrom`?
+  return constructFrom(context || argument, argument);
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_toDate = ((/* unused pure expression or super */ null && (toDate)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/getTimezoneOffsetInMilliseconds.js
+
+
+/**
+ * Google Chrome as of 67.0.3396.87 introduced timezones with offset that includes seconds.
+ * They usually appear for dates that denote time before the timezones were introduced
+ * (e.g. for 'Europe/Prague' timezone the offset is GMT+00:57:44 before 1 October 1891
+ * and GMT+01:00:00 after that date)
+ *
+ * Date#getTimezoneOffset returns the offset in minutes and would return 57 for the example above,
+ * which would lead to incorrect calculations.
+ *
+ * This function returns the timezone offset in milliseconds that takes seconds in account.
+ */
+function getTimezoneOffsetInMilliseconds(date) {
+  const _date = toDate(date);
+  const utcDate = new Date(
+    Date.UTC(
+      _date.getFullYear(),
+      _date.getMonth(),
+      _date.getDate(),
+      _date.getHours(),
+      _date.getMinutes(),
+      _date.getSeconds(),
+      _date.getMilliseconds(),
+    ),
+  );
+  utcDate.setUTCFullYear(_date.getFullYear());
+  return +date - +utcDate;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/normalizeDates.js
+
+
+function normalizeDates(context, ...dates) {
+  const normalize = constructFrom.bind(
+    null,
+    context || dates.find((date) => typeof date === "object"),
+  );
+  return dates.map(normalize);
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfDay.js
+
+
+/**
+ * The {@link startOfDay} function options.
+ */
+
+/**
+ * @name startOfDay
+ * @category Day Helpers
+ * @summary Return the start of a day for the given date.
+ *
+ * @description
+ * Return the start of a day for the given date.
+ * The result will be in the local timezone.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The original date
+ * @param options - The options
+ *
+ * @returns The start of a day
+ *
+ * @example
+ * // The start of a day for 2 September 2014 11:55:00:
+ * const result = startOfDay(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Tue Sep 02 2014 00:00:00
+ */
+function startOfDay(date, options) {
+  const _date = toDate(date, options?.in);
+  _date.setHours(0, 0, 0, 0);
+  return _date;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfDay = ((/* unused pure expression or super */ null && (startOfDay)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/differenceInCalendarDays.js
+
+
+
+
+
+/**
+ * The {@link differenceInCalendarDays} function options.
+ */
+
+/**
+ * @name differenceInCalendarDays
+ * @category Day Helpers
+ * @summary Get the number of calendar days between the given dates.
+ *
+ * @description
+ * Get the number of calendar days between the given dates. This means that the times are removed
+ * from the dates and then the difference in days is calculated.
+ *
+ * @param laterDate - The later date
+ * @param earlierDate - The earlier date
+ * @param options - The options object
+ *
+ * @returns The number of calendar days
+ *
+ * @example
+ * // How many calendar days are between
+ * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
+ * const result = differenceInCalendarDays(
+ *   new Date(2012, 6, 2, 0, 0),
+ *   new Date(2011, 6, 2, 23, 0)
+ * )
+ * //=> 366
+ * // How many calendar days are between
+ * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
+ * const result = differenceInCalendarDays(
+ *   new Date(2011, 6, 3, 0, 1),
+ *   new Date(2011, 6, 2, 23, 59)
+ * )
+ * //=> 1
+ */
+function differenceInCalendarDays(laterDate, earlierDate, options) {
+  const [laterDate_, earlierDate_] = normalizeDates(
+    options?.in,
+    laterDate,
+    earlierDate,
+  );
+
+  const laterStartOfDay = startOfDay(laterDate_);
+  const earlierStartOfDay = startOfDay(earlierDate_);
+
+  const laterTimestamp =
+    +laterStartOfDay - getTimezoneOffsetInMilliseconds(laterStartOfDay);
+  const earlierTimestamp =
+    +earlierStartOfDay - getTimezoneOffsetInMilliseconds(earlierStartOfDay);
+
+  // Round the number of days to the nearest integer because the number of
+  // milliseconds in a day is not constant (e.g. it's different in the week of
+  // the daylight saving time clock shift).
+  return Math.round((laterTimestamp - earlierTimestamp) / millisecondsInDay);
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_differenceInCalendarDays = ((/* unused pure expression or super */ null && (differenceInCalendarDays)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfYear.js
+
+
+/**
+ * The {@link startOfYear} function options.
+ */
+
+/**
+ * @name startOfYear
+ * @category Year Helpers
+ * @summary Return the start of a year for the given date.
+ *
+ * @description
+ * Return the start of a year for the given date.
+ * The result will be in the local timezone.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The original date
+ * @param options - The options
+ *
+ * @returns The start of a year
+ *
+ * @example
+ * // The start of a year for 2 September 2014 11:55:00:
+ * const result = startOfYear(new Date(2014, 8, 2, 11, 55, 00))
+ * //=> Wed Jan 01 2014 00:00:00
+ */
+function startOfYear(date, options) {
+  const date_ = toDate(date, options?.in);
+  date_.setFullYear(date_.getFullYear(), 0, 1);
+  date_.setHours(0, 0, 0, 0);
+  return date_;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfYear = ((/* unused pure expression or super */ null && (startOfYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/getDayOfYear.js
+
+
+
+
+/**
+ * The {@link getDayOfYear} function options.
+ */
+
+/**
+ * @name getDayOfYear
+ * @category Day Helpers
+ * @summary Get the day of the year of the given date.
+ *
+ * @description
+ * Get the day of the year of the given date.
+ *
+ * @param date - The given date
+ * @param options - The options
+ *
+ * @returns The day of year
+ *
+ * @example
+ * // Which day of the year is 2 July 2014?
+ * const result = getDayOfYear(new Date(2014, 6, 2))
+ * //=> 183
+ */
+function getDayOfYear(date, options) {
+  const _date = toDate(date, options?.in);
+  const diff = differenceInCalendarDays(_date, startOfYear(_date));
+  const dayOfYear = diff + 1;
+  return dayOfYear;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_getDayOfYear = ((/* unused pure expression or super */ null && (getDayOfYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfWeek.js
+
+
+
+/**
+ * The {@link startOfWeek} function options.
+ */
+
+/**
+ * @name startOfWeek
+ * @category Week Helpers
+ * @summary Return the start of a week for the given date.
+ *
+ * @description
+ * Return the start of a week for the given date.
+ * The result will be in the local timezone.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The original date
+ * @param options - An object with options
+ *
+ * @returns The start of a week
+ *
+ * @example
+ * // The start of a week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Aug 31 2014 00:00:00
+ *
+ * @example
+ * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfWeek(date, options) {
+  const defaultOptions = getDefaultOptions();
+  const weekStartsOn =
+    options?.weekStartsOn ??
+    options?.locale?.options?.weekStartsOn ??
+    defaultOptions.weekStartsOn ??
+    defaultOptions.locale?.options?.weekStartsOn ??
+    0;
+
+  const _date = toDate(date, options?.in);
+  const day = _date.getDay();
+  const diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
+
+  _date.setDate(_date.getDate() - diff);
+  _date.setHours(0, 0, 0, 0);
+  return _date;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfWeek = ((/* unused pure expression or super */ null && (startOfWeek)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfISOWeek.js
+
+
+/**
+ * The {@link startOfISOWeek} function options.
+ */
+
+/**
+ * @name startOfISOWeek
+ * @category ISO Week Helpers
+ * @summary Return the start of an ISO week for the given date.
+ *
+ * @description
+ * Return the start of an ISO week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The original date
+ * @param options - An object with options
+ *
+ * @returns The start of an ISO week
+ *
+ * @example
+ * // The start of an ISO week for 2 September 2014 11:55:00:
+ * const result = startOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfISOWeek(date, options) {
+  return startOfWeek(date, { ...options, weekStartsOn: 1 });
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfISOWeek = ((/* unused pure expression or super */ null && (startOfISOWeek)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/getISOWeekYear.js
+
+
+
+
+/**
+ * The {@link getISOWeekYear} function options.
+ */
+
+/**
+ * @name getISOWeekYear
+ * @category ISO Week-Numbering Year Helpers
+ * @summary Get the ISO week-numbering year of the given date.
+ *
+ * @description
+ * Get the ISO week-numbering year of the given date,
+ * which always starts 3 days before the year's first Thursday.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * @param date - The given date
+ *
+ * @returns The ISO week-numbering year
+ *
+ * @example
+ * // Which ISO-week numbering year is 2 January 2005?
+ * const result = getISOWeekYear(new Date(2005, 0, 2))
+ * //=> 2004
+ */
+function getISOWeekYear(date, options) {
+  const _date = toDate(date, options?.in);
+  const year = _date.getFullYear();
+
+  const fourthOfJanuaryOfNextYear = constructFrom(_date, 0);
+  fourthOfJanuaryOfNextYear.setFullYear(year + 1, 0, 4);
+  fourthOfJanuaryOfNextYear.setHours(0, 0, 0, 0);
+  const startOfNextYear = startOfISOWeek(fourthOfJanuaryOfNextYear);
+
+  const fourthOfJanuaryOfThisYear = constructFrom(_date, 0);
+  fourthOfJanuaryOfThisYear.setFullYear(year, 0, 4);
+  fourthOfJanuaryOfThisYear.setHours(0, 0, 0, 0);
+  const startOfThisYear = startOfISOWeek(fourthOfJanuaryOfThisYear);
+
+  if (_date.getTime() >= startOfNextYear.getTime()) {
+    return year + 1;
+  } else if (_date.getTime() >= startOfThisYear.getTime()) {
+    return year;
+  } else {
+    return year - 1;
+  }
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_getISOWeekYear = ((/* unused pure expression or super */ null && (getISOWeekYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfISOWeekYear.js
+
+
+
+
+/**
+ * The {@link startOfISOWeekYear} function options.
+ */
+
+/**
+ * @name startOfISOWeekYear
+ * @category ISO Week-Numbering Year Helpers
+ * @summary Return the start of an ISO week-numbering year for the given date.
+ *
+ * @description
+ * Return the start of an ISO week-numbering year,
+ * which always starts 3 days before the year's first Thursday.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The original date
+ * @param options - An object with options
+ *
+ * @returns The start of an ISO week-numbering year
+ *
+ * @example
+ * // The start of an ISO week-numbering year for 2 July 2005:
+ * const result = startOfISOWeekYear(new Date(2005, 6, 2))
+ * //=> Mon Jan 03 2005 00:00:00
+ */
+function startOfISOWeekYear(date, options) {
+  const year = getISOWeekYear(date, options);
+  const fourthOfJanuary = constructFrom(options?.in || date, 0);
+  fourthOfJanuary.setFullYear(year, 0, 4);
+  fourthOfJanuary.setHours(0, 0, 0, 0);
+  return startOfISOWeek(fourthOfJanuary);
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfISOWeekYear = ((/* unused pure expression or super */ null && (startOfISOWeekYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/getISOWeek.js
+
+
+
+
+
+/**
+ * The {@link getISOWeek} function options.
+ */
+
+/**
+ * @name getISOWeek
+ * @category ISO Week Helpers
+ * @summary Get the ISO week of the given date.
+ *
+ * @description
+ * Get the ISO week of the given date.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * @param date - The given date
+ * @param options - The options
+ *
+ * @returns The ISO week
+ *
+ * @example
+ * // Which week of the ISO-week numbering year is 2 January 2005?
+ * const result = getISOWeek(new Date(2005, 0, 2))
+ * //=> 53
+ */
+function getISOWeek(date, options) {
+  const _date = toDate(date, options?.in);
+  const diff = +startOfISOWeek(_date) - +startOfISOWeekYear(_date);
+
+  // Round the number of weeks to the nearest integer because the number of
+  // milliseconds in a week is not constant (e.g. it's different in the week of
+  // the daylight saving time clock shift).
+  return Math.round(diff / millisecondsInWeek) + 1;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_getISOWeek = ((/* unused pure expression or super */ null && (getISOWeek)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/getWeekYear.js
+
+
+
+
+
+/**
+ * The {@link getWeekYear} function options.
+ */
+
+/**
+ * @name getWeekYear
+ * @category Week-Numbering Year Helpers
+ * @summary Get the local week-numbering year of the given date.
+ *
+ * @description
+ * Get the local week-numbering year of the given date.
+ * The exact calculation depends on the values of
+ * `options.weekStartsOn` (which is the index of the first day of the week)
+ * and `options.firstWeekContainsDate` (which is the day of January, which is always in
+ * the first week of the week-numbering year)
+ *
+ * Week numbering: https://en.wikipedia.org/wiki/Week#The_ISO_week_date_system
+ *
+ * @param date - The given date
+ * @param options - An object with options.
+ *
+ * @returns The local week-numbering year
+ *
+ * @example
+ * // Which week numbering year is 26 December 2004 with the default settings?
+ * const result = getWeekYear(new Date(2004, 11, 26))
+ * //=> 2005
+ *
+ * @example
+ * // Which week numbering year is 26 December 2004 if week starts on Saturday?
+ * const result = getWeekYear(new Date(2004, 11, 26), { weekStartsOn: 6 })
+ * //=> 2004
+ *
+ * @example
+ * // Which week numbering year is 26 December 2004 if the first week contains 4 January?
+ * const result = getWeekYear(new Date(2004, 11, 26), { firstWeekContainsDate: 4 })
+ * //=> 2004
+ */
+function getWeekYear(date, options) {
+  const _date = toDate(date, options?.in);
+  const year = _date.getFullYear();
+
+  const defaultOptions = getDefaultOptions();
+  const firstWeekContainsDate =
+    options?.firstWeekContainsDate ??
+    options?.locale?.options?.firstWeekContainsDate ??
+    defaultOptions.firstWeekContainsDate ??
+    defaultOptions.locale?.options?.firstWeekContainsDate ??
+    1;
+
+  const firstWeekOfNextYear = constructFrom(options?.in || date, 0);
+  firstWeekOfNextYear.setFullYear(year + 1, 0, firstWeekContainsDate);
+  firstWeekOfNextYear.setHours(0, 0, 0, 0);
+  const startOfNextYear = startOfWeek(firstWeekOfNextYear, options);
+
+  const firstWeekOfThisYear = constructFrom(options?.in || date, 0);
+  firstWeekOfThisYear.setFullYear(year, 0, firstWeekContainsDate);
+  firstWeekOfThisYear.setHours(0, 0, 0, 0);
+  const startOfThisYear = startOfWeek(firstWeekOfThisYear, options);
+
+  if (+_date >= +startOfNextYear) {
+    return year + 1;
+  } else if (+_date >= +startOfThisYear) {
+    return year;
+  } else {
+    return year - 1;
+  }
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_getWeekYear = ((/* unused pure expression or super */ null && (getWeekYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/startOfWeekYear.js
+
+
+
+
+
+/**
+ * The {@link startOfWeekYear} function options.
+ */
+
+/**
+ * @name startOfWeekYear
+ * @category Week-Numbering Year Helpers
+ * @summary Return the start of a local week-numbering year for the given date.
+ *
+ * @description
+ * Return the start of a local week-numbering year.
+ * The exact calculation depends on the values of
+ * `options.weekStartsOn` (which is the index of the first day of the week)
+ * and `options.firstWeekContainsDate` (which is the day of January, which is always in
+ * the first week of the week-numbering year)
+ *
+ * Week numbering: https://en.wikipedia.org/wiki/Week#The_ISO_week_date_system
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type.
+ *
+ * @param date - The original date
+ * @param options - An object with options
+ *
+ * @returns The start of a week-numbering year
+ *
+ * @example
+ * // The start of an a week-numbering year for 2 July 2005 with default settings:
+ * const result = startOfWeekYear(new Date(2005, 6, 2))
+ * //=> Sun Dec 26 2004 00:00:00
+ *
+ * @example
+ * // The start of a week-numbering year for 2 July 2005
+ * // if Monday is the first day of week
+ * // and 4 January is always in the first week of the year:
+ * const result = startOfWeekYear(new Date(2005, 6, 2), {
+ *   weekStartsOn: 1,
+ *   firstWeekContainsDate: 4
+ * })
+ * //=> Mon Jan 03 2005 00:00:00
+ */
+function startOfWeekYear(date, options) {
+  const defaultOptions = getDefaultOptions();
+  const firstWeekContainsDate =
+    options?.firstWeekContainsDate ??
+    options?.locale?.options?.firstWeekContainsDate ??
+    defaultOptions.firstWeekContainsDate ??
+    defaultOptions.locale?.options?.firstWeekContainsDate ??
+    1;
+
+  const year = getWeekYear(date, options);
+  const firstWeek = constructFrom(options?.in || date, 0);
+  firstWeek.setFullYear(year, 0, firstWeekContainsDate);
+  firstWeek.setHours(0, 0, 0, 0);
+  const _date = startOfWeek(firstWeek, options);
+  return _date;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_startOfWeekYear = ((/* unused pure expression or super */ null && (startOfWeekYear)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/getWeek.js
+
+
+
+
+
+/**
+ * The {@link getWeek} function options.
+ */
+
+/**
+ * @name getWeek
+ * @category Week Helpers
+ * @summary Get the local week index of the given date.
+ *
+ * @description
+ * Get the local week index of the given date.
+ * The exact calculation depends on the values of
+ * `options.weekStartsOn` (which is the index of the first day of the week)
+ * and `options.firstWeekContainsDate` (which is the day of January, which is always in
+ * the first week of the week-numbering year)
+ *
+ * Week numbering: https://en.wikipedia.org/wiki/Week#The_ISO_week_date_system
+ *
+ * @param date - The given date
+ * @param options - An object with options
+ *
+ * @returns The week
+ *
+ * @example
+ * // Which week of the local week numbering year is 2 January 2005 with default options?
+ * const result = getWeek(new Date(2005, 0, 2))
+ * //=> 2
+ *
+ * @example
+ * // Which week of the local week numbering year is 2 January 2005,
+ * // if Monday is the first day of the week,
+ * // and the first week of the year always contains 4 January?
+ * const result = getWeek(new Date(2005, 0, 2), {
+ *   weekStartsOn: 1,
+ *   firstWeekContainsDate: 4
+ * })
+ * //=> 53
+ */
+function getWeek(date, options) {
+  const _date = toDate(date, options?.in);
+  const diff = +startOfWeek(_date, options) - +startOfWeekYear(_date, options);
+
+  // Round the number of weeks to the nearest integer because the number of
+  // milliseconds in a week is not constant (e.g. it's different in the week of
+  // the daylight saving time clock shift).
+  return Math.round(diff / millisecondsInWeek) + 1;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_getWeek = ((/* unused pure expression or super */ null && (getWeek)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/addLeadingZeros.js
+function addLeadingZeros(number, targetLength) {
+  const sign = number < 0 ? "-" : "";
+  const output = Math.abs(number).toString().padStart(targetLength, "0");
+  return sign + output;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/format/lightFormatters.js
+
+
+/*
+ * |     | Unit                           |     | Unit                           |
+ * |-----|--------------------------------|-----|--------------------------------|
+ * |  a  | AM, PM                         |  A* |                                |
+ * |  d  | Day of month                   |  D  |                                |
+ * |  h  | Hour [1-12]                    |  H  | Hour [0-23]                    |
+ * |  m  | Minute                         |  M  | Month                          |
+ * |  s  | Second                         |  S  | Fraction of second             |
+ * |  y  | Year (abs)                     |  Y  |                                |
+ *
+ * Letters marked by * are not implemented but reserved by Unicode standard.
+ */
+
+const lightFormatters = {
+  // Year
+  y(date, token) {
+    // From http://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Format_tokens
+    // | Year     |     y | yy |   yyy |  yyyy | yyyyy |
+    // |----------|-------|----|-------|-------|-------|
+    // | AD 1     |     1 | 01 |   001 |  0001 | 00001 |
+    // | AD 12    |    12 | 12 |   012 |  0012 | 00012 |
+    // | AD 123   |   123 | 23 |   123 |  0123 | 00123 |
+    // | AD 1234  |  1234 | 34 |  1234 |  1234 | 01234 |
+    // | AD 12345 | 12345 | 45 | 12345 | 12345 | 12345 |
+
+    const signedYear = date.getFullYear();
+    // Returns 1 for 1 BC (which is year 0 in JavaScript)
+    const year = signedYear > 0 ? signedYear : 1 - signedYear;
+    return addLeadingZeros(token === "yy" ? year % 100 : year, token.length);
+  },
+
+  // Month
+  M(date, token) {
+    const month = date.getMonth();
+    return token === "M" ? String(month + 1) : addLeadingZeros(month + 1, 2);
+  },
+
+  // Day of the month
+  d(date, token) {
+    return addLeadingZeros(date.getDate(), token.length);
+  },
+
+  // AM or PM
+  a(date, token) {
+    const dayPeriodEnumValue = date.getHours() / 12 >= 1 ? "pm" : "am";
+
+    switch (token) {
+      case "a":
+      case "aa":
+        return dayPeriodEnumValue.toUpperCase();
+      case "aaa":
+        return dayPeriodEnumValue;
+      case "aaaaa":
+        return dayPeriodEnumValue[0];
+      case "aaaa":
+      default:
+        return dayPeriodEnumValue === "am" ? "a.m." : "p.m.";
+    }
+  },
+
+  // Hour [1-12]
+  h(date, token) {
+    return addLeadingZeros(date.getHours() % 12 || 12, token.length);
+  },
+
+  // Hour [0-23]
+  H(date, token) {
+    return addLeadingZeros(date.getHours(), token.length);
+  },
+
+  // Minute
+  m(date, token) {
+    return addLeadingZeros(date.getMinutes(), token.length);
+  },
+
+  // Second
+  s(date, token) {
+    return addLeadingZeros(date.getSeconds(), token.length);
+  },
+
+  // Fraction of second
+  S(date, token) {
+    const numberOfDigits = token.length;
+    const milliseconds = date.getMilliseconds();
+    const fractionalSeconds = Math.trunc(
+      milliseconds * Math.pow(10, numberOfDigits - 3),
+    );
+    return addLeadingZeros(fractionalSeconds, token.length);
+  },
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/format/formatters.js
+
+
+
+
+
+
+
+
+
+const dayPeriodEnum = {
+  am: "am",
+  pm: "pm",
+  midnight: "midnight",
+  noon: "noon",
+  morning: "morning",
+  afternoon: "afternoon",
+  evening: "evening",
+  night: "night",
+};
+
+/*
+ * |     | Unit                           |     | Unit                           |
+ * |-----|--------------------------------|-----|--------------------------------|
+ * |  a  | AM, PM                         |  A* | Milliseconds in day            |
+ * |  b  | AM, PM, noon, midnight         |  B  | Flexible day period            |
+ * |  c  | Stand-alone local day of week  |  C* | Localized hour w/ day period   |
+ * |  d  | Day of month                   |  D  | Day of year                    |
+ * |  e  | Local day of week              |  E  | Day of week                    |
+ * |  f  |                                |  F* | Day of week in month           |
+ * |  g* | Modified Julian day            |  G  | Era                            |
+ * |  h  | Hour [1-12]                    |  H  | Hour [0-23]                    |
+ * |  i! | ISO day of week                |  I! | ISO week of year               |
+ * |  j* | Localized hour w/ day period   |  J* | Localized hour w/o day period  |
+ * |  k  | Hour [1-24]                    |  K  | Hour [0-11]                    |
+ * |  l* | (deprecated)                   |  L  | Stand-alone month              |
+ * |  m  | Minute                         |  M  | Month                          |
+ * |  n  |                                |  N  |                                |
+ * |  o! | Ordinal number modifier        |  O  | Timezone (GMT)                 |
+ * |  p! | Long localized time            |  P! | Long localized date            |
+ * |  q  | Stand-alone quarter            |  Q  | Quarter                        |
+ * |  r* | Related Gregorian year         |  R! | ISO week-numbering year        |
+ * |  s  | Second                         |  S  | Fraction of second             |
+ * |  t! | Seconds timestamp              |  T! | Milliseconds timestamp         |
+ * |  u  | Extended year                  |  U* | Cyclic year                    |
+ * |  v* | Timezone (generic non-locat.)  |  V* | Timezone (location)            |
+ * |  w  | Local week of year             |  W* | Week of month                  |
+ * |  x  | Timezone (ISO-8601 w/o Z)      |  X  | Timezone (ISO-8601)            |
+ * |  y  | Year (abs)                     |  Y  | Local week-numbering year      |
+ * |  z  | Timezone (specific non-locat.) |  Z* | Timezone (aliases)             |
+ *
+ * Letters marked by * are not implemented but reserved by Unicode standard.
+ *
+ * Letters marked by ! are non-standard, but implemented by date-fns:
+ * - `o` modifies the previous token to turn it into an ordinal (see `format` docs)
+ * - `i` is ISO day of week. For `i` and `ii` is returns numeric ISO week days,
+ *   i.e. 7 for Sunday, 1 for Monday, etc.
+ * - `I` is ISO week of year, as opposed to `w` which is local week of year.
+ * - `R` is ISO week-numbering year, as opposed to `Y` which is local week-numbering year.
+ *   `R` is supposed to be used in conjunction with `I` and `i`
+ *   for universal ISO week-numbering date, whereas
+ *   `Y` is supposed to be used in conjunction with `w` and `e`
+ *   for week-numbering date specific to the locale.
+ * - `P` is long localized date format
+ * - `p` is long localized time format
+ */
+
+const formatters = {
+  // Era
+  G: function (date, token, localize) {
+    const era = date.getFullYear() > 0 ? 1 : 0;
+    switch (token) {
+      // AD, BC
+      case "G":
+      case "GG":
+      case "GGG":
+        return localize.era(era, { width: "abbreviated" });
+      // A, B
+      case "GGGGG":
+        return localize.era(era, { width: "narrow" });
+      // Anno Domini, Before Christ
+      case "GGGG":
+      default:
+        return localize.era(era, { width: "wide" });
+    }
+  },
+
+  // Year
+  y: function (date, token, localize) {
+    // Ordinal number
+    if (token === "yo") {
+      const signedYear = date.getFullYear();
+      // Returns 1 for 1 BC (which is year 0 in JavaScript)
+      const year = signedYear > 0 ? signedYear : 1 - signedYear;
+      return localize.ordinalNumber(year, { unit: "year" });
+    }
+
+    return lightFormatters.y(date, token);
+  },
+
+  // Local week-numbering year
+  Y: function (date, token, localize, options) {
+    const signedWeekYear = getWeekYear(date, options);
+    // Returns 1 for 1 BC (which is year 0 in JavaScript)
+    const weekYear = signedWeekYear > 0 ? signedWeekYear : 1 - signedWeekYear;
+
+    // Two digit year
+    if (token === "YY") {
+      const twoDigitYear = weekYear % 100;
+      return addLeadingZeros(twoDigitYear, 2);
+    }
+
+    // Ordinal number
+    if (token === "Yo") {
+      return localize.ordinalNumber(weekYear, { unit: "year" });
+    }
+
+    // Padding
+    return addLeadingZeros(weekYear, token.length);
+  },
+
+  // ISO week-numbering year
+  R: function (date, token) {
+    const isoWeekYear = getISOWeekYear(date);
+
+    // Padding
+    return addLeadingZeros(isoWeekYear, token.length);
+  },
+
+  // Extended year. This is a single number designating the year of this calendar system.
+  // The main difference between `y` and `u` localizers are B.C. years:
+  // | Year | `y` | `u` |
+  // |------|-----|-----|
+  // | AC 1 |   1 |   1 |
+  // | BC 1 |   1 |   0 |
+  // | BC 2 |   2 |  -1 |
+  // Also `yy` always returns the last two digits of a year,
+  // while `uu` pads single digit years to 2 characters and returns other years unchanged.
+  u: function (date, token) {
+    const year = date.getFullYear();
+    return addLeadingZeros(year, token.length);
+  },
+
+  // Quarter
+  Q: function (date, token, localize) {
+    const quarter = Math.ceil((date.getMonth() + 1) / 3);
+    switch (token) {
+      // 1, 2, 3, 4
+      case "Q":
+        return String(quarter);
+      // 01, 02, 03, 04
+      case "QQ":
+        return addLeadingZeros(quarter, 2);
+      // 1st, 2nd, 3rd, 4th
+      case "Qo":
+        return localize.ordinalNumber(quarter, { unit: "quarter" });
+      // Q1, Q2, Q3, Q4
+      case "QQQ":
+        return localize.quarter(quarter, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      // 1, 2, 3, 4 (narrow quarter; could be not numerical)
+      case "QQQQQ":
+        return localize.quarter(quarter, {
+          width: "narrow",
+          context: "formatting",
+        });
+      // 1st quarter, 2nd quarter, ...
+      case "QQQQ":
+      default:
+        return localize.quarter(quarter, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // Stand-alone quarter
+  q: function (date, token, localize) {
+    const quarter = Math.ceil((date.getMonth() + 1) / 3);
+    switch (token) {
+      // 1, 2, 3, 4
+      case "q":
+        return String(quarter);
+      // 01, 02, 03, 04
+      case "qq":
+        return addLeadingZeros(quarter, 2);
+      // 1st, 2nd, 3rd, 4th
+      case "qo":
+        return localize.ordinalNumber(quarter, { unit: "quarter" });
+      // Q1, Q2, Q3, Q4
+      case "qqq":
+        return localize.quarter(quarter, {
+          width: "abbreviated",
+          context: "standalone",
+        });
+      // 1, 2, 3, 4 (narrow quarter; could be not numerical)
+      case "qqqqq":
+        return localize.quarter(quarter, {
+          width: "narrow",
+          context: "standalone",
+        });
+      // 1st quarter, 2nd quarter, ...
+      case "qqqq":
+      default:
+        return localize.quarter(quarter, {
+          width: "wide",
+          context: "standalone",
+        });
+    }
+  },
+
+  // Month
+  M: function (date, token, localize) {
+    const month = date.getMonth();
+    switch (token) {
+      case "M":
+      case "MM":
+        return lightFormatters.M(date, token);
+      // 1st, 2nd, ..., 12th
+      case "Mo":
+        return localize.ordinalNumber(month + 1, { unit: "month" });
+      // Jan, Feb, ..., Dec
+      case "MMM":
+        return localize.month(month, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      // J, F, ..., D
+      case "MMMMM":
+        return localize.month(month, {
+          width: "narrow",
+          context: "formatting",
+        });
+      // January, February, ..., December
+      case "MMMM":
+      default:
+        return localize.month(month, { width: "wide", context: "formatting" });
+    }
+  },
+
+  // Stand-alone month
+  L: function (date, token, localize) {
+    const month = date.getMonth();
+    switch (token) {
+      // 1, 2, ..., 12
+      case "L":
+        return String(month + 1);
+      // 01, 02, ..., 12
+      case "LL":
+        return addLeadingZeros(month + 1, 2);
+      // 1st, 2nd, ..., 12th
+      case "Lo":
+        return localize.ordinalNumber(month + 1, { unit: "month" });
+      // Jan, Feb, ..., Dec
+      case "LLL":
+        return localize.month(month, {
+          width: "abbreviated",
+          context: "standalone",
+        });
+      // J, F, ..., D
+      case "LLLLL":
+        return localize.month(month, {
+          width: "narrow",
+          context: "standalone",
+        });
+      // January, February, ..., December
+      case "LLLL":
+      default:
+        return localize.month(month, { width: "wide", context: "standalone" });
+    }
+  },
+
+  // Local week of year
+  w: function (date, token, localize, options) {
+    const week = getWeek(date, options);
+
+    if (token === "wo") {
+      return localize.ordinalNumber(week, { unit: "week" });
+    }
+
+    return addLeadingZeros(week, token.length);
+  },
+
+  // ISO week of year
+  I: function (date, token, localize) {
+    const isoWeek = getISOWeek(date);
+
+    if (token === "Io") {
+      return localize.ordinalNumber(isoWeek, { unit: "week" });
+    }
+
+    return addLeadingZeros(isoWeek, token.length);
+  },
+
+  // Day of the month
+  d: function (date, token, localize) {
+    if (token === "do") {
+      return localize.ordinalNumber(date.getDate(), { unit: "date" });
+    }
+
+    return lightFormatters.d(date, token);
+  },
+
+  // Day of year
+  D: function (date, token, localize) {
+    const dayOfYear = getDayOfYear(date);
+
+    if (token === "Do") {
+      return localize.ordinalNumber(dayOfYear, { unit: "dayOfYear" });
+    }
+
+    return addLeadingZeros(dayOfYear, token.length);
+  },
+
+  // Day of week
+  E: function (date, token, localize) {
+    const dayOfWeek = date.getDay();
+    switch (token) {
+      // Tue
+      case "E":
+      case "EE":
+      case "EEE":
+        return localize.day(dayOfWeek, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      // T
+      case "EEEEE":
+        return localize.day(dayOfWeek, {
+          width: "narrow",
+          context: "formatting",
+        });
+      // Tu
+      case "EEEEEE":
+        return localize.day(dayOfWeek, {
+          width: "short",
+          context: "formatting",
+        });
+      // Tuesday
+      case "EEEE":
+      default:
+        return localize.day(dayOfWeek, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // Local day of week
+  e: function (date, token, localize, options) {
+    const dayOfWeek = date.getDay();
+    const localDayOfWeek = (dayOfWeek - options.weekStartsOn + 8) % 7 || 7;
+    switch (token) {
+      // Numerical value (Nth day of week with current locale or weekStartsOn)
+      case "e":
+        return String(localDayOfWeek);
+      // Padded numerical value
+      case "ee":
+        return addLeadingZeros(localDayOfWeek, 2);
+      // 1st, 2nd, ..., 7th
+      case "eo":
+        return localize.ordinalNumber(localDayOfWeek, { unit: "day" });
+      case "eee":
+        return localize.day(dayOfWeek, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      // T
+      case "eeeee":
+        return localize.day(dayOfWeek, {
+          width: "narrow",
+          context: "formatting",
+        });
+      // Tu
+      case "eeeeee":
+        return localize.day(dayOfWeek, {
+          width: "short",
+          context: "formatting",
+        });
+      // Tuesday
+      case "eeee":
+      default:
+        return localize.day(dayOfWeek, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // Stand-alone local day of week
+  c: function (date, token, localize, options) {
+    const dayOfWeek = date.getDay();
+    const localDayOfWeek = (dayOfWeek - options.weekStartsOn + 8) % 7 || 7;
+    switch (token) {
+      // Numerical value (same as in `e`)
+      case "c":
+        return String(localDayOfWeek);
+      // Padded numerical value
+      case "cc":
+        return addLeadingZeros(localDayOfWeek, token.length);
+      // 1st, 2nd, ..., 7th
+      case "co":
+        return localize.ordinalNumber(localDayOfWeek, { unit: "day" });
+      case "ccc":
+        return localize.day(dayOfWeek, {
+          width: "abbreviated",
+          context: "standalone",
+        });
+      // T
+      case "ccccc":
+        return localize.day(dayOfWeek, {
+          width: "narrow",
+          context: "standalone",
+        });
+      // Tu
+      case "cccccc":
+        return localize.day(dayOfWeek, {
+          width: "short",
+          context: "standalone",
+        });
+      // Tuesday
+      case "cccc":
+      default:
+        return localize.day(dayOfWeek, {
+          width: "wide",
+          context: "standalone",
+        });
+    }
+  },
+
+  // ISO day of week
+  i: function (date, token, localize) {
+    const dayOfWeek = date.getDay();
+    const isoDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
+    switch (token) {
+      // 2
+      case "i":
+        return String(isoDayOfWeek);
+      // 02
+      case "ii":
+        return addLeadingZeros(isoDayOfWeek, token.length);
+      // 2nd
+      case "io":
+        return localize.ordinalNumber(isoDayOfWeek, { unit: "day" });
+      // Tue
+      case "iii":
+        return localize.day(dayOfWeek, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      // T
+      case "iiiii":
+        return localize.day(dayOfWeek, {
+          width: "narrow",
+          context: "formatting",
+        });
+      // Tu
+      case "iiiiii":
+        return localize.day(dayOfWeek, {
+          width: "short",
+          context: "formatting",
+        });
+      // Tuesday
+      case "iiii":
+      default:
+        return localize.day(dayOfWeek, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // AM or PM
+  a: function (date, token, localize) {
+    const hours = date.getHours();
+    const dayPeriodEnumValue = hours / 12 >= 1 ? "pm" : "am";
+
+    switch (token) {
+      case "a":
+      case "aa":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      case "aaa":
+        return localize
+          .dayPeriod(dayPeriodEnumValue, {
+            width: "abbreviated",
+            context: "formatting",
+          })
+          .toLowerCase();
+      case "aaaaa":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "narrow",
+          context: "formatting",
+        });
+      case "aaaa":
+      default:
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // AM, PM, midnight, noon
+  b: function (date, token, localize) {
+    const hours = date.getHours();
+    let dayPeriodEnumValue;
+    if (hours === 12) {
+      dayPeriodEnumValue = dayPeriodEnum.noon;
+    } else if (hours === 0) {
+      dayPeriodEnumValue = dayPeriodEnum.midnight;
+    } else {
+      dayPeriodEnumValue = hours / 12 >= 1 ? "pm" : "am";
+    }
+
+    switch (token) {
+      case "b":
+      case "bb":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      case "bbb":
+        return localize
+          .dayPeriod(dayPeriodEnumValue, {
+            width: "abbreviated",
+            context: "formatting",
+          })
+          .toLowerCase();
+      case "bbbbb":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "narrow",
+          context: "formatting",
+        });
+      case "bbbb":
+      default:
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // in the morning, in the afternoon, in the evening, at night
+  B: function (date, token, localize) {
+    const hours = date.getHours();
+    let dayPeriodEnumValue;
+    if (hours >= 17) {
+      dayPeriodEnumValue = dayPeriodEnum.evening;
+    } else if (hours >= 12) {
+      dayPeriodEnumValue = dayPeriodEnum.afternoon;
+    } else if (hours >= 4) {
+      dayPeriodEnumValue = dayPeriodEnum.morning;
+    } else {
+      dayPeriodEnumValue = dayPeriodEnum.night;
+    }
+
+    switch (token) {
+      case "B":
+      case "BB":
+      case "BBB":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "abbreviated",
+          context: "formatting",
+        });
+      case "BBBBB":
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "narrow",
+          context: "formatting",
+        });
+      case "BBBB":
+      default:
+        return localize.dayPeriod(dayPeriodEnumValue, {
+          width: "wide",
+          context: "formatting",
+        });
+    }
+  },
+
+  // Hour [1-12]
+  h: function (date, token, localize) {
+    if (token === "ho") {
+      let hours = date.getHours() % 12;
+      if (hours === 0) hours = 12;
+      return localize.ordinalNumber(hours, { unit: "hour" });
+    }
+
+    return lightFormatters.h(date, token);
+  },
+
+  // Hour [0-23]
+  H: function (date, token, localize) {
+    if (token === "Ho") {
+      return localize.ordinalNumber(date.getHours(), { unit: "hour" });
+    }
+
+    return lightFormatters.H(date, token);
+  },
+
+  // Hour [0-11]
+  K: function (date, token, localize) {
+    const hours = date.getHours() % 12;
+
+    if (token === "Ko") {
+      return localize.ordinalNumber(hours, { unit: "hour" });
+    }
+
+    return addLeadingZeros(hours, token.length);
+  },
+
+  // Hour [1-24]
+  k: function (date, token, localize) {
+    let hours = date.getHours();
+    if (hours === 0) hours = 24;
+
+    if (token === "ko") {
+      return localize.ordinalNumber(hours, { unit: "hour" });
+    }
+
+    return addLeadingZeros(hours, token.length);
+  },
+
+  // Minute
+  m: function (date, token, localize) {
+    if (token === "mo") {
+      return localize.ordinalNumber(date.getMinutes(), { unit: "minute" });
+    }
+
+    return lightFormatters.m(date, token);
+  },
+
+  // Second
+  s: function (date, token, localize) {
+    if (token === "so") {
+      return localize.ordinalNumber(date.getSeconds(), { unit: "second" });
+    }
+
+    return lightFormatters.s(date, token);
+  },
+
+  // Fraction of second
+  S: function (date, token) {
+    return lightFormatters.S(date, token);
+  },
+
+  // Timezone (ISO-8601. If offset is 0, output is always `'Z'`)
+  X: function (date, token, _localize) {
+    const timezoneOffset = date.getTimezoneOffset();
+
+    if (timezoneOffset === 0) {
+      return "Z";
+    }
+
+    switch (token) {
+      // Hours and optional minutes
+      case "X":
+        return formatTimezoneWithOptionalMinutes(timezoneOffset);
+
+      // Hours, minutes and optional seconds without `:` delimiter
+      // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
+      // so this token always has the same output as `XX`
+      case "XXXX":
+      case "XX": // Hours and minutes without `:` delimiter
+        return formatTimezone(timezoneOffset);
+
+      // Hours, minutes and optional seconds with `:` delimiter
+      // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
+      // so this token always has the same output as `XXX`
+      case "XXXXX":
+      case "XXX": // Hours and minutes with `:` delimiter
+      default:
+        return formatTimezone(timezoneOffset, ":");
+    }
+  },
+
+  // Timezone (ISO-8601. If offset is 0, output is `'+00:00'` or equivalent)
+  x: function (date, token, _localize) {
+    const timezoneOffset = date.getTimezoneOffset();
+
+    switch (token) {
+      // Hours and optional minutes
+      case "x":
+        return formatTimezoneWithOptionalMinutes(timezoneOffset);
+
+      // Hours, minutes and optional seconds without `:` delimiter
+      // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
+      // so this token always has the same output as `xx`
+      case "xxxx":
+      case "xx": // Hours and minutes without `:` delimiter
+        return formatTimezone(timezoneOffset);
+
+      // Hours, minutes and optional seconds with `:` delimiter
+      // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
+      // so this token always has the same output as `xxx`
+      case "xxxxx":
+      case "xxx": // Hours and minutes with `:` delimiter
+      default:
+        return formatTimezone(timezoneOffset, ":");
+    }
+  },
+
+  // Timezone (GMT)
+  O: function (date, token, _localize) {
+    const timezoneOffset = date.getTimezoneOffset();
+
+    switch (token) {
+      // Short
+      case "O":
+      case "OO":
+      case "OOO":
+        return "GMT" + formatTimezoneShort(timezoneOffset, ":");
+      // Long
+      case "OOOO":
+      default:
+        return "GMT" + formatTimezone(timezoneOffset, ":");
+    }
+  },
+
+  // Timezone (specific non-location)
+  z: function (date, token, _localize) {
+    const timezoneOffset = date.getTimezoneOffset();
+
+    switch (token) {
+      // Short
+      case "z":
+      case "zz":
+      case "zzz":
+        return "GMT" + formatTimezoneShort(timezoneOffset, ":");
+      // Long
+      case "zzzz":
+      default:
+        return "GMT" + formatTimezone(timezoneOffset, ":");
+    }
+  },
+
+  // Seconds timestamp
+  t: function (date, token, _localize) {
+    const timestamp = Math.trunc(+date / 1000);
+    return addLeadingZeros(timestamp, token.length);
+  },
+
+  // Milliseconds timestamp
+  T: function (date, token, _localize) {
+    return addLeadingZeros(+date, token.length);
+  },
+};
+
+function formatTimezoneShort(offset, delimiter = "") {
+  const sign = offset > 0 ? "-" : "+";
+  const absOffset = Math.abs(offset);
+  const hours = Math.trunc(absOffset / 60);
+  const minutes = absOffset % 60;
+  if (minutes === 0) {
+    return sign + String(hours);
+  }
+  return sign + String(hours) + delimiter + addLeadingZeros(minutes, 2);
+}
+
+function formatTimezoneWithOptionalMinutes(offset, delimiter) {
+  if (offset % 60 === 0) {
+    const sign = offset > 0 ? "-" : "+";
+    return sign + addLeadingZeros(Math.abs(offset) / 60, 2);
+  }
+  return formatTimezone(offset, delimiter);
+}
+
+function formatTimezone(offset, delimiter = "") {
+  const sign = offset > 0 ? "-" : "+";
+  const absOffset = Math.abs(offset);
+  const hours = addLeadingZeros(Math.trunc(absOffset / 60), 2);
+  const minutes = addLeadingZeros(absOffset % 60, 2);
+  return sign + hours + delimiter + minutes;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/format/longFormatters.js
+const dateLongFormatter = (pattern, formatLong) => {
+  switch (pattern) {
+    case "P":
+      return formatLong.date({ width: "short" });
+    case "PP":
+      return formatLong.date({ width: "medium" });
+    case "PPP":
+      return formatLong.date({ width: "long" });
+    case "PPPP":
+    default:
+      return formatLong.date({ width: "full" });
+  }
+};
+
+const timeLongFormatter = (pattern, formatLong) => {
+  switch (pattern) {
+    case "p":
+      return formatLong.time({ width: "short" });
+    case "pp":
+      return formatLong.time({ width: "medium" });
+    case "ppp":
+      return formatLong.time({ width: "long" });
+    case "pppp":
+    default:
+      return formatLong.time({ width: "full" });
+  }
+};
+
+const dateTimeLongFormatter = (pattern, formatLong) => {
+  const matchResult = pattern.match(/(P+)(p+)?/) || [];
+  const datePattern = matchResult[1];
+  const timePattern = matchResult[2];
+
+  if (!timePattern) {
+    return dateLongFormatter(pattern, formatLong);
+  }
+
+  let dateTimeFormat;
+
+  switch (datePattern) {
+    case "P":
+      dateTimeFormat = formatLong.dateTime({ width: "short" });
+      break;
+    case "PP":
+      dateTimeFormat = formatLong.dateTime({ width: "medium" });
+      break;
+    case "PPP":
+      dateTimeFormat = formatLong.dateTime({ width: "long" });
+      break;
+    case "PPPP":
+    default:
+      dateTimeFormat = formatLong.dateTime({ width: "full" });
+      break;
+  }
+
+  return dateTimeFormat
+    .replace("{{date}}", dateLongFormatter(datePattern, formatLong))
+    .replace("{{time}}", timeLongFormatter(timePattern, formatLong));
+};
+
+const longFormatters = {
+  p: timeLongFormatter,
+  P: dateTimeLongFormatter,
+};
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/_lib/protectedTokens.js
+const dayOfYearTokenRE = /^D+$/;
+const weekYearTokenRE = /^Y+$/;
+
+const throwTokens = ["D", "DD", "YY", "YYYY"];
+
+function isProtectedDayOfYearToken(token) {
+  return dayOfYearTokenRE.test(token);
+}
+
+function isProtectedWeekYearToken(token) {
+  return weekYearTokenRE.test(token);
+}
+
+function warnOrThrowProtectedError(token, format, input) {
+  const _message = message(token, format, input);
+  console.warn(_message);
+  if (throwTokens.includes(token)) throw new RangeError(_message);
+}
+
+function message(token, format, input) {
+  const subject = token[0] === "Y" ? "years" : "days of the month";
+  return `Use \`${token.toLowerCase()}\` instead of \`${token}\` (in \`${format}\`) for formatting ${subject} to the input \`${input}\`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md`;
+}
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/isDate.js
+/**
+ * @name isDate
+ * @category Common Helpers
+ * @summary Is the given value a date?
+ *
+ * @description
+ * Returns true if the given value is an instance of Date. The function works for dates transferred across iframes.
+ *
+ * @param value - The value to check
+ *
+ * @returns True if the given value is a date
+ *
+ * @example
+ * // For a valid date:
+ * const result = isDate(new Date())
+ * //=> true
+ *
+ * @example
+ * // For an invalid date:
+ * const result = isDate(new Date(NaN))
+ * //=> true
+ *
+ * @example
+ * // For some value:
+ * const result = isDate('2014-02-31')
+ * //=> false
+ *
+ * @example
+ * // For an object:
+ * const result = isDate({})
+ * //=> false
+ */
+function isDate(value) {
+  return (
+    value instanceof Date ||
+    (typeof value === "object" &&
+      Object.prototype.toString.call(value) === "[object Date]")
+  );
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_isDate = ((/* unused pure expression or super */ null && (isDate)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/isValid.js
+
+
+
+/**
+ * @name isValid
+ * @category Common Helpers
+ * @summary Is the given date valid?
+ *
+ * @description
+ * Returns false if argument is Invalid Date and true otherwise.
+ * Argument is converted to Date using `toDate`. See [toDate](https://date-fns.org/docs/toDate)
+ * Invalid Date is a Date, whose time value is NaN.
+ *
+ * Time value of Date: http://es5.github.io/#x15.9.1.1
+ *
+ * @param date - The date to check
+ *
+ * @returns The date is valid
+ *
+ * @example
+ * // For the valid date:
+ * const result = isValid(new Date(2014, 1, 31))
+ * //=> true
+ *
+ * @example
+ * // For the value, convertible into a date:
+ * const result = isValid(1393804800000)
+ * //=> true
+ *
+ * @example
+ * // For the invalid date:
+ * const result = isValid(new Date(''))
+ * //=> false
+ */
+function isValid(date) {
+  return !((!isDate(date) && typeof date !== "number") || isNaN(+toDate(date)));
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_isValid = ((/* unused pure expression or super */ null && (isValid)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/format.js
+
+
+
+
+
+
+
+
+// Rexports of internal for libraries to use.
+// See: https://github.com/date-fns/date-fns/issues/3638#issuecomment-1877082874
+
+
+// This RegExp consists of three parts separated by `|`:
+// - [yYQqMLwIdDecihHKkms]o matches any available ordinal number token
+//   (one of the certain letters followed by `o`)
+// - (\w)\1* matches any sequences of the same letter
+// - '' matches two quote characters in a row
+// - '(''|[^'])+('|$) matches anything surrounded by two quote characters ('),
+//   except a single quote symbol, which ends the sequence.
+//   Two quote characters do not end the sequence.
+//   If there is no matching single quote
+//   then the sequence will continue until the end of the string.
+// - . matches any single character unmatched by previous parts of the RegExps
+const formattingTokensRegExp =
+  /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g;
+
+// This RegExp catches symbols escaped by quotes, and also
+// sequences of symbols P, p, and the combinations like `PPPPPPPppppp`
+const longFormattingTokensRegExp = /P+p+|P+|p+|''|'(''|[^'])+('|$)|./g;
+
+const escapedStringRegExp = /^'([^]*?)'?$/;
+const doubleQuoteRegExp = /''/g;
+const unescapedLatinCharacterRegExp = /[a-zA-Z]/;
+
+
+
+/**
+ * The {@link format} function options.
+ */
+
+/**
+ * @name format
+ * @alias formatDate
+ * @category Common Helpers
+ * @summary Format the date.
+ *
+ * @description
+ * Return the formatted date string in the given format. The result may vary by locale.
+ *
+ * > ⚠️ Please note that the `format` tokens differ from Moment.js and other libraries.
+ * > See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ *
+ * The characters wrapped between two single quotes characters (') are escaped.
+ * Two single quotes in a row, whether inside or outside a quoted sequence, represent a 'real' single quote.
+ * (see the last example)
+ *
+ * Format of the string is based on Unicode Technical Standard #35:
+ * https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+ * with a few additions (see note 7 below the table).
+ *
+ * Accepted patterns:
+ * | Unit                            | Pattern | Result examples                   | Notes |
+ * |---------------------------------|---------|-----------------------------------|-------|
+ * | Era                             | G..GGG  | AD, BC                            |       |
+ * |                                 | GGGG    | Anno Domini, Before Christ        | 2     |
+ * |                                 | GGGGG   | A, B                              |       |
+ * | Calendar year                   | y       | 44, 1, 1900, 2017                 | 5     |
+ * |                                 | yo      | 44th, 1st, 0th, 17th              | 5,7   |
+ * |                                 | yy      | 44, 01, 00, 17                    | 5     |
+ * |                                 | yyy     | 044, 001, 1900, 2017              | 5     |
+ * |                                 | yyyy    | 0044, 0001, 1900, 2017            | 5     |
+ * |                                 | yyyyy   | ...                               | 3,5   |
+ * | Local week-numbering year       | Y       | 44, 1, 1900, 2017                 | 5     |
+ * |                                 | Yo      | 44th, 1st, 1900th, 2017th         | 5,7   |
+ * |                                 | YY      | 44, 01, 00, 17                    | 5,8   |
+ * |                                 | YYY     | 044, 001, 1900, 2017              | 5     |
+ * |                                 | YYYY    | 0044, 0001, 1900, 2017            | 5,8   |
+ * |                                 | YYYYY   | ...                               | 3,5   |
+ * | ISO week-numbering year         | R       | -43, 0, 1, 1900, 2017             | 5,7   |
+ * |                                 | RR      | -43, 00, 01, 1900, 2017           | 5,7   |
+ * |                                 | RRR     | -043, 000, 001, 1900, 2017        | 5,7   |
+ * |                                 | RRRR    | -0043, 0000, 0001, 1900, 2017     | 5,7   |
+ * |                                 | RRRRR   | ...                               | 3,5,7 |
+ * | Extended year                   | u       | -43, 0, 1, 1900, 2017             | 5     |
+ * |                                 | uu      | -43, 01, 1900, 2017               | 5     |
+ * |                                 | uuu     | -043, 001, 1900, 2017             | 5     |
+ * |                                 | uuuu    | -0043, 0001, 1900, 2017           | 5     |
+ * |                                 | uuuuu   | ...                               | 3,5   |
+ * | Quarter (formatting)            | Q       | 1, 2, 3, 4                        |       |
+ * |                                 | Qo      | 1st, 2nd, 3rd, 4th                | 7     |
+ * |                                 | QQ      | 01, 02, 03, 04                    |       |
+ * |                                 | QQQ     | Q1, Q2, Q3, Q4                    |       |
+ * |                                 | QQQQ    | 1st quarter, 2nd quarter, ...     | 2     |
+ * |                                 | QQQQQ   | 1, 2, 3, 4                        | 4     |
+ * | Quarter (stand-alone)           | q       | 1, 2, 3, 4                        |       |
+ * |                                 | qo      | 1st, 2nd, 3rd, 4th                | 7     |
+ * |                                 | qq      | 01, 02, 03, 04                    |       |
+ * |                                 | qqq     | Q1, Q2, Q3, Q4                    |       |
+ * |                                 | qqqq    | 1st quarter, 2nd quarter, ...     | 2     |
+ * |                                 | qqqqq   | 1, 2, 3, 4                        | 4     |
+ * | Month (formatting)              | M       | 1, 2, ..., 12                     |       |
+ * |                                 | Mo      | 1st, 2nd, ..., 12th               | 7     |
+ * |                                 | MM      | 01, 02, ..., 12                   |       |
+ * |                                 | MMM     | Jan, Feb, ..., Dec                |       |
+ * |                                 | MMMM    | January, February, ..., December  | 2     |
+ * |                                 | MMMMM   | J, F, ..., D                      |       |
+ * | Month (stand-alone)             | L       | 1, 2, ..., 12                     |       |
+ * |                                 | Lo      | 1st, 2nd, ..., 12th               | 7     |
+ * |                                 | LL      | 01, 02, ..., 12                   |       |
+ * |                                 | LLL     | Jan, Feb, ..., Dec                |       |
+ * |                                 | LLLL    | January, February, ..., December  | 2     |
+ * |                                 | LLLLL   | J, F, ..., D                      |       |
+ * | Local week of year              | w       | 1, 2, ..., 53                     |       |
+ * |                                 | wo      | 1st, 2nd, ..., 53th               | 7     |
+ * |                                 | ww      | 01, 02, ..., 53                   |       |
+ * | ISO week of year                | I       | 1, 2, ..., 53                     | 7     |
+ * |                                 | Io      | 1st, 2nd, ..., 53th               | 7     |
+ * |                                 | II      | 01, 02, ..., 53                   | 7     |
+ * | Day of month                    | d       | 1, 2, ..., 31                     |       |
+ * |                                 | do      | 1st, 2nd, ..., 31st               | 7     |
+ * |                                 | dd      | 01, 02, ..., 31                   |       |
+ * | Day of year                     | D       | 1, 2, ..., 365, 366               | 9     |
+ * |                                 | Do      | 1st, 2nd, ..., 365th, 366th       | 7     |
+ * |                                 | DD      | 01, 02, ..., 365, 366             | 9     |
+ * |                                 | DDD     | 001, 002, ..., 365, 366           |       |
+ * |                                 | DDDD    | ...                               | 3     |
+ * | Day of week (formatting)        | E..EEE  | Mon, Tue, Wed, ..., Sun           |       |
+ * |                                 | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
+ * |                                 | EEEEE   | M, T, W, T, F, S, S               |       |
+ * |                                 | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
+ * | ISO day of week (formatting)    | i       | 1, 2, 3, ..., 7                   | 7     |
+ * |                                 | io      | 1st, 2nd, ..., 7th                | 7     |
+ * |                                 | ii      | 01, 02, ..., 07                   | 7     |
+ * |                                 | iii     | Mon, Tue, Wed, ..., Sun           | 7     |
+ * |                                 | iiii    | Monday, Tuesday, ..., Sunday      | 2,7   |
+ * |                                 | iiiii   | M, T, W, T, F, S, S               | 7     |
+ * |                                 | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 7     |
+ * | Local day of week (formatting)  | e       | 2, 3, 4, ..., 1                   |       |
+ * |                                 | eo      | 2nd, 3rd, ..., 1st                | 7     |
+ * |                                 | ee      | 02, 03, ..., 01                   |       |
+ * |                                 | eee     | Mon, Tue, Wed, ..., Sun           |       |
+ * |                                 | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
+ * |                                 | eeeee   | M, T, W, T, F, S, S               |       |
+ * |                                 | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
+ * | Local day of week (stand-alone) | c       | 2, 3, 4, ..., 1                   |       |
+ * |                                 | co      | 2nd, 3rd, ..., 1st                | 7     |
+ * |                                 | cc      | 02, 03, ..., 01                   |       |
+ * |                                 | ccc     | Mon, Tue, Wed, ..., Sun           |       |
+ * |                                 | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
+ * |                                 | ccccc   | M, T, W, T, F, S, S               |       |
+ * |                                 | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
+ * | AM, PM                          | a..aa   | AM, PM                            |       |
+ * |                                 | aaa     | am, pm                            |       |
+ * |                                 | aaaa    | a.m., p.m.                        | 2     |
+ * |                                 | aaaaa   | a, p                              |       |
+ * | AM, PM, noon, midnight          | b..bb   | AM, PM, noon, midnight            |       |
+ * |                                 | bbb     | am, pm, noon, midnight            |       |
+ * |                                 | bbbb    | a.m., p.m., noon, midnight        | 2     |
+ * |                                 | bbbbb   | a, p, n, mi                       |       |
+ * | Flexible day period             | B..BBB  | at night, in the morning, ...     |       |
+ * |                                 | BBBB    | at night, in the morning, ...     | 2     |
+ * |                                 | BBBBB   | at night, in the morning, ...     |       |
+ * | Hour [1-12]                     | h       | 1, 2, ..., 11, 12                 |       |
+ * |                                 | ho      | 1st, 2nd, ..., 11th, 12th         | 7     |
+ * |                                 | hh      | 01, 02, ..., 11, 12               |       |
+ * | Hour [0-23]                     | H       | 0, 1, 2, ..., 23                  |       |
+ * |                                 | Ho      | 0th, 1st, 2nd, ..., 23rd          | 7     |
+ * |                                 | HH      | 00, 01, 02, ..., 23               |       |
+ * | Hour [0-11]                     | K       | 1, 2, ..., 11, 0                  |       |
+ * |                                 | Ko      | 1st, 2nd, ..., 11th, 0th          | 7     |
+ * |                                 | KK      | 01, 02, ..., 11, 00               |       |
+ * | Hour [1-24]                     | k       | 24, 1, 2, ..., 23                 |       |
+ * |                                 | ko      | 24th, 1st, 2nd, ..., 23rd         | 7     |
+ * |                                 | kk      | 24, 01, 02, ..., 23               |       |
+ * | Minute                          | m       | 0, 1, ..., 59                     |       |
+ * |                                 | mo      | 0th, 1st, ..., 59th               | 7     |
+ * |                                 | mm      | 00, 01, ..., 59                   |       |
+ * | Second                          | s       | 0, 1, ..., 59                     |       |
+ * |                                 | so      | 0th, 1st, ..., 59th               | 7     |
+ * |                                 | ss      | 00, 01, ..., 59                   |       |
+ * | Fraction of second              | S       | 0, 1, ..., 9                      |       |
+ * |                                 | SS      | 00, 01, ..., 99                   |       |
+ * |                                 | SSS     | 000, 001, ..., 999                |       |
+ * |                                 | SSSS    | ...                               | 3     |
+ * | Timezone (ISO-8601 w/ Z)        | X       | -08, +0530, Z                     |       |
+ * |                                 | XX      | -0800, +0530, Z                   |       |
+ * |                                 | XXX     | -08:00, +05:30, Z                 |       |
+ * |                                 | XXXX    | -0800, +0530, Z, +123456          | 2     |
+ * |                                 | XXXXX   | -08:00, +05:30, Z, +12:34:56      |       |
+ * | Timezone (ISO-8601 w/o Z)       | x       | -08, +0530, +00                   |       |
+ * |                                 | xx      | -0800, +0530, +0000               |       |
+ * |                                 | xxx     | -08:00, +05:30, +00:00            | 2     |
+ * |                                 | xxxx    | -0800, +0530, +0000, +123456      |       |
+ * |                                 | xxxxx   | -08:00, +05:30, +00:00, +12:34:56 |       |
+ * | Timezone (GMT)                  | O...OOO | GMT-8, GMT+5:30, GMT+0            |       |
+ * |                                 | OOOO    | GMT-08:00, GMT+05:30, GMT+00:00   | 2     |
+ * | Timezone (specific non-locat.)  | z...zzz | GMT-8, GMT+5:30, GMT+0            | 6     |
+ * |                                 | zzzz    | GMT-08:00, GMT+05:30, GMT+00:00   | 2,6   |
+ * | Seconds timestamp               | t       | 512969520                         | 7     |
+ * |                                 | tt      | ...                               | 3,7   |
+ * | Milliseconds timestamp          | T       | 512969520900                      | 7     |
+ * |                                 | TT      | ...                               | 3,7   |
+ * | Long localized date             | P       | 04/29/1453                        | 7     |
+ * |                                 | PP      | Apr 29, 1453                      | 7     |
+ * |                                 | PPP     | April 29th, 1453                  | 7     |
+ * |                                 | PPPP    | Friday, April 29th, 1453          | 2,7   |
+ * | Long localized time             | p       | 12:00 AM                          | 7     |
+ * |                                 | pp      | 12:00:00 AM                       | 7     |
+ * |                                 | ppp     | 12:00:00 AM GMT+2                 | 7     |
+ * |                                 | pppp    | 12:00:00 AM GMT+02:00             | 2,7   |
+ * | Combination of date and time    | Pp      | 04/29/1453, 12:00 AM              | 7     |
+ * |                                 | PPpp    | Apr 29, 1453, 12:00:00 AM         | 7     |
+ * |                                 | PPPppp  | April 29th, 1453 at ...           | 7     |
+ * |                                 | PPPPpppp| Friday, April 29th, 1453 at ...   | 2,7   |
+ * Notes:
+ * 1. "Formatting" units (e.g. formatting quarter) in the default en-US locale
+ *    are the same as "stand-alone" units, but are different in some languages.
+ *    "Formatting" units are declined according to the rules of the language
+ *    in the context of a date. "Stand-alone" units are always nominative singular:
+ *
+ *    `format(new Date(2017, 10, 6), 'do LLLL', {locale: cs}) //=> '6. listopad'`
+ *
+ *    `format(new Date(2017, 10, 6), 'do MMMM', {locale: cs}) //=> '6. listopadu'`
+ *
+ * 2. Any sequence of the identical letters is a pattern, unless it is escaped by
+ *    the single quote characters (see below).
+ *    If the sequence is longer than listed in table (e.g. `EEEEEEEEEEE`)
+ *    the output will be the same as default pattern for this unit, usually
+ *    the longest one (in case of ISO weekdays, `EEEE`). Default patterns for units
+ *    are marked with "2" in the last column of the table.
+ *
+ *    `format(new Date(2017, 10, 6), 'MMM') //=> 'Nov'`
+ *
+ *    `format(new Date(2017, 10, 6), 'MMMM') //=> 'November'`
+ *
+ *    `format(new Date(2017, 10, 6), 'MMMMM') //=> 'N'`
+ *
+ *    `format(new Date(2017, 10, 6), 'MMMMMM') //=> 'November'`
+ *
+ *    `format(new Date(2017, 10, 6), 'MMMMMMM') //=> 'November'`
+ *
+ * 3. Some patterns could be unlimited length (such as `yyyyyyyy`).
+ *    The output will be padded with zeros to match the length of the pattern.
+ *
+ *    `format(new Date(2017, 10, 6), 'yyyyyyyy') //=> '00002017'`
+ *
+ * 4. `QQQQQ` and `qqqqq` could be not strictly numerical in some locales.
+ *    These tokens represent the shortest form of the quarter.
+ *
+ * 5. The main difference between `y` and `u` patterns are B.C. years:
+ *
+ *    | Year | `y` | `u` |
+ *    |------|-----|-----|
+ *    | AC 1 |   1 |   1 |
+ *    | BC 1 |   1 |   0 |
+ *    | BC 2 |   2 |  -1 |
+ *
+ *    Also `yy` always returns the last two digits of a year,
+ *    while `uu` pads single digit years to 2 characters and returns other years unchanged:
+ *
+ *    | Year | `yy` | `uu` |
+ *    |------|------|------|
+ *    | 1    |   01 |   01 |
+ *    | 14   |   14 |   14 |
+ *    | 376  |   76 |  376 |
+ *    | 1453 |   53 | 1453 |
+ *
+ *    The same difference is true for local and ISO week-numbering years (`Y` and `R`),
+ *    except local week-numbering years are dependent on `options.weekStartsOn`
+ *    and `options.firstWeekContainsDate` (compare [getISOWeekYear](https://date-fns.org/docs/getISOWeekYear)
+ *    and [getWeekYear](https://date-fns.org/docs/getWeekYear)).
+ *
+ * 6. Specific non-location timezones are currently unavailable in `date-fns`,
+ *    so right now these tokens fall back to GMT timezones.
+ *
+ * 7. These patterns are not in the Unicode Technical Standard #35:
+ *    - `i`: ISO day of week
+ *    - `I`: ISO week of year
+ *    - `R`: ISO week-numbering year
+ *    - `t`: seconds timestamp
+ *    - `T`: milliseconds timestamp
+ *    - `o`: ordinal number modifier
+ *    - `P`: long localized date
+ *    - `p`: long localized time
+ *
+ * 8. `YY` and `YYYY` tokens represent week-numbering years but they are often confused with years.
+ *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ *
+ * 9. `D` and `DD` tokens represent days of the year but they are often confused with days of the month.
+ *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ *
+ * @param date - The original date
+ * @param format - The string of tokens
+ * @param options - An object with options
+ *
+ * @returns The formatted date string
+ *
+ * @throws `date` must not be Invalid Date
+ * @throws `options.locale` must contain `localize` property
+ * @throws `options.locale` must contain `formatLong` property
+ * @throws use `yyyy` instead of `YYYY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ * @throws use `yy` instead of `YY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ * @throws use `d` instead of `D` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ * @throws use `dd` instead of `DD` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+ * @throws format string contains an unescaped latin alphabet character
+ *
+ * @example
+ * // Represent 11 February 2014 in middle-endian format:
+ * const result = format(new Date(2014, 1, 11), 'MM/dd/yyyy')
+ * //=> '02/11/2014'
+ *
+ * @example
+ * // Represent 2 July 2014 in Esperanto:
+ * import { eoLocale } from 'date-fns/locale/eo'
+ * const result = format(new Date(2014, 6, 2), "do 'de' MMMM yyyy", {
+ *   locale: eoLocale
+ * })
+ * //=> '2-a de julio 2014'
+ *
+ * @example
+ * // Escape string by single quote characters:
+ * const result = format(new Date(2014, 6, 2, 15), "h 'o''clock'")
+ * //=> "3 o'clock"
+ */
+function format(date, formatStr, options) {
+  const defaultOptions = getDefaultOptions();
+  const locale = options?.locale ?? defaultOptions.locale ?? enUS;
+
+  const firstWeekContainsDate =
+    options?.firstWeekContainsDate ??
+    options?.locale?.options?.firstWeekContainsDate ??
+    defaultOptions.firstWeekContainsDate ??
+    defaultOptions.locale?.options?.firstWeekContainsDate ??
+    1;
+
+  const weekStartsOn =
+    options?.weekStartsOn ??
+    options?.locale?.options?.weekStartsOn ??
+    defaultOptions.weekStartsOn ??
+    defaultOptions.locale?.options?.weekStartsOn ??
+    0;
+
+  const originalDate = toDate(date, options?.in);
+
+  if (!isValid(originalDate)) {
+    throw new RangeError("Invalid time value");
+  }
+
+  let parts = formatStr
+    .match(longFormattingTokensRegExp)
+    .map((substring) => {
+      const firstCharacter = substring[0];
+      if (firstCharacter === "p" || firstCharacter === "P") {
+        const longFormatter = longFormatters[firstCharacter];
+        return longFormatter(substring, locale.formatLong);
+      }
+      return substring;
+    })
+    .join("")
+    .match(formattingTokensRegExp)
+    .map((substring) => {
+      // Replace two single quote characters with one single quote character
+      if (substring === "''") {
+        return { isToken: false, value: "'" };
+      }
+
+      const firstCharacter = substring[0];
+      if (firstCharacter === "'") {
+        return { isToken: false, value: cleanEscapedString(substring) };
+      }
+
+      if (formatters[firstCharacter]) {
+        return { isToken: true, value: substring };
+      }
+
+      if (firstCharacter.match(unescapedLatinCharacterRegExp)) {
+        throw new RangeError(
+          "Format string contains an unescaped latin alphabet character `" +
+            firstCharacter +
+            "`",
+        );
+      }
+
+      return { isToken: false, value: substring };
+    });
+
+  // invoke localize preprocessor (only for french locales at the moment)
+  if (locale.localize.preprocessor) {
+    parts = locale.localize.preprocessor(originalDate, parts);
+  }
+
+  const formatterOptions = {
+    firstWeekContainsDate,
+    weekStartsOn,
+    locale,
+  };
+
+  return parts
+    .map((part) => {
+      if (!part.isToken) return part.value;
+
+      const token = part.value;
+
+      if (
+        (!options?.useAdditionalWeekYearTokens &&
+          isProtectedWeekYearToken(token)) ||
+        (!options?.useAdditionalDayOfYearTokens &&
+          isProtectedDayOfYearToken(token))
+      ) {
+        warnOrThrowProtectedError(token, formatStr, String(date));
+      }
+
+      const formatter = formatters[token[0]];
+      return formatter(originalDate, token, locale.localize, formatterOptions);
+    })
+    .join("");
+}
+
+function cleanEscapedString(input) {
+  const matched = input.match(escapedStringRegExp);
+
+  if (!matched) {
+    return input;
+  }
+
+  return matched[1].replace(doubleQuoteRegExp, "'");
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_format = ((/* unused pure expression or super */ null && (format)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/addDays.js
+
+
+
+/**
+ * The {@link addDays} function options.
+ */
+
+/**
+ * @name addDays
+ * @category Day Helpers
+ * @summary Add the specified number of days to the given date.
+ *
+ * @description
+ * Add the specified number of days to the given date.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The date to be changed
+ * @param amount - The amount of days to be added.
+ * @param options - An object with options
+ *
+ * @returns The new date with the days added
+ *
+ * @example
+ * // Add 10 days to 1 September 2014:
+ * const result = addDays(new Date(2014, 8, 1), 10)
+ * //=> Thu Sep 11 2014 00:00:00
+ */
+function addDays(date, amount, options) {
+  const _date = toDate(date, options?.in);
+  if (isNaN(amount)) return constructFrom(options?.in || date, NaN);
+
+  // If 0 days, no-op to avoid changing times in the hour before end of DST
+  if (!amount) return _date;
+
+  _date.setDate(_date.getDate() + amount);
+  return _date;
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_addDays = ((/* unused pure expression or super */ null && (addDays)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/addMonths.js
+
+
+
+/**
+ * The {@link addMonths} function options.
+ */
+
+/**
+ * @name addMonths
+ * @category Month Helpers
+ * @summary Add the specified number of months to the given date.
+ *
+ * @description
+ * Add the specified number of months to the given date.
+ *
+ * @typeParam DateType - The `Date` type, the function operates on. Gets inferred from passed arguments. Allows to use extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The date to be changed
+ * @param amount - The amount of months to be added.
+ * @param options - The options object
+ *
+ * @returns The new date with the months added
+ *
+ * @example
+ * // Add 5 months to 1 September 2014:
+ * const result = addMonths(new Date(2014, 8, 1), 5)
+ * //=> Sun Feb 01 2015 00:00:00
+ *
+ * // Add one month to 30 January 2023:
+ * const result = addMonths(new Date(2023, 0, 30), 1)
+ * //=> Tue Feb 28 2023 00:00:00
+ */
+function addMonths(date, amount, options) {
+  const _date = toDate(date, options?.in);
+  if (isNaN(amount)) return constructFrom(options?.in || date, NaN);
+  if (!amount) {
+    // If 0 months, no-op to avoid changing times in the hour before end of DST
+    return _date;
+  }
+  const dayOfMonth = _date.getDate();
+
+  // The JS Date object supports date math by accepting out-of-bounds values for
+  // month, day, etc. For example, new Date(2020, 0, 0) returns 31 Dec 2019 and
+  // new Date(2020, 13, 1) returns 1 Feb 2021.  This is *almost* the behavior we
+  // want except that dates will wrap around the end of a month, meaning that
+  // new Date(2020, 13, 31) will return 3 Mar 2021 not 28 Feb 2021 as desired. So
+  // we'll default to the end of the desired month by adding 1 to the desired
+  // month and using a date of 0 to back up one day to the end of the desired
+  // month.
+  const endOfDesiredMonth = constructFrom(options?.in || date, _date.getTime());
+  endOfDesiredMonth.setMonth(_date.getMonth() + amount + 1, 0);
+  const daysInMonth = endOfDesiredMonth.getDate();
+  if (dayOfMonth >= daysInMonth) {
+    // If we're already at the end of the month, then this is the correct date
+    // and we're done.
+    return endOfDesiredMonth;
+  } else {
+    // Otherwise, we now know that setting the original day-of-month value won't
+    // cause an overflow, so set the desired day-of-month. Note that we can't
+    // just set the date of `endOfDesiredMonth` because that object may have had
+    // its time changed in the unusual case where where a DST transition was on
+    // the last day of the month and its local time was in the hour skipped or
+    // repeated next to a DST transition.  So we use `date` instead which is
+    // guaranteed to still have the original time.
+    _date.setFullYear(
+      endOfDesiredMonth.getFullYear(),
+      endOfDesiredMonth.getMonth(),
+      dayOfMonth,
+    );
+    return _date;
+  }
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_addMonths = ((/* unused pure expression or super */ null && (addMonths)));
+
+;// CONCATENATED MODULE: ./node_modules/date-fns/add.js
+
+
+
+
+
+/**
+ * The {@link add} function options.
+ */
+
+/**
+ * @name add
+ * @category Common Helpers
+ * @summary Add the specified years, months, weeks, days, hours, minutes, and seconds to the given date.
+ *
+ * @description
+ * Add the specified years, months, weeks, days, hours, minutes, and seconds to the given date.
+ *
+ * @typeParam DateType - The `Date` type the function operates on. Gets inferred from passed arguments. Allows using extensions like [`UTCDate`](https://github.com/date-fns/utc).
+ * @typeParam ResultDate - The result `Date` type, it is the type returned from the context function if it is passed, or inferred from the arguments.
+ *
+ * @param date - The date to be changed
+ * @param duration - The object with years, months, weeks, days, hours, minutes, and seconds to be added.
+ * @param options - An object with options
+ *
+ * @returns The new date with the seconds added
+ *
+ * @example
+ * // Add the following duration to 1 September 2014, 10:19:50
+ * const result = add(new Date(2014, 8, 1, 10, 19, 50), {
+ *   years: 2,
+ *   months: 9,
+ *   weeks: 1,
+ *   days: 7,
+ *   hours: 5,
+ *   minutes: 9,
+ *   seconds: 30,
+ * })
+ * //=> Thu Jun 15 2017 15:29:20
+ */
+function add(date, duration, options) {
+  const {
+    years = 0,
+    months = 0,
+    weeks = 0,
+    days = 0,
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+  } = duration;
+
+  // Add years and months
+  const _date = toDate(date, options?.in);
+  const dateWithMonths =
+    months || years ? addMonths(_date, months + years * 12) : _date;
+
+  // Add weeks and days
+  const dateWithDays =
+    days || weeks ? addDays(dateWithMonths, days + weeks * 7) : dateWithMonths;
+
+  // Add days, hours, minutes, and seconds
+  const minutesToAdd = minutes + hours * 60;
+  const secondsToAdd = seconds + minutesToAdd * 60;
+  const msToAdd = secondsToAdd * 1000;
+
+  return constructFrom(options?.in || date, +dateWithDays + msToAdd);
+}
+
+// Fallback for modularized imports:
+/* harmony default export */ const date_fns_add = ((/* unused pure expression or super */ null && (add)));
+
+;// CONCATENATED MODULE: ./node_modules/mustache/mustache.mjs
+/*!
+ * mustache.js - Logic-less {{mustache}} templates with JavaScript
+ * http://github.com/janl/mustache.js
+ */
+
+var objectToString = Object.prototype.toString;
+var isArray = Array.isArray || function isArrayPolyfill (object) {
+  return objectToString.call(object) === '[object Array]';
+};
+
+function isFunction (object) {
+  return typeof object === 'function';
+}
+
+/**
+ * More correct typeof string handling array
+ * which normally returns typeof 'object'
+ */
+function typeStr (obj) {
+  return isArray(obj) ? 'array' : typeof obj;
+}
+
+function escapeRegExp (string) {
+  return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&');
+}
+
+/**
+ * Null safe way of checking whether or not an object,
+ * including its prototype, has a given property
+ */
+function hasProperty (obj, propName) {
+  return obj != null && typeof obj === 'object' && (propName in obj);
+}
+
+/**
+ * Safe way of detecting whether or not the given thing is a primitive and
+ * whether it has the given property
+ */
+function primitiveHasOwnProperty (primitive, propName) {
+  return (
+    primitive != null
+    && typeof primitive !== 'object'
+    && primitive.hasOwnProperty
+    && primitive.hasOwnProperty(propName)
+  );
+}
+
+// Workaround for https://issues.apache.org/jira/browse/COUCHDB-577
+// See https://github.com/janl/mustache.js/issues/189
+var regExpTest = RegExp.prototype.test;
+function testRegExp (re, string) {
+  return regExpTest.call(re, string);
+}
+
+var nonSpaceRe = /\S/;
+function isWhitespace (string) {
+  return !testRegExp(nonSpaceRe, string);
+}
+
+var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function escapeHtml (string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+    return entityMap[s];
+  });
+}
+
+var whiteRe = /\s*/;
+var spaceRe = /\s+/;
+var equalsRe = /\s*=/;
+var curlyRe = /\s*\}/;
+var tagRe = /#|\^|\/|>|\{|&|=|!/;
+
+/**
+ * Breaks up the given `template` string into a tree of tokens. If the `tags`
+ * argument is given here it must be an array with two string values: the
+ * opening and closing tags used in the template (e.g. [ "<%", "%>" ]). Of
+ * course, the default is to use mustaches (i.e. mustache.tags).
+ *
+ * A token is an array with at least 4 elements. The first element is the
+ * mustache symbol that was used inside the tag, e.g. "#" or "&". If the tag
+ * did not contain a symbol (i.e. {{myValue}}) this element is "name". For
+ * all text that appears outside a symbol this element is "text".
+ *
+ * The second element of a token is its "value". For mustache tags this is
+ * whatever else was inside the tag besides the opening symbol. For text tokens
+ * this is the text itself.
+ *
+ * The third and fourth elements of the token are the start and end indices,
+ * respectively, of the token in the original template.
+ *
+ * Tokens that are the root node of a subtree contain two more elements: 1) an
+ * array of tokens in the subtree and 2) the index in the original template at
+ * which the closing tag for that section begins.
+ *
+ * Tokens for partials also contain two more elements: 1) a string value of
+ * indendation prior to that tag and 2) the index of that tag on that line -
+ * eg a value of 2 indicates the partial is the third tag on this line.
+ */
+function parseTemplate (template, tags) {
+  if (!template)
+    return [];
+  var lineHasNonSpace = false;
+  var sections = [];     // Stack to hold section tokens
+  var tokens = [];       // Buffer to hold the tokens
+  var spaces = [];       // Indices of whitespace tokens on the current line
+  var hasTag = false;    // Is there a {{tag}} on the current line?
+  var nonSpace = false;  // Is there a non-space char on the current line?
+  var indentation = '';  // Tracks indentation for tags that use it
+  var tagIndex = 0;      // Stores a count of number of tags encountered on a line
+
+  // Strips all whitespace tokens array for the current line
+  // if there was a {{#tag}} on it and otherwise only space.
+  function stripSpace () {
+    if (hasTag && !nonSpace) {
+      while (spaces.length)
+        delete tokens[spaces.pop()];
+    } else {
+      spaces = [];
+    }
+
+    hasTag = false;
+    nonSpace = false;
+  }
+
+  var openingTagRe, closingTagRe, closingCurlyRe;
+  function compileTags (tagsToCompile) {
+    if (typeof tagsToCompile === 'string')
+      tagsToCompile = tagsToCompile.split(spaceRe, 2);
+
+    if (!isArray(tagsToCompile) || tagsToCompile.length !== 2)
+      throw new Error('Invalid tags: ' + tagsToCompile);
+
+    openingTagRe = new RegExp(escapeRegExp(tagsToCompile[0]) + '\\s*');
+    closingTagRe = new RegExp('\\s*' + escapeRegExp(tagsToCompile[1]));
+    closingCurlyRe = new RegExp('\\s*' + escapeRegExp('}' + tagsToCompile[1]));
+  }
+
+  compileTags(tags || mustache.tags);
+
+  var scanner = new Scanner(template);
+
+  var start, type, value, chr, token, openSection;
+  while (!scanner.eos()) {
+    start = scanner.pos;
+
+    // Match any text between tags.
+    value = scanner.scanUntil(openingTagRe);
+
+    if (value) {
+      for (var i = 0, valueLength = value.length; i < valueLength; ++i) {
+        chr = value.charAt(i);
+
+        if (isWhitespace(chr)) {
+          spaces.push(tokens.length);
+          indentation += chr;
+        } else {
+          nonSpace = true;
+          lineHasNonSpace = true;
+          indentation += ' ';
+        }
+
+        tokens.push([ 'text', chr, start, start + 1 ]);
+        start += 1;
+
+        // Check for whitespace on the current line.
+        if (chr === '\n') {
+          stripSpace();
+          indentation = '';
+          tagIndex = 0;
+          lineHasNonSpace = false;
+        }
+      }
+    }
+
+    // Match the opening tag.
+    if (!scanner.scan(openingTagRe))
+      break;
+
+    hasTag = true;
+
+    // Get the tag type.
+    type = scanner.scan(tagRe) || 'name';
+    scanner.scan(whiteRe);
+
+    // Get the tag value.
+    if (type === '=') {
+      value = scanner.scanUntil(equalsRe);
+      scanner.scan(equalsRe);
+      scanner.scanUntil(closingTagRe);
+    } else if (type === '{') {
+      value = scanner.scanUntil(closingCurlyRe);
+      scanner.scan(curlyRe);
+      scanner.scanUntil(closingTagRe);
+      type = '&';
+    } else {
+      value = scanner.scanUntil(closingTagRe);
+    }
+
+    // Match the closing tag.
+    if (!scanner.scan(closingTagRe))
+      throw new Error('Unclosed tag at ' + scanner.pos);
+
+    if (type == '>') {
+      token = [ type, value, start, scanner.pos, indentation, tagIndex, lineHasNonSpace ];
+    } else {
+      token = [ type, value, start, scanner.pos ];
+    }
+    tagIndex++;
+    tokens.push(token);
+
+    if (type === '#' || type === '^') {
+      sections.push(token);
+    } else if (type === '/') {
+      // Check section nesting.
+      openSection = sections.pop();
+
+      if (!openSection)
+        throw new Error('Unopened section "' + value + '" at ' + start);
+
+      if (openSection[1] !== value)
+        throw new Error('Unclosed section "' + openSection[1] + '" at ' + start);
+    } else if (type === 'name' || type === '{' || type === '&') {
+      nonSpace = true;
+    } else if (type === '=') {
+      // Set the tags for the next time around.
+      compileTags(value);
+    }
+  }
+
+  stripSpace();
+
+  // Make sure there are no open sections when we're done.
+  openSection = sections.pop();
+
+  if (openSection)
+    throw new Error('Unclosed section "' + openSection[1] + '" at ' + scanner.pos);
+
+  return nestTokens(squashTokens(tokens));
+}
+
+/**
+ * Combines the values of consecutive text tokens in the given `tokens` array
+ * to a single token.
+ */
+function squashTokens (tokens) {
+  var squashedTokens = [];
+
+  var token, lastToken;
+  for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+    token = tokens[i];
+
+    if (token) {
+      if (token[0] === 'text' && lastToken && lastToken[0] === 'text') {
+        lastToken[1] += token[1];
+        lastToken[3] = token[3];
+      } else {
+        squashedTokens.push(token);
+        lastToken = token;
+      }
+    }
+  }
+
+  return squashedTokens;
+}
+
+/**
+ * Forms the given array of `tokens` into a nested tree structure where
+ * tokens that represent a section have two additional items: 1) an array of
+ * all tokens that appear in that section and 2) the index in the original
+ * template that represents the end of that section.
+ */
+function nestTokens (tokens) {
+  var nestedTokens = [];
+  var collector = nestedTokens;
+  var sections = [];
+
+  var token, section;
+  for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+    token = tokens[i];
+
+    switch (token[0]) {
+      case '#':
+      case '^':
+        collector.push(token);
+        sections.push(token);
+        collector = token[4] = [];
+        break;
+      case '/':
+        section = sections.pop();
+        section[5] = token[2];
+        collector = sections.length > 0 ? sections[sections.length - 1][4] : nestedTokens;
+        break;
+      default:
+        collector.push(token);
+    }
+  }
+
+  return nestedTokens;
+}
+
+/**
+ * A simple string scanner that is used by the template parser to find
+ * tokens in template strings.
+ */
+function Scanner (string) {
+  this.string = string;
+  this.tail = string;
+  this.pos = 0;
+}
+
+/**
+ * Returns `true` if the tail is empty (end of string).
+ */
+Scanner.prototype.eos = function eos () {
+  return this.tail === '';
+};
+
+/**
+ * Tries to match the given regular expression at the current position.
+ * Returns the matched text if it can match, the empty string otherwise.
+ */
+Scanner.prototype.scan = function scan (re) {
+  var match = this.tail.match(re);
+
+  if (!match || match.index !== 0)
+    return '';
+
+  var string = match[0];
+
+  this.tail = this.tail.substring(string.length);
+  this.pos += string.length;
+
+  return string;
+};
+
+/**
+ * Skips all text until the given regular expression can be matched. Returns
+ * the skipped string, which is the entire tail if no match can be made.
+ */
+Scanner.prototype.scanUntil = function scanUntil (re) {
+  var index = this.tail.search(re), match;
+
+  switch (index) {
+    case -1:
+      match = this.tail;
+      this.tail = '';
+      break;
+    case 0:
+      match = '';
+      break;
+    default:
+      match = this.tail.substring(0, index);
+      this.tail = this.tail.substring(index);
+  }
+
+  this.pos += match.length;
+
+  return match;
+};
+
+/**
+ * Represents a rendering context by wrapping a view object and
+ * maintaining a reference to the parent context.
+ */
+function Context (view, parentContext) {
+  this.view = view;
+  this.cache = { '.': this.view };
+  this.parent = parentContext;
+}
+
+/**
+ * Creates a new context using the given view with this context
+ * as the parent.
+ */
+Context.prototype.push = function push (view) {
+  return new Context(view, this);
+};
+
+/**
+ * Returns the value of the given name in this context, traversing
+ * up the context hierarchy if the value is absent in this context's view.
+ */
+Context.prototype.lookup = function lookup (name) {
+  var cache = this.cache;
+
+  var value;
+  if (cache.hasOwnProperty(name)) {
+    value = cache[name];
+  } else {
+    var context = this, intermediateValue, names, index, lookupHit = false;
+
+    while (context) {
+      if (name.indexOf('.') > 0) {
+        intermediateValue = context.view;
+        names = name.split('.');
+        index = 0;
+
+        /**
+         * Using the dot notion path in `name`, we descend through the
+         * nested objects.
+         *
+         * To be certain that the lookup has been successful, we have to
+         * check if the last object in the path actually has the property
+         * we are looking for. We store the result in `lookupHit`.
+         *
+         * This is specially necessary for when the value has been set to
+         * `undefined` and we want to avoid looking up parent contexts.
+         *
+         * In the case where dot notation is used, we consider the lookup
+         * to be successful even if the last "object" in the path is
+         * not actually an object but a primitive (e.g., a string, or an
+         * integer), because it is sometimes useful to access a property
+         * of an autoboxed primitive, such as the length of a string.
+         **/
+        while (intermediateValue != null && index < names.length) {
+          if (index === names.length - 1)
+            lookupHit = (
+              hasProperty(intermediateValue, names[index])
+              || primitiveHasOwnProperty(intermediateValue, names[index])
+            );
+
+          intermediateValue = intermediateValue[names[index++]];
+        }
+      } else {
+        intermediateValue = context.view[name];
+
+        /**
+         * Only checking against `hasProperty`, which always returns `false` if
+         * `context.view` is not an object. Deliberately omitting the check
+         * against `primitiveHasOwnProperty` if dot notation is not used.
+         *
+         * Consider this example:
+         * ```
+         * Mustache.render("The length of a football field is {{#length}}{{length}}{{/length}}.", {length: "100 yards"})
+         * ```
+         *
+         * If we were to check also against `primitiveHasOwnProperty`, as we do
+         * in the dot notation case, then render call would return:
+         *
+         * "The length of a football field is 9."
+         *
+         * rather than the expected:
+         *
+         * "The length of a football field is 100 yards."
+         **/
+        lookupHit = hasProperty(context.view, name);
+      }
+
+      if (lookupHit) {
+        value = intermediateValue;
+        break;
+      }
+
+      context = context.parent;
+    }
+
+    cache[name] = value;
+  }
+
+  if (isFunction(value))
+    value = value.call(this.view);
+
+  return value;
+};
+
+/**
+ * A Writer knows how to take a stream of tokens and render them to a
+ * string, given a context. It also maintains a cache of templates to
+ * avoid the need to parse the same template twice.
+ */
+function Writer () {
+  this.templateCache = {
+    _cache: {},
+    set: function set (key, value) {
+      this._cache[key] = value;
+    },
+    get: function get (key) {
+      return this._cache[key];
+    },
+    clear: function clear () {
+      this._cache = {};
+    }
+  };
+}
+
+/**
+ * Clears all cached templates in this writer.
+ */
+Writer.prototype.clearCache = function clearCache () {
+  if (typeof this.templateCache !== 'undefined') {
+    this.templateCache.clear();
+  }
+};
+
+/**
+ * Parses and caches the given `template` according to the given `tags` or
+ * `mustache.tags` if `tags` is omitted,  and returns the array of tokens
+ * that is generated from the parse.
+ */
+Writer.prototype.parse = function parse (template, tags) {
+  var cache = this.templateCache;
+  var cacheKey = template + ':' + (tags || mustache.tags).join(':');
+  var isCacheEnabled = typeof cache !== 'undefined';
+  var tokens = isCacheEnabled ? cache.get(cacheKey) : undefined;
+
+  if (tokens == undefined) {
+    tokens = parseTemplate(template, tags);
+    isCacheEnabled && cache.set(cacheKey, tokens);
+  }
+  return tokens;
+};
+
+/**
+ * High-level method that is used to render the given `template` with
+ * the given `view`.
+ *
+ * The optional `partials` argument may be an object that contains the
+ * names and templates of partials that are used in the template. It may
+ * also be a function that is used to load partial templates on the fly
+ * that takes a single argument: the name of the partial.
+ *
+ * If the optional `config` argument is given here, then it should be an
+ * object with a `tags` attribute or an `escape` attribute or both.
+ * If an array is passed, then it will be interpreted the same way as
+ * a `tags` attribute on a `config` object.
+ *
+ * The `tags` attribute of a `config` object must be an array with two
+ * string values: the opening and closing tags used in the template (e.g.
+ * [ "<%", "%>" ]). The default is to mustache.tags.
+ *
+ * The `escape` attribute of a `config` object must be a function which
+ * accepts a string as input and outputs a safely escaped string.
+ * If an `escape` function is not provided, then an HTML-safe string
+ * escaping function is used as the default.
+ */
+Writer.prototype.render = function render (template, view, partials, config) {
+  var tags = this.getConfigTags(config);
+  var tokens = this.parse(template, tags);
+  var context = (view instanceof Context) ? view : new Context(view, undefined);
+  return this.renderTokens(tokens, context, partials, template, config);
+};
+
+/**
+ * Low-level method that renders the given array of `tokens` using
+ * the given `context` and `partials`.
+ *
+ * Note: The `originalTemplate` is only ever used to extract the portion
+ * of the original template that was contained in a higher-order section.
+ * If the template doesn't use higher-order sections, this argument may
+ * be omitted.
+ */
+Writer.prototype.renderTokens = function renderTokens (tokens, context, partials, originalTemplate, config) {
+  var buffer = '';
+
+  var token, symbol, value;
+  for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+    value = undefined;
+    token = tokens[i];
+    symbol = token[0];
+
+    if (symbol === '#') value = this.renderSection(token, context, partials, originalTemplate, config);
+    else if (symbol === '^') value = this.renderInverted(token, context, partials, originalTemplate, config);
+    else if (symbol === '>') value = this.renderPartial(token, context, partials, config);
+    else if (symbol === '&') value = this.unescapedValue(token, context);
+    else if (symbol === 'name') value = this.escapedValue(token, context, config);
+    else if (symbol === 'text') value = this.rawValue(token);
+
+    if (value !== undefined)
+      buffer += value;
+  }
+
+  return buffer;
+};
+
+Writer.prototype.renderSection = function renderSection (token, context, partials, originalTemplate, config) {
+  var self = this;
+  var buffer = '';
+  var value = context.lookup(token[1]);
+
+  // This function is used to render an arbitrary template
+  // in the current context by higher-order sections.
+  function subRender (template) {
+    return self.render(template, context, partials, config);
+  }
+
+  if (!value) return;
+
+  if (isArray(value)) {
+    for (var j = 0, valueLength = value.length; j < valueLength; ++j) {
+      buffer += this.renderTokens(token[4], context.push(value[j]), partials, originalTemplate, config);
+    }
+  } else if (typeof value === 'object' || typeof value === 'string' || typeof value === 'number') {
+    buffer += this.renderTokens(token[4], context.push(value), partials, originalTemplate, config);
+  } else if (isFunction(value)) {
+    if (typeof originalTemplate !== 'string')
+      throw new Error('Cannot use higher-order sections without the original template');
+
+    // Extract the portion of the original template that the section contains.
+    value = value.call(context.view, originalTemplate.slice(token[3], token[5]), subRender);
+
+    if (value != null)
+      buffer += value;
+  } else {
+    buffer += this.renderTokens(token[4], context, partials, originalTemplate, config);
+  }
+  return buffer;
+};
+
+Writer.prototype.renderInverted = function renderInverted (token, context, partials, originalTemplate, config) {
+  var value = context.lookup(token[1]);
+
+  // Use JavaScript's definition of falsy. Include empty arrays.
+  // See https://github.com/janl/mustache.js/issues/186
+  if (!value || (isArray(value) && value.length === 0))
+    return this.renderTokens(token[4], context, partials, originalTemplate, config);
+};
+
+Writer.prototype.indentPartial = function indentPartial (partial, indentation, lineHasNonSpace) {
+  var filteredIndentation = indentation.replace(/[^ \t]/g, '');
+  var partialByNl = partial.split('\n');
+  for (var i = 0; i < partialByNl.length; i++) {
+    if (partialByNl[i].length && (i > 0 || !lineHasNonSpace)) {
+      partialByNl[i] = filteredIndentation + partialByNl[i];
+    }
+  }
+  return partialByNl.join('\n');
+};
+
+Writer.prototype.renderPartial = function renderPartial (token, context, partials, config) {
+  if (!partials) return;
+  var tags = this.getConfigTags(config);
+
+  var value = isFunction(partials) ? partials(token[1]) : partials[token[1]];
+  if (value != null) {
+    var lineHasNonSpace = token[6];
+    var tagIndex = token[5];
+    var indentation = token[4];
+    var indentedValue = value;
+    if (tagIndex == 0 && indentation) {
+      indentedValue = this.indentPartial(value, indentation, lineHasNonSpace);
+    }
+    var tokens = this.parse(indentedValue, tags);
+    return this.renderTokens(tokens, context, partials, indentedValue, config);
+  }
+};
+
+Writer.prototype.unescapedValue = function unescapedValue (token, context) {
+  var value = context.lookup(token[1]);
+  if (value != null)
+    return value;
+};
+
+Writer.prototype.escapedValue = function escapedValue (token, context, config) {
+  var escape = this.getConfigEscape(config) || mustache.escape;
+  var value = context.lookup(token[1]);
+  if (value != null)
+    return (typeof value === 'number' && escape === mustache.escape) ? String(value) : escape(value);
+};
+
+Writer.prototype.rawValue = function rawValue (token) {
+  return token[1];
+};
+
+Writer.prototype.getConfigTags = function getConfigTags (config) {
+  if (isArray(config)) {
+    return config;
+  }
+  else if (config && typeof config === 'object') {
+    return config.tags;
+  }
+  else {
+    return undefined;
+  }
+};
+
+Writer.prototype.getConfigEscape = function getConfigEscape (config) {
+  if (config && typeof config === 'object' && !isArray(config)) {
+    return config.escape;
+  }
+  else {
+    return undefined;
+  }
+};
+
+var mustache = {
+  name: 'mustache.js',
+  version: '4.2.0',
+  tags: [ '{{', '}}' ],
+  clearCache: undefined,
+  escape: undefined,
+  parse: undefined,
+  render: undefined,
+  Scanner: undefined,
+  Context: undefined,
+  Writer: undefined,
+  /**
+   * Allows a user to override the default caching strategy, by providing an
+   * object with set, get and clear methods. This can also be used to disable
+   * the cache by setting it to the literal `undefined`.
+   */
+  set templateCache (cache) {
+    defaultWriter.templateCache = cache;
+  },
+  /**
+   * Gets the default or overridden caching object from the default writer.
+   */
+  get templateCache () {
+    return defaultWriter.templateCache;
+  }
+};
+
+// All high-level mustache.* functions use this writer.
+var defaultWriter = new Writer();
+
+/**
+ * Clears all cached templates in the default writer.
+ */
+mustache.clearCache = function clearCache () {
+  return defaultWriter.clearCache();
+};
+
+/**
+ * Parses and caches the given template in the default writer and returns the
+ * array of tokens it contains. Doing this ahead of time avoids the need to
+ * parse templates on the fly as they are rendered.
+ */
+mustache.parse = function parse (template, tags) {
+  return defaultWriter.parse(template, tags);
+};
+
+/**
+ * Renders the `template` with the given `view`, `partials`, and `config`
+ * using the default writer.
+ */
+mustache.render = function render (template, view, partials, config) {
+  if (typeof template !== 'string') {
+    throw new TypeError('Invalid template! Template should be a "string" ' +
+                        'but "' + typeStr(template) + '" was given as the first ' +
+                        'argument for mustache#render(template, view, partials)');
+  }
+
+  return defaultWriter.render(template, view, partials, config);
+};
+
+// Export the escaping function so that the user may override it.
+// See https://github.com/janl/mustache.js/issues/244
+mustache.escape = escapeHtml;
+
+// Export these mainly for testing, but also for advanced usage.
+mustache.Scanner = Scanner;
+mustache.Context = Context;
+mustache.Writer = Writer;
+
+/* harmony default export */ const mustache_mustache = (mustache);
+
+;// CONCATENATED MODULE: ./dist/index.mjs
+
+
+
+
+
+
+
+//#region src/utils/lib/inputs.ts
+let INPUTS = /* @__PURE__ */ function(INPUTS$1) {
+	INPUTS$1["SELF_ASSIGN_CMD"] = "self_assign_cmd";
+	INPUTS$1["SELF_UNASSIGN_CMD"] = "self_unassign_cmd";
+	INPUTS$1["ASSIGN_USER_CMD"] = "assign_user_cmd";
+	INPUTS$1["UNASSIGN_USER_CMD"] = "unassign_user_cmd";
+	INPUTS$1["GITHUB_TOKEN"] = "github_token";
+	INPUTS$1["MAINTAINERS"] = "maintainers";
+	INPUTS$1["ENABLE_AUTO_SUGGESTION"] = "enable_auto_suggestion";
+	INPUTS$1["ALLOW_SELF_ASSIGN_AUTHOR"] = "allow_self_assign_author";
+	INPUTS$1["ASSIGNED_LABEL"] = "assigned_label";
+	INPUTS$1["REQUIRED_LABEL"] = "required_label";
+	INPUTS$1["PIN_LABEL"] = "pin_label";
+	INPUTS$1["DAYS_UNTIL_UNASSIGN"] = "days_until_unassign";
+	INPUTS$1["STALE_ASSIGNMENT_LABEL"] = "stale_assignment_label";
+	INPUTS$1["ASSIGNED_COMMENT"] = "assigned_comment";
+	INPUTS$1["ASSIGNED_COMMENT_NEWCOMER"] = "assigned_comment_newcomer";
+	INPUTS$1["UNASSIGNED_COMMENT"] = "unassigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT"] = "already_assigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT_PINNED"] = "already_assigned_comment_pinned";
+	INPUTS$1["ASSIGNMENT_SUGGESTION_COMMENT"] = "assignment_suggestion_comment";
+	INPUTS$1["BLOCK_ASSIGNMENT_COMMENT"] = "block_assignment_comment";
+	INPUTS$1["ENABLE_REMINDER"] = "enable_reminder";
+	INPUTS$1["REMINDER_DAYS"] = "reminder_days";
+	INPUTS$1["REMINDER_COMMENT"] = "reminder_comment";
+	INPUTS$1["MAX_ASSIGNMENTS"] = "max_assignments";
+	INPUTS$1["MAX_ASSIGNMENTS_MESSAGE"] = "max_assignments_message";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_LABELS"] = "max_overall_assignment_labels";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_COUNT"] = "max_overall_assignment_count";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_MESSAGE"] = "max_overall_assignment_message";
+	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
+	INPUTS$1["IGNORED_USERS"] = "ignored_users";
+	INPUTS$1["IGNORED_MESSAGE"] = "ignored_message";
+	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_COMMENT"] = "closed_issue_assignment_comment";
+	return INPUTS$1;
+}({});
+
+//#endregion
+//#region src/handlers/comment-handler.ts
+const MyOctokit$1 = Octokit.plugin(throttling);
+var CommentHandler = class {
+	constructor() {
+		this.context = github.context;
+		this.issue = this.context.payload.issue;
+		this.comment = this.context.payload.comment;
+		this.token = core.getInput(INPUTS.GITHUB_TOKEN);
+		this.octokit = new MyOctokit$1({
+			auth: this.token,
+			throttle: {
+				onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`Request quota exhausted for request ${options.method} ${options.url}`);
+					if (retryCount < 1) {
+						core.warning(`Retrying after ${retryAfter} seconds!`);
+						return true;
+					}
+				},
+				onSecondaryRateLimit: (_retryAfter, options) => {
+					core.warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+				}
+			}
+		});
+	}
+	async handle_issue_comment() {
+		core.info(`🤖 Checking commands in the issue (#${this.issue?.number}) comments"`);
+		if (!this.token) return core.setFailed(`🚫 Missing required input "token", received "${this.token}"`);
+		const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
+		if (requiredLabel) {
+			if (!this.issue?.labels?.find((label) => label.name === requiredLabel)) return core.setFailed(`🚫 Missing required label: "${core.getInput("required_label")}" not found in issue #${this.issue?.number}.`);
+		}
+		const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
+		const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+		const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
+		const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const enableAutoSuggestion = core.getBooleanInput(INPUTS.ENABLE_AUTO_SUGGESTION);
+		const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
+		const maintainers = maintainersInput.split(",");
+		const body = (this.context.payload.comment?.body).replace(/^\\/, "/").toLowerCase();
+		if (body.trim().startsWith(">") || maintainers.includes(this.comment?.user?.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+			core.info(`🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`);
+			return;
+		}
+		if (enableAutoSuggestion && this._contribution_phrases().some((phrase) => body.toLowerCase().includes(phrase.toLowerCase()))) {
+			core.info(`🤖 Comment indicates interest in contribution: ${body}`);
+			return this.$_handle_assignment_interest();
+		}
+		if (body === selfAssignCmd || body.includes(selfAssignCmd)) return this.$_handle_self_assignment();
+		if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) return this.$_handle_self_unassignment();
+		if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+			if (!maintainersInput) return core.info(`🤖 Ignoring maintainer command because the "maintainers" input is empty`);
+			if (!(await this._resolve_maintainers(maintainersInput)).includes(this.comment?.user?.login)) return core.info(`🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`);
+			if (body.includes(assignCommenterCmd)) return this.$_handle_user_assignment(assignCommenterCmd);
+			return this.$_handle_user_unassignment(unassignCommenterCmd);
+		}
+		return core.info(`🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`);
+	}
+	async _resolve_maintainers(maintainersInput) {
+		const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
+		const resolvedMaintainers = /* @__PURE__ */ new Set();
+		for (const maintainer of maintainers) if (maintainer.startsWith("@") && maintainer.includes("/")) {
+			const [org, team] = maintainer.substring(1).split("/");
+			const members = await this._get_team_members(org, team);
+			for (const m of members) resolvedMaintainers.add(m);
+		} else resolvedMaintainers.add(maintainer);
+		return Array.from(resolvedMaintainers);
+	}
+	async _get_team_members(org, team_slug) {
+		try {
+			return (await this.octokit.request("GET /orgs/{org}/teams/{team_slug}/members", {
+				org,
+				team_slug
+			})).data.map((m) => m.login);
+		} catch (error) {
+			core.warning(`Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`);
+			return [];
+		}
+	}
+	_is_issue_pinned() {
+		const pinLabel = core.getInput(INPUTS.PIN_LABEL);
+		return this.issue?.labels?.some((label) => label.name === pinLabel) || false;
+	}
+	async $_handle_assignment_interest() {
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+			const commentTemplate = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		return this._create_comment(INPUTS.ASSIGNMENT_SUGGESTION_COMMENT, {
+			handle: this.comment?.user?.login,
+			trigger: core.getInput(INPUTS.SELF_ASSIGN_CMD)
+		});
+	}
+	async $_handle_self_assignment() {
+		core.info(`🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		if (this.issue?.state === "closed") {
+			await this._create_comment(INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`[CLOSED ISSUE] User @${this.comment?.user?.login} tried to assign themselves to closed issue #${this.issue?.number}`);
+		}
+		const allowSelfAssignAuthor = core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== "false";
+		const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+		if (!allowSelfAssignAuthor && isIssueAuthor) {
+			await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`);
+		}
+		const ignoredUsersInput = core.getInput(INPUTS.IGNORED_USERS);
+		if (ignoredUsersInput) {
+			const ignoredUsers = ignoredUsersInput.split(",").map((u) => u.trim()).filter(Boolean);
+			const userHandle$1 = this.comment?.user?.login;
+			if (ignoredUsers.includes(userHandle$1)) {
+				await this._create_comment(INPUTS.IGNORED_MESSAGE, { handle: userHandle$1 });
+				core.setOutput("assigned", "no");
+				return core.info(`🤖 User @${userHandle$1} is in the ignored users list and cannot self-assign issue #${this.issue?.number}`);
+			}
+		}
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		const blockAssignment = core.getInput("block_assignment");
+		const comments = await this.octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
+		const userHandle = this.comment?.user?.login;
+		const wasUnassigned = comments.data.some((comment) => {
+			const hasManualUnassign = comment.body?.includes(`${unassignCmd} @${userHandle}`);
+			const hasAutoUnassign = comment.body?.includes(mustache_mustache.render(unassignedComment, { handle: userHandle }));
+			return hasManualUnassign || hasAutoUnassign;
+		});
+		if (blockAssignment === "true" && wasUnassigned) {
+			await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`);
+		}
+		if (this.issue?.assignee) {
+			const commentTemplate$1 = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate$1, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		const overallLabelsRaw = core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS);
+		const overallCountLimit = parseInt(core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10);
+		if (overallLabelsRaw && overallCountLimit > 0) {
+			const currentIssueLabels = this.issue?.labels?.map((l) => typeof l === "string" ? l : l.name) || [];
+			const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+			const matchingLabels = currentIssueLabels.filter((label) => trackedLabels.includes(label));
+			if (matchingLabels.length > 0) {
+				const labelCounts = await this._get_assignment_count_per_label(overallLabelsRaw);
+				for (const label of matchingLabels) {
+					const count = labelCounts.get(label) || 0;
+					if (count >= overallCountLimit) {
+						await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
+							handle: this.comment?.user?.login,
+							max_overall_assignment_count: overallCountLimit.toString(),
+							label
+						});
+						core.setOutput("assigned", "no");
+						return core.info(`🤖 User @${this.comment?.user?.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`);
+					}
+				}
+			}
+		}
+		const maxAssignments = parseInt(core.getInput(INPUTS.MAX_ASSIGNMENTS) || "3", 10);
+		if (await this._get_assignment_count() >= maxAssignments) {
+			await this._create_comment(INPUTS.MAX_ASSIGNMENTS_MESSAGE, {
+				handle: this.comment?.user?.login,
+				max_assignments: maxAssignments.toString()
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} has reached the maximum number of assignments (${maxAssignments})`);
+		}
+		core.info(`🤖 Assigning @${this.comment?.user?.login} to issue #${this.issue?.number}`);
+		core.info(`🤖 Adding comment to issue #${this.issue?.number}`);
+		const isNewcomer = await this._is_newcomer(this.comment?.user?.login);
+		const commentTemplate = isNewcomer ? INPUTS.ASSIGNED_COMMENT_NEWCOMER : INPUTS.ASSIGNED_COMMENT;
+		core.info(`🤖 User @${this.comment?.user?.login} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		await Promise.all([this._add_assignee(), this._create_comment(commentTemplate, {
+			total_days: daysUntilUnassign,
+			unassigned_date: format(add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }), "dd LLLL y"),
+			handle: this.comment?.user?.login,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		})]);
+		core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+		return core.setOutput("assigned", "yes");
+	}
+	async $_handle_self_unassignment() {
+		core.info(`🤖 Starting issue #${this.issue?.number} unassignment for user @${this.issue?.assignee?.login} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		const commenterLogin = this.comment?.user?.login;
+		const assigneeLogin = this.issue?.assignee?.login;
+		const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+		const rawBody = this.context.payload.comment?.body;
+		const idx = rawBody.replace(/^\\/, "/").toLowerCase().indexOf(selfUnassignCmd);
+		let targetUsername = null;
+		if (idx !== -1) {
+			const userHandleMatch = rawBody.slice(idx + selfUnassignCmd.length).trim().match(/@([a-zA-Z0-9-]{1,39})/i);
+			if (userHandleMatch?.[1]) targetUsername = userHandleMatch[1];
+		}
+		if (targetUsername && targetUsername.toLowerCase() !== commenterLogin?.toLowerCase()) {
+			core.setOutput("unassigned", "no");
+			core.setOutput("unassigned_issues", []);
+			return core.info(`🤖 User @${commenterLogin} cannot unassign @${targetUsername} using self-unassign command. Use maintainer commands instead.`);
+		}
+		if (assigneeLogin === commenterLogin) {
+			await Promise.all([this._remove_assignee(), this._create_comment(INPUTS.UNASSIGNED_COMMENT, {
+				handle: this.comment?.user?.login,
+				pin_label: core.getInput(INPUTS.PIN_LABEL)
+			})]);
+			core.info(`🤖 Done issue unassignment!`);
+			core.setOutput("unassigned", "yes");
+			core.setOutput("unassigned_issues", [this.issue?.number]);
+			return;
+		}
+		core.setOutput("unassigned", "no");
+		core.setOutput("unassigned_issues", []);
+		return core.info(`🤖 Commenter is different from the assignee, ignoring...`);
+	}
+	async $_handle_user_assignment(input) {
+		core.info(`Starting issue assignment to user`);
+		const idx = this.comment?.body.indexOf(input);
+		if (idx !== -1) {
+			const userHandleMatch = (this.comment?.body?.slice(idx + input.length).trim()).match(/@([a-zA-Z0-9-]{1,39})/);
+			if (userHandleMatch?.[1]) {
+				const userHandle = userHandleMatch[1];
+				core.info(`🤖 Assigning @${userHandle} to issue #${this.issue?.number}`);
+				const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+				const isNewcomer = await this._is_newcomer(userHandle);
+				const commentTemplate = isNewcomer ? INPUTS.ASSIGNED_COMMENT_NEWCOMER : INPUTS.ASSIGNED_COMMENT;
+				core.info(`🤖 User @${userHandle} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+				await Promise.all([
+					this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+						owner: this.context.repo.owner,
+						repo: this.context.repo.repo,
+						issue_number: Number(this.issue?.number),
+						assignees: [userHandle.trim()],
+						headers: { "X-GitHub-Api-Version": "2022-11-28" }
+					}),
+					this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+						owner: this.context.repo.owner,
+						repo: this.context.repo.repo,
+						issue_number: Number(this.issue?.number),
+						labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+						headers: { "X-GitHub-Api-Version": "2022-11-28" }
+					}),
+					this._create_comment(commentTemplate, {
+						total_days: daysUntilUnassign,
+						unassigned_date: format(add(/* @__PURE__ */ new Date(), { days: daysUntilUnassign }), "dd LLLL y"),
+						handle: userHandle,
+						pin_label: core.getInput(INPUTS.PIN_LABEL)
+					})
+				]);
+				core.info(`🤖 Issue #${this.issue?.number} assigned!`);
+				return core.setOutput("assigned", "yes");
+			} else {
+				core.info(`No valid user handle found after /assign command`);
+				return core.setOutput("assigned", "no");
+			}
+		}
+	}
+	async $_handle_user_unassignment(input) {
+		core.info(`Starting issue unassignment to user`);
+		const idx = this.comment?.body.indexOf(input);
+		if (idx !== -1) {
+			const userHandleMatch = (this.comment?.body?.slice(idx + input.length).trim()).match(/@([a-zA-Z0-9-]{1,39})/);
+			if (userHandleMatch?.[1]) {
+				const userHandle = userHandleMatch[1];
+				if (this.issue?.assignee?.login === userHandle) {
+					await this._remove_assignee();
+					core.setOutput("unassigned", "yes");
+					core.setOutput("unassigned_issues", [this.issue?.number]);
+					return core.info(`🤖 User @${userHandle} is unassigned from the issue #${this.issue?.number}`);
+				}
+				core.setOutput("unassigned", "no");
+				core.setOutput("unassigned_issues", []);
+				return core.info(`🤖 User @${userHandle} is not assigned to the issue #${this.issue?.number}`);
+			} else {
+				core.setOutput("unassigned", "no");
+				core.setOutput("unassigned_issues", []);
+				return core.info(`No valid user handle found after /assign command`);
+			}
+		}
+	}
+	_add_assignee() {
+		return Promise.all([this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			assignees: [this.comment?.user.login],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		}), this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			labels: [core.getInput(INPUTS.ASSIGNED_LABEL)],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})]);
+	}
+	_remove_assignee() {
+		return Promise.allSettled([
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				assignees: [this.issue?.assignee?.login],
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: core.getInput(INPUTS.ASSIGNED_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: core.getInput(INPUTS.PIN_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(this.issue?.number),
+				name: "🔔 reminder-sent",
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})
+		]);
+	}
+	//! this should calculate how many times is left before the current
+	//! assignee get unassign by the action
+	_create_comment(input, options) {
+		const body = mustache_mustache.render(core.getInput(input), options);
+		return this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			body,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+	}
+	async _get_assignment_count() {
+		const { owner, repo } = this.context.repo;
+		return (await this.octokit.request("GET /repos/{owner}/{repo}/issues", {
+			owner,
+			repo,
+			assignee: this.comment?.user?.login,
+			state: "open",
+			per_page: 100,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})).data.length;
+	}
+	/**
+	* Count issues (open or closed) assigned to the current commenter for each label.
+	* `labelsRaw` is a comma-separated list of label names.
+	* Returns a Map of label -> count of issues with that label.
+	*/
+	async _get_assignment_count_per_label(labelsRaw) {
+		const { owner, repo } = this.context.repo;
+		const labels = labelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+		const labelCounts = /* @__PURE__ */ new Map();
+		if (labels.length === 0) return labelCounts;
+		for (const label of labels) {
+			const issues = await this.octokit.request("GET /repos/{owner}/{repo}/issues", {
+				owner,
+				repo,
+				assignee: this.comment?.user?.login,
+				labels: label,
+				state: "all",
+				per_page: 100,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			});
+			labelCounts.set(label, issues.data.length);
+		}
+		return labelCounts;
+	}
+	/**
+	* Check if a user is a newcomer (has never opened a PR in this repo)
+	*/
+	async _is_newcomer(username) {
+		const { owner, repo } = this.context.repo;
+		try {
+			const query = [
+				`repo:${owner}/${repo}`,
+				"is:pr",
+				`author:${username}`
+			].join(" ");
+			return (await this.octokit.request("GET /search/issues", {
+				q: query,
+				per_page: 1,
+				advanced_search: true,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})).data.total_count === 0;
+		} catch (error) {
+			core.warning(`Failed to check PR history for @${username}: ${error}`);
+			return false;
+		}
+	}
+	_contribution_phrases() {
+		return [
+			"asssign-me",
+			"Assign this issue to me",
+			"Assign it to me",
+			"Assign to me",
+			"Assign me",
+			"Assign me this issue",
+			"Assign this for me",
+			"Available to work on",
+			"Can I be assigned to this issue",
+			"can I kindly work on this issue",
+			"Can I take on this issue",
+			"Can I take this issue",
+			"Can I take up this issue",
+			"Can I work on it",
+			"Could I get assigned",
+			"I'd like to be assigned to",
+			"I'm keen to have a go",
+			"I am here to do a university assignment",
+			"I am interested in taking on this issue",
+			"I am interested in the issue",
+			"I am very interested in this issue",
+			"I hope to contribute to this issue",
+			"I would like to work on this issue",
+			"Interested to work",
+			"is this free to take",
+			"May I do this feature",
+			"May I take it",
+			"May I work on this issue",
+			"Please assign",
+			"Still open for contribution",
+			"Want to take this issue",
+			"Want to contribute",
+			"Would be happy to pick this up",
+			"Would like to work on this",
+			"Would like to contribute",
+			"Would love to work on this issue"
+		];
+	}
+};
+
+//#endregion
+//#region src/utils/helpers/common.ts
+/**
+* Utility function to split array into chunks
+* @param array - The array to split
+* @param chunkSize - The size of each chunk
+* @returns An array of arrays
+*/
+function chunkArray(array, chunkSize) {
+	const chunks = [];
+	for (let i = 0; i < array.length; i += chunkSize) chunks.push(array.slice(i, i + chunkSize));
+	return chunks;
+}
+/**
+* Utility function to calculate days between dates
+* @param start - The start date
+* @param end - The end date
+* @returns The number of days between the two dates
+*/
+function getDaysBetween(start, end) {
+	const diffTime = Math.abs(end.getTime() - start.getTime());
+	return Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
+}
+
+//#endregion
+//#region src/handlers/schedule-handler.ts
+const MyOctokit = Octokit.plugin(throttling);
+var ScheduleHandler = class {
+	constructor() {
+		this.context = github.context;
+		this.token = core.getInput(INPUTS.GITHUB_TOKEN, { required: true });
+		this.assignedLabel = core.getInput(INPUTS.ASSIGNED_LABEL);
+		this.exemptLabel = core.getInput(INPUTS.PIN_LABEL);
+		this.octokit = new MyOctokit({
+			auth: this.token,
+			throttle: {
+				onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`⚠️ Request quota exhausted for request ${options.method} ${options.url} ⚠️`);
+					if (retryCount < 1) {
+						core.warning(`⚠️ Retrying after ${retryAfter} seconds! ⚠️`);
+						return true;
+					}
+					return false;
+				},
+				onSecondaryRateLimit: (retryAfter, options, _octokit, retryCount) => {
+					core.warning(`⚠️ SecondaryRateLimit detected for request ${options.method} ${options.url} ⚠️`);
+					if (retryCount < 2) {
+						core.warning(`⚠️ Secondary rate limit hit. Retrying after ${retryAfter} seconds! ⚠️`);
+						return true;
+					}
+					return false;
+				}
+			}
+		});
+	}
+	async handle_unassignments() {
+		const { unassignIssues, reminderIssues } = await this._get_assigned_issues();
+		let processedUnassignments = [];
+		let processedReminders = [];
+		if (unassignIssues.length > 0) processedUnassignments = await this._process_unassignments(unassignIssues);
+		if (core.getInput(INPUTS.ENABLE_REMINDER) !== "true") {
+			await this._generate_summary(processedUnassignments, processedReminders);
+			return;
+		}
+		if (reminderIssues.length > 0) processedReminders = await this._process_reminders(reminderIssues);
+		await this._generate_summary(processedUnassignments, processedReminders);
+	}
+	async _get_assigned_issues() {
+		const { owner, repo } = this.context.repo;
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		let reminderDays;
+		const reminderDaysInput = core.getInput(INPUTS.REMINDER_DAYS);
+		if (reminderDaysInput === "auto") reminderDays = Math.floor(daysUntilUnassign / 2);
+		else {
+			reminderDays = parseInt(reminderDaysInput, 10);
+			if (Number.isNaN(reminderDays)) reminderDays = Math.floor(daysUntilUnassign / 2);
+		}
+		const { data: { items: issues } } = await this.octokit.request("GET /search/issues", {
+			q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
+			per_page: 100,
+			advanced_search: true,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		const unassignIssues = [];
+		const reminderIssues = [];
+		const chunks = chunkArray(issues, 10);
+		for (let i = 0; i < chunks.length; i++) {
+			const results = chunks[i].map((issue) => ({
+				issue,
+				lastActivityDate: new Date(issue.updated_at),
+				daysSinceActivity: getDaysBetween(new Date(issue.updated_at), /* @__PURE__ */ new Date())
+			}));
+			for (const result of results.filter(Boolean)) {
+				const hasReminderLabel = result.issue?.labels?.some((label) => label?.name === "🔔 reminder-sent");
+				let shouldUnassign = result.daysSinceActivity >= daysUntilUnassign;
+				if (hasReminderLabel) shouldUnassign = shouldUnassign || result.daysSinceActivity >= daysUntilUnassign - reminderDays;
+				if (shouldUnassign) {
+					unassignIssues.push({
+						...result,
+						hasReminderLabel
+					});
+					continue;
+				}
+				if (result.daysSinceActivity >= reminderDays) {
+					if (!hasReminderLabel) reminderIssues.push({
+						...result,
+						hasReminderLabel
+					});
+				}
+			}
+		}
+		core.info(`📋 Found ${unassignIssues.length} issues to unassign`);
+		core.info(`🔔 Found ${reminderIssues.length} issues to send reminders for`);
+		return {
+			unassignIssues,
+			reminderIssues
+		};
+	}
+	async _process_unassignments(arr) {
+		const processedResults = [];
+		const unassignedIssueNumbers = [];
+		const chunks = chunkArray(arr, 5);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			const results = await Promise.allSettled(chunk.map(async ({ issue, ...rest }) => {
+				try {
+					await this._unassign_issue(issue);
+					return {
+						issue,
+						...rest
+					};
+				} catch (_err) {
+					return {
+						issue,
+						...rest
+					};
+				}
+			}));
+			processedResults.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value));
+			unassignedIssueNumbers.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value.issue.number));
+			if (i < chunks.length - 1) await new Promise((resolve) => setTimeout(resolve, 1e3));
+		}
+		core.setOutput("unassigned_issues", unassignedIssueNumbers);
+		return processedResults;
+	}
+	async _process_reminders(arr) {
+		const processedResults = [];
+		const chunks = chunkArray(arr, 5);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			const results = await Promise.allSettled(chunk.map(async ({ issue, daysSinceActivity, ...rest }) => {
+				try {
+					await this._send_reminder_for_issue(issue, daysSinceActivity);
+					return {
+						issue,
+						daysSinceActivity,
+						...rest
+					};
+				} catch (_err) {
+					return {
+						issue,
+						daysSinceActivity,
+						...rest
+					};
+				}
+			}));
+			processedResults.push(...results.filter((r) => r.status === "fulfilled").map((r) => r.value));
+		}
+		return processedResults;
+	}
+	async _unassign_issue(issue) {
+		if (!issue.assignee) {
+			core.warning(`⚠️ Issue #${issue.number} has no assignee, skipping...`);
+			return;
+		}
+		const body = mustache_mustache.render(core.getInput(INPUTS.UNASSIGNED_COMMENT), {
+			handle: issue.assignee.login,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		});
+		return Promise.allSettled([
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				assignees: [issue.assignee.login],
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				name: this.assignedLabel,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(issue?.number),
+				name: core.getInput(INPUTS.PIN_LABEL),
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: Number(issue?.number),
+				name: "🔔 reminder-sent",
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			}),
+			this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+				owner: this.context.repo.owner,
+				repo: this.context.repo.repo,
+				issue_number: issue.number,
+				body,
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})
+		]);
+	}
+	async _send_reminder_for_issue(issue, daysSinceActivity) {
+		const totalDays = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		const daysRemaining = Math.max(0, totalDays - daysSinceActivity);
+		const body = mustache_mustache.render(core.getInput(INPUTS.REMINDER_COMMENT), {
+			handle: issue.assignee?.login,
+			days_remaining: daysRemaining,
+			pin_label: core.getInput(INPUTS.PIN_LABEL)
+		});
+		return Promise.all([this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(issue?.number),
+			labels: ["🔔 reminder-sent"],
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		}), this.octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(issue?.number),
+			body,
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		})]);
+	}
+	async _generate_summary(processedUnassignments, processedReminders) {
+		if (processedUnassignments.length === 0 && processedReminders.length === 0) {
+			core.info("✅ No issues to summarize.");
+			return;
+		}
+		const unassignedTable = processedUnassignments.map(({ issue, daysSinceActivity }) => ({
+			Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+			Assignee: issue.assignee?.login ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
+			"Days Since Activity": `${daysSinceActivity || "N/A"}`,
+			Status: "Unassigned"
+		}));
+		const reminderTable = processedReminders.map(({ issue, daysSinceActivity }) => ({
+			Issue: `[#${issue.number}](https://github.com/${this.context.repo.owner}/${this.context.repo.repo}/issues/${issue.number})`,
+			Assignee: issue.assignee?.login ? `[@${issue.assignee.login}](https://github.com/${issue.assignee.login})` : "Unassigned",
+			"Days Since Activity": `${daysSinceActivity || "N/A"}`,
+			Status: "Reminder Sent"
+		}));
+		const summary = [
+			"## 📋 Summary of Processed Issues",
+			"",
+			`**Total Issues Processed:** ${processedUnassignments.length + processedReminders.length}`,
+			`**Unassigned:** ${processedUnassignments.length} | **Reminders Sent:** ${processedReminders.length}`,
+			"",
+			"### Unassigned Issues",
+			"",
+			unassignedTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|\n${unassignedTable.map((row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`).join("\n")}` : "No unassigned issues found.",
+			"",
+			"### Reminder Sent Issues",
+			"",
+			reminderTable.length > 0 ? `| Issue | Assignee | Days Since Activity | Status |
+|-------|----------|--------------------|--------|\n${reminderTable.map((row) => `| ${row.Issue} | ${row.Assignee} | ${row["Days Since Activity"]} | ${row.Status} |`).join("\n")}` : "No reminder sent issues found.",
+			""
+		];
+		core.summary.addRaw(summary.join("\n"));
+		await core.summary.write();
+	}
+};
+
+//#endregion
+//#region src/index.ts
+(async () => {
+	const event = github.context.eventName;
+>>>>>>>> edge:dist/index.mjs
 	try {
 		if (event === "issue_comment") await new CommentHandler().handle_issue_comment();
 		else if (event === "workflow_dispatch" || event === "schedule") await new ScheduleHandler().handle_unassignments();
 		else return;
 	} catch (error) {
+<<<<<<<< HEAD:dist/index.cjs
 		if (error instanceof Error) return _actions_core.setFailed(error.message);
 	}
 })();
+========
+		if (error instanceof Error) return core.setFailed(error.message);
+	}
+})();
+
+//#endregion
+>>>>>>>> edge:dist/index.mjs
 
 //#endregion
 module.exports = __webpack_exports__;

@@ -10,73 +10,24 @@ on:
   workflow_call:
 
 jobs:
-  test:
-    name: Test application
+  ci:
+    name: Lint, Test & Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: '☁️ checkout repository'
         uses: actions/checkout@v4
 
-      - name: '🔧 setup node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: '🔧 install npm@latest'
-        run: npm i -g npm@latest
+      - name: '🔧 setup bun'
+        uses: oven-sh/setup-bun@v2
 
       - name: '📦 install dependencies'
-        uses: bahmutov/npm-install@v1
+        run: bun install
 
-      - name: '🔍 run tests'
-        run: npm run test
+      - name: '🔍 run lint, test & build check'
+        run: bun run ci
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  lint:
-    name: Code standards
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: '☁️ checkout repository'
-        uses: actions/checkout@v4
-
-      - name: '🔧 setup node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: '🔧 install npm@latest'
-        run: npm i -g npm@latest
-
-      - name: '📦 install dependencies'
-        uses: bahmutov/npm-install@v1
-
-      - name: '🔍 lint code'
-        run: npm run lint
-
-  test-build:
-    name: Test build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: '☁️ checkout repository'
-        uses: actions/checkout@v4
-
-      - name: '🔧 setup node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: '🔧 install npm@latest'
-        run: npm i -g npm@latest
-
-      - name: '📦 install dependencies'
-        uses: bahmutov/npm-install@v1
-
-      - name: '🔍 run tests'
-        run: npm run tsc:build

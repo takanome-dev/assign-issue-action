@@ -2,6 +2,14 @@
 
 <p align="center"><a href="https://github.com/takanome-dev/assign-issue-action"><img alt="Licence Badge" src="https://img.shields.io/github/license/takanome-dev/assign-issue-action?color=%2330C151"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="Release Badge" src="https://img.shields.io/github/release/takanome-dev/assign-issue-action?color=%2330C151"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/development.yml/badge.svg"></a> <a href="https://github.com/takanome-dev/assign-issue-action"><img alt="GitHub Actions status" src="https://github.com/takanome-dev/assign-issue-action/actions/workflows/codeql-analysis.yml/badge.svg"></a> <a href="https://codecov.io/gh/takanome-dev/assign-issue-action"><img src="https://codecov.io/gh/takanome-dev/assign-issue-action/branch/beta/graph/badge.svg?token=MX3SB0GFB3" /></a></p>
 
+<p align="center">
+  <img src="public/og.png" alt="Assign Issue Action" width="1200" />
+</p>
+
+<p align="center">
+  <strong>🎯 <a href="https://action.takanomedev.com/">Generate your workflow file online</a></strong>
+</p>
+
 ---
 
 This action simplifies issue management for maintainers and contributors, making collaboration more efficient.
@@ -75,7 +83,7 @@ Various inputs are defined in action.yml to let you configure the action:
 | `block_assignment`                | Whether to block self-assignment after a user was previously unassigned.                                                                                                                                    | `true`                                                                           |
 | `block_assignment_comment`        | The comment posted when a user tries to re-assign themselves after being unassigned.                                                                                                                        | Customizable message explaining that a maintainer needs to approve reassignment. |
 | `enable_reminder`                 | Whether to send a reminder before automatic unassignment occurs.                                                                                                                                            | `true`                                                                           |
-| `reminder_days`                   | How many days before unassignment to send a reminder. Set to 'auto' to calculate halfway point (days_until_unassign / 2)                                                                                    | `auto`                                                                           |
+| `reminder_days`                   | How many days after assignment the reminder should be sent. Set to 'auto' to calculate halfway point (days_until_unassign / 2)                                                                              | `auto`                                                                           |
 | `reminder_comment`                | The comment posted as a reminder before automatic unassignment.                                                                                                                                             | Customizable message warning about upcoming unassignment.                        |
 | `max_assignments`                 | The maximum number of issues a user can be assigned to at once.                                                                                                                                             | `3`                                                                              |
 | `max_assignments_message`         | The message posted when a user has reached their maximum assignments.                                                                                                                                       | Customizable message explaining the limit and options for managing assignments.  |
@@ -83,6 +91,8 @@ Various inputs are defined in action.yml to let you configure the action:
 | `max_overall_assignment_count`    | The maximum number of issues a user can be assigned for each label in `max_overall_assignment_labels`. Each label has its own independent limit.                                                            | `2`                                                                              |
 | `max_overall_assignment_message`  | The message posted when a user has reached the per-label assignment limit.                                                                                                                                  | Customizable message encouraging progression to more advanced issues.            |
 | `self_assign_author_blocked_comment` | The message posted when an issue author tries to self-assign their own issue but `allow_self_assign_author` is `false`.                                                                                  | Customizable message explaining maintainer approval is needed.                   |
+| `ignored_users`                   | A comma-separated list of usernames that are ignored from using `/assign-me`. These users will not be able to self-assign issues.                                                                          | `''`                                                                             |
+| `ignored_message`                 | The message posted when an ignored user tries to use `/assign-me`.                                                                                                                                          | Customizable message explaining they cannot self-assign and to contact maintainers. |
 
 ## Outputs
 
