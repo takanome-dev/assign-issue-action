@@ -57,6 +57,20 @@ export class SelfAssignCommand implements Command {
           { handle: username },
         )
       } else if (validation.reason?.includes('already assigned')) {
+        const currentAssignee = issue?.assignee?.login
+
+        // If the user trying to assign is the current assignee, stay silent (issue #405)
+        if (currentAssignee === username) {
+          core.info(
+            `🤖 User @${username} is already assigned to issue #${issue?.number}, staying silent`,
+          )
+          core.setOutput('assigned', 'no')
+          return {
+            success: true,
+            message: `User @${username} is already assigned to issue #${issue?.number}`,
+          }
+        }
+
         const isPinned = validator.isIssuePinned({
           labels: issue?.labels,
           number: Number(issue?.number),
@@ -92,7 +106,7 @@ export class SelfAssignCommand implements Command {
               total_days: String(config.daysUntilUnassign),
               days_remaining: daysRemaining,
               handle: username,
-              assignee: issue?.assignee?.login,
+              assignee: currentAssignee,
             },
           )
         } else {
