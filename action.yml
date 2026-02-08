@@ -126,7 +126,7 @@ inputs:
       Hi @{{ handle }}, this issue is currently assigned to @{{ assignee }}.
 
       > [!NOTE]
-      > If no progress is made within **{{ total_days }} days**, the issue will be automatically unassigned.
+      > If no progress is made within **{{ days_remaining }} days**, the issue will be automatically unassigned.
 
       <details>
       <summary>Options for contributors</summary>

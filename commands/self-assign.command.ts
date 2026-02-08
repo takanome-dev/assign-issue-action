@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { add, format } from 'date-fns'
+import { add, format, differenceInDays } from 'date-fns'
 import type {
   Command,
   CommandContext,
@@ -74,11 +74,23 @@ export class SelfAssignCommand implements Command {
         )
 
         if (!hasRecentComment) {
+          // Calculate remaining days based on last activity
+          // Issue updated_at reflects last comment/activity
+          const lastActivity = issue?.updated_at
+            ? new Date(issue.updated_at)
+            : new Date()
+          const daysSinceActivity = differenceInDays(new Date(), lastActivity)
+          const daysRemaining = Math.max(
+            0,
+            config.daysUntilUnassign - daysSinceActivity,
+          )
+
           await commentService.createTemplatedComment(
             Number(issue?.number),
             template,
             {
               total_days: String(config.daysUntilUnassign),
+              days_remaining: daysRemaining,
               handle: username,
               assignee: issue?.assignee?.login,
             },
