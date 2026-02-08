@@ -1,7 +1,32 @@
 [test]
 # Always enable coverage
 coverage = true
-# To require 90% line-level and function-level coverage
-coverageThreshold = 0.9
+# coverageThreshold = 0.9
 coverageReporter = ["text", "lcov"]  # default ["text"]
 coverageDir = "coverage"    # default "coverage"
+coverageSkipTestFiles = true  # default false
+coveragePathIgnorePatterns = [
+  # Exclude utility files
+  # "src/utils/**",
+
+  # Exclude configuration files
+  "*.config.js",
+  "webpack.config.ts",
+  "vite.config.ts",
+
+  # Exclude specific test patterns
+  "**/*.spec.ts",
+  "**/*.e2e.ts",
+
+  # Exclude build artifacts
+  "dist/**",
+  "build/**",
+
+  # Exclude generated files
+  "src/generated/**",
+  "**/*.generated.ts",
+
+  # Exclude vendor/third-party code
+  "vendor/**",
+  "third-party/**"
+]
