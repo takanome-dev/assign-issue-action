@@ -1,6 +1,6 @@
 {
   "name": "assign-issue-action",
-  "version": "2.1.1",
+  "version": "3.0.1",
   "description": "A GitHub Action to streamline issue assignments with commands for contributors and maintainers.",
   "engines": {
     "node": "20.x",

@@ -45,7 +45,7 @@ export default class ScheduleHandler {
     this.commentService = new CommentService(this.octokit, repoContext)
   }
 
-  async handle_unassignments() {
+  async handle_unassignments(): Promise<void> {
     // Get all assigned issues with their activity status in a single query
     const { unassignIssues, reminderIssues } = await this._get_assigned_issues()
 
