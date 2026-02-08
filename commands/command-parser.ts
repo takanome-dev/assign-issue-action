@@ -1,7 +1,7 @@
 import type { ActionConfig } from '../core'
 import { CommandType, type ParsedCommand } from './types'
 
-const CONTRIBUTION_PHRASES = [
+const CONTRIBUTION_PHRASES: string[] = [
   'asssign-me',
   'Assign this issue to me',
   'Assign it to me',

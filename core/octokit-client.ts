@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { Octokit } from '@octokit/core'
 import { throttling } from '@octokit/plugin-throttling'
 
-const ThrottledOctokit = Octokit.plugin(throttling)
+const ThrottledOctokit: typeof Octokit = Octokit.plugin(throttling)
 
 export type OctokitClient = InstanceType<typeof ThrottledOctokit>
 

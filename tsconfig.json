@@ -15,14 +15,16 @@
     "noImplicitThis": true,
     "skipLibCheck": true,
     "isolatedDeclarations": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["bun"]
   },
   "exclude": [
     "coverage",
     "dist",
     "lib",
     "*.js",
-    "__tests__",
+    "**/*.test.ts",
+    "**/__tests__/**",
     "__mocks__",
     "scripts"
   ]
