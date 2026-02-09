@@ -108,6 +108,10 @@ The action provides the following outputs that can be used in subsequent workflo
 
 We would love you to contribute to this project, pull requests are welcome!
 
+## Related Projects
+
+- [vouch](https://github.com/mitchellh/vouch) is a community trust management system with allow list and block list support.
+
 ## ⚖️ LICENSE
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE)
