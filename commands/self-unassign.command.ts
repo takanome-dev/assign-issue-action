@@ -18,14 +18,25 @@ export class SelfUnassignCommand implements Command {
     const assigneeLogin = issue?.assignee?.login
 
     core.info(
-      `🤖 Starting issue #${issue?.number} unassignment for user @${assigneeLogin} in repo "${context.repoOwner}/${context.repoName}"`,
+      `🤖 Starting issue #${issue?.number} unassignment for user @${commenterLogin} in repo "${context.repoOwner}/${context.repoName}"`,
     )
 
     // Check if commenter is the assignee
+    // If not, stay silent (do not react with "already assigned" - issue #326)
     if (assigneeLogin !== commenterLogin) {
       core.setOutput('unassigned', 'no')
       core.setOutput('unassigned_issues', [])
-      core.info(`🤖 Commenter is different from the assignee, ignoring...`)
+
+      if (assigneeLogin) {
+        core.info(
+          `🤖 Commenter @${commenterLogin} is not the assignee @${assigneeLogin}, staying silent (issue #326)`,
+        )
+      } else {
+        core.info(
+          `🤖 Issue is not assigned to anyone, staying silent (issue #326)`,
+        )
+      }
+
       return {
         success: false,
         message: 'Commenter is not the assignee',

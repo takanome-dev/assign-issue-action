@@ -58177,7 +58177,7 @@ var AssignUserCommand = class {
 	}
 	async execute(context$3, services) {
 		const { issue, config } = context$3;
-		const { issueService, commentService, newcomerChecker } = services;
+		const { issueService, commentService, newcomerChecker, statsService } = services;
 		const targetUsername = this.parsedCommand.targetUsername;
 		_actions_core.info(`Starting issue assignment to user`);
 		if (!targetUsername) {
@@ -58192,11 +58192,17 @@ var AssignUserCommand = class {
 		const isNewcomer = await newcomerChecker.isNewcomer(targetUsername);
 		const commentTemplate = isNewcomer ? config.assignedNewcomerText : config.assignedText;
 		_actions_core.info(`🤖 User @${targetUsername} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		const stats = await statsService.getContributorStats(targetUsername);
+		_actions_core.info(`🤖 @${targetUsername} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`);
 		await Promise.all([issueService.assignWithLabel(Number(issue?.number), targetUsername.trim(), config.assignedLabel), commentService.createTemplatedComment(Number(issue?.number), commentTemplate, {
 			total_days: config.daysUntilUnassign,
 			unassigned_date: (0, date_fns.format)((0, date_fns.add)(/* @__PURE__ */ new Date(), { days: config.daysUntilUnassign }), "dd LLLL y"),
 			handle: targetUsername,
-			pin_label: config.pinLabel
+			pin_label: config.pinLabel,
+			prs_total: stats.prs_total,
+			prs_merged: stats.prs_merged,
+			prs_unmerged: stats.prs_unmerged,
+			prs_merged_percentage: stats.prs_merged_percentage
 		})]);
 		_actions_core.info(`🤖 Issue #${issue?.number} assigned!`);
 		_actions_core.setOutput("assigned", "yes");
@@ -58350,7 +58356,7 @@ var CommandParser = class {
 var SelfAssignCommand = class {
 	async execute(context$3, services) {
 		const { issue, comment, config } = context$3;
-		const { issueService, commentService, validator, newcomerChecker } = services;
+		const { issueService, commentService, validator, newcomerChecker, statsService } = services;
 		const username = comment?.user?.login;
 		_actions_core.info(`🤖 Starting assignment for issue #${issue?.number} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
 		const validation = await validator.validateAssignment({
@@ -58414,11 +58420,17 @@ var SelfAssignCommand = class {
 		const isNewcomer = await newcomerChecker.isNewcomer(username);
 		const commentTemplate = isNewcomer ? config.assignedNewcomerText : config.assignedText;
 		_actions_core.info(`🤖 User @${username} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		const stats = await statsService.getContributorStats(username);
+		_actions_core.info(`🤖 @${username} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`);
 		await Promise.all([issueService.assignWithLabel(Number(issue?.number), username, config.assignedLabel), commentService.createTemplatedComment(Number(issue?.number), commentTemplate, {
 			total_days: config.daysUntilUnassign,
 			unassigned_date: (0, date_fns.format)((0, date_fns.add)(/* @__PURE__ */ new Date(), { days: config.daysUntilUnassign }), "dd LLLL y"),
 			handle: username,
-			pin_label: config.pinLabel
+			pin_label: config.pinLabel,
+			prs_total: stats.prs_total,
+			prs_merged: stats.prs_merged,
+			prs_unmerged: stats.prs_unmerged,
+			prs_merged_percentage: stats.prs_merged_percentage
 		})]);
 		_actions_core.info(`🤖 Issue #${issue?.number} assigned!`);
 		_actions_core.setOutput("assigned", "yes");
@@ -58458,11 +58470,12 @@ var SelfUnassignCommand = class {
 		const { issueService, commentService, validator } = services;
 		const commenterLogin = comment?.user?.login;
 		const assigneeLogin = issue?.assignee?.login;
-		_actions_core.info(`🤖 Starting issue #${issue?.number} unassignment for user @${assigneeLogin} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
+		_actions_core.info(`🤖 Starting issue #${issue?.number} unassignment for user @${commenterLogin} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
 		if (assigneeLogin !== commenterLogin) {
 			_actions_core.setOutput("unassigned", "no");
 			_actions_core.setOutput("unassigned_issues", []);
-			_actions_core.info(`🤖 Commenter is different from the assignee, ignoring...`);
+			if (assigneeLogin) _actions_core.info(`🤖 Commenter @${commenterLogin} is not the assignee @${assigneeLogin}, staying silent (issue #326)`);
+			else _actions_core.info(`🤖 Issue is not assigned to anyone, staying silent (issue #326)`);
 			return {
 				success: false,
 				message: "Commenter is not the assignee",
@@ -58857,7 +58870,7 @@ var NewcomerChecker = class {
 
 //#endregion
 //#region services/github/comment-service.ts
-const API_VERSION$1 = "2022-11-28";
+const API_VERSION$2 = "2022-11-28";
 var CommentService = class {
 	constructor(octokit, repoContext) {
 		this.octokit = octokit;
@@ -58872,7 +58885,7 @@ var CommentService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			body,
-			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
+			headers: { "X-GitHub-Api-Version": API_VERSION$2 }
 		});
 	}
 	/**
@@ -58892,7 +58905,7 @@ var CommentService = class {
 
 //#endregion
 //#region services/github/issue-service.ts
-const API_VERSION = "2022-11-28";
+const API_VERSION$1 = "2022-11-28";
 var IssueService = class {
 	constructor(octokit, repoContext) {
 		this.octokit = octokit;
@@ -58904,7 +58917,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			assignees: [username],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async removeAssignee(issueNumber, username) {
@@ -58913,7 +58926,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			assignees: [username],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async addLabel(issueNumber, label) {
@@ -58922,7 +58935,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			labels: [label],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async removeLabel(issueNumber, label) {
@@ -58932,7 +58945,7 @@ var IssueService = class {
 				repo: this.repoContext.repo,
 				issue_number: issueNumber,
 				name: label,
-				headers: { "X-GitHub-Api-Version": API_VERSION }
+				headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 			});
 		} catch {}
 	}
@@ -58941,7 +58954,7 @@ var IssueService = class {
 			owner: this.repoContext.owner,
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		})).data;
 	}
 	async searchIssues(query) {
@@ -58950,7 +58963,7 @@ var IssueService = class {
 		return (await this.octokit.request("GET /search/issues", {
 			q: fullQuery,
 			advanced_search: "true",
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		})).data;
 	}
 	async getAssignmentCount(username) {
@@ -59024,6 +59037,53 @@ var TeamService = class {
 };
 
 //#endregion
+//#region services/github/stats-service.ts
+const API_VERSION = "2022-11-28";
+var StatsService = class {
+	constructor(octokit, repoContext) {
+		this.octokit = octokit;
+		this.repoContext = repoContext;
+	}
+	/**
+	* Get PR statistics for a contributor in the repository
+	*/
+	async getContributorStats(username) {
+		try {
+			const allPrs = await this.searchPullRequests(`is:pr author:${username}`);
+			const mergedPrs = await this.searchPullRequests(`is:pr author:${username} is:merged`);
+			const total = allPrs.total_count;
+			const merged = mergedPrs.total_count;
+			return {
+				prs_total: total,
+				prs_merged: merged,
+				prs_unmerged: total - merged,
+				prs_merged_percentage: total > 0 ? Math.round(merged / total * 100) : 0
+			};
+		} catch (error) {
+			_actions_core.warning(`Failed to fetch PR stats for @${username}: ${error}`);
+			return {
+				prs_total: 0,
+				prs_merged: 0,
+				prs_unmerged: 0,
+				prs_merged_percentage: 0
+			};
+		}
+	}
+	/**
+	* Search for pull requests
+	*/
+	async searchPullRequests(query) {
+		const { owner, repo } = this.repoContext;
+		const fullQuery = `repo:${owner}/${repo} ${query}`;
+		return (await this.octokit.request("GET /search/issues", {
+			q: fullQuery,
+			advanced_search: "true",
+			headers: { "X-GitHub-Api-Version": API_VERSION }
+		})).data;
+	}
+};
+
+//#endregion
 //#region handlers/comment-handler.ts
 var CommentHandler = class {
 	constructor() {
@@ -59042,6 +59102,7 @@ var CommentHandler = class {
 			issueService,
 			commentService,
 			teamService: this.teamService,
+			statsService: new StatsService(this.octokit, repoContext),
 			validator: new AssignmentValidator(issueService, this.config),
 			newcomerChecker: new NewcomerChecker(issueService)
 		};
