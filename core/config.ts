@@ -33,25 +33,26 @@ export interface ActionConfig {
   enableReminder: boolean
   reminderDays: number | 'auto'
 
-  // Comment templates
-  assignedComment: string
-  assignedCommentNewcomer: string
-  unassignedComment: string
-  alreadyAssignedComment: string
-  alreadyAssignedCommentPinned: string
-  assignmentSuggestionComment: string
-  blockAssignmentComment: string
-  reminderComment: string
-  maxAssignmentsMessage: string
-  maxOverallAssignmentMessage: string
-  selfAssignAuthorBlockedComment: string
+  // Text templates
+  assignedText: string
+  assignedNewcomerText: string
+  unassignedText: string
+  selfUnassignedText: string
+  alreadyAssignedText: string
+  alreadyAssignedPinnedText: string
+  assignmentSuggestionText: string
+  blockAssignmentText: string
+  reminderText: string
+  maxAssignmentsText: string
+  maxOverallAssignmentText: string
+  selfAssignAuthorBlockedText: string
 
   // Ignored users
   ignoredUsers: string[]
-  ignoredMessage: string
+  ignoredText: string
 
   // Closed issue handling
-  closedIssueAssignmentComment: string
+  closedIssueAssignmentText: string
 }
 
 let cachedConfig: ActionConfig | null = null
@@ -133,25 +134,22 @@ export function loadConfig(): ActionConfig {
     enableReminder: core.getInput(INPUTS.ENABLE_REMINDER) === 'true',
     reminderDays,
 
-    // Comment templates
-    assignedComment: core.getInput(INPUTS.ASSIGNED_COMMENT),
-    assignedCommentNewcomer: core.getInput(INPUTS.ASSIGNED_COMMENT_NEWCOMER),
-    unassignedComment: core.getInput(INPUTS.UNASSIGNED_COMMENT),
-    alreadyAssignedComment: core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT),
-    alreadyAssignedCommentPinned: core.getInput(
-      INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED,
+    // Text templates
+    assignedText: core.getInput(INPUTS.ASSIGNED_TEXT),
+    assignedNewcomerText: core.getInput(INPUTS.ASSIGNED_NEWCOMER_TEXT),
+    unassignedText: core.getInput(INPUTS.UNASSIGNED_TEXT),
+    selfUnassignedText: core.getInput(INPUTS.SELF_UNASSIGNED_TEXT),
+    alreadyAssignedText: core.getInput(INPUTS.ALREADY_ASSIGNED_TEXT),
+    alreadyAssignedPinnedText: core.getInput(
+      INPUTS.ALREADY_ASSIGNED_PINNED_TEXT,
     ),
-    assignmentSuggestionComment: core.getInput(
-      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
-    ),
-    blockAssignmentComment: core.getInput(INPUTS.BLOCK_ASSIGNMENT_COMMENT),
-    reminderComment: core.getInput(INPUTS.REMINDER_COMMENT),
-    maxAssignmentsMessage: core.getInput(INPUTS.MAX_ASSIGNMENTS_MESSAGE),
-    maxOverallAssignmentMessage: core.getInput(
-      INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE,
-    ),
-    selfAssignAuthorBlockedComment: core.getInput(
-      INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT,
+    assignmentSuggestionText: core.getInput(INPUTS.ASSIGNMENT_SUGGESTION_TEXT),
+    blockAssignmentText: core.getInput(INPUTS.BLOCK_ASSIGNMENT_TEXT),
+    reminderText: core.getInput(INPUTS.REMINDER_TEXT),
+    maxAssignmentsText: core.getInput(INPUTS.MAX_ASSIGNMENTS_TEXT),
+    maxOverallAssignmentText: core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_TEXT),
+    selfAssignAuthorBlockedText: core.getInput(
+      INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_TEXT,
     ),
 
     // Ignored users
@@ -162,11 +160,11 @@ export function loadConfig(): ActionConfig {
           .map((u) => u.trim())
           .filter(Boolean)
       : [],
-    ignoredMessage: core.getInput(INPUTS.IGNORED_MESSAGE),
+    ignoredText: core.getInput(INPUTS.IGNORED_TEXT),
 
     // Closed issue handling
-    closedIssueAssignmentComment: core.getInput(
-      INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT,
+    closedIssueAssignmentText: core.getInput(
+      INPUTS.CLOSED_ISSUE_ASSIGNMENT_TEXT,
     ),
   }
 }

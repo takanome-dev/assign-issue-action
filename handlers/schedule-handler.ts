@@ -279,11 +279,11 @@ export default class ScheduleHandler {
       return
     }
 
-    const { unassignedComment, pinLabel, assignedLabel } = this.config
+    const { unassignedText, pinLabel, assignedLabel } = this.config
 
     // Generate hidden marker for tracking this unassignment
     const marker = `<!-- unassigned:${issue.assignee.login} -->`
-    const body = `${this.commentService.renderTemplate(unassignedComment, {
+    const body = `${this.commentService.renderTemplate(unassignedText, {
       handle: issue.assignee.login,
       pin_label: pinLabel,
     })}\n${marker}`
@@ -310,10 +310,10 @@ export default class ScheduleHandler {
       return
     }
 
-    const { daysUntilUnassign, reminderComment, pinLabel } = this.config
+    const { daysUntilUnassign, reminderText, pinLabel } = this.config
     const daysRemaining = Math.max(0, daysUntilUnassign - daysSinceActivity)
 
-    const body = this.commentService.renderTemplate(reminderComment, {
+    const body = this.commentService.renderTemplate(reminderText, {
       handle: issue.assignee.login,
       days_remaining: daysRemaining,
       pin_label: pinLabel,

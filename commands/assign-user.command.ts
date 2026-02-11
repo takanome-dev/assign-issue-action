@@ -33,8 +33,8 @@ export class AssignUserCommand implements Command {
     // Check if newcomer
     const isNewcomer = await newcomerChecker.isNewcomer(targetUsername)
     const commentTemplate = isNewcomer
-      ? config.assignedCommentNewcomer
-      : config.assignedComment
+      ? config.assignedNewcomerText
+      : config.assignedText
 
     core.info(
       `🤖 User @${targetUsername} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,

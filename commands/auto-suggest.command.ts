@@ -31,8 +31,8 @@ export class AutoSuggestCommand implements Command {
       })
 
       const template = isPinned
-        ? config.alreadyAssignedCommentPinned
-        : config.alreadyAssignedComment
+        ? config.alreadyAssignedPinnedText
+        : config.alreadyAssignedText
 
       await commentService.createTemplatedComment(
         Number(issue?.number),
@@ -58,7 +58,7 @@ export class AutoSuggestCommand implements Command {
     // Suggest using the assign command
     await commentService.createTemplatedComment(
       Number(issue?.number),
-      config.assignmentSuggestionComment,
+      config.assignmentSuggestionText,
       {
         handle: username,
         trigger: config.selfAssignCmd,

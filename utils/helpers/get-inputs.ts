@@ -7,8 +7,8 @@ type Inputs = {
   pin_label: string
   days_until_unassign: number
   stale_assignment_label: string
-  assigned_comment: string
-  assignment_suggestion_comment: string
+  assigned_text: string
+  assignment_suggestion_text: string
   github_token: string
   maintainers: string
   enable_auto_suggestion: string
@@ -26,10 +26,8 @@ export function getInputs(): Inputs {
 
     days_until_unassign: parseInt(getInput(INPUTS.DAYS_UNTIL_UNASSIGN), 10),
     stale_assignment_label: getInput(INPUTS.STALE_ASSIGNMENT_LABEL),
-    assigned_comment: getInput(INPUTS.ASSIGNED_COMMENT),
-    assignment_suggestion_comment: getInput(
-      INPUTS.ASSIGNMENT_SUGGESTION_COMMENT,
-    ),
+    assigned_text: getInput(INPUTS.ASSIGNED_TEXT),
+    assignment_suggestion_text: getInput(INPUTS.ASSIGNMENT_SUGGESTION_TEXT),
     github_token: getInput(INPUTS.GITHUB_TOKEN),
     maintainers: getInput(INPUTS.MAINTAINERS),
     enable_auto_suggestion: getInput(INPUTS.ENABLE_AUTO_SUGGESTION),
