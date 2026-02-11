@@ -27,10 +27,8 @@ export class StatsService {
   async getContributorStats(username: string): Promise<ContributorStats> {
     try {
       // Fetch all PRs by this user in the repo
-      const allPrs = await this.searchPullRequests(
-        `is:pr author:${username}`,
-      )
-      
+      const allPrs = await this.searchPullRequests(`is:pr author:${username}`)
+
       // Fetch merged PRs by this user
       const mergedPrs = await this.searchPullRequests(
         `is:pr author:${username} is:merged`,

@@ -8,7 +8,9 @@ describe('StatsService', () => {
 
   beforeEach(() => {
     mockOctokit = {
-      request: mock(() => Promise.resolve({ data: { total_count: 0, items: [] } })),
+      request: mock(() =>
+        Promise.resolve({ data: { total_count: 0, items: [] } }),
+      ),
     } as unknown as OctokitClient
 
     statsService = new StatsService(mockOctokit, {

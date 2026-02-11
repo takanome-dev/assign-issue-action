@@ -16,7 +16,8 @@ export class AssignUserCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, config } = context
-    const { issueService, commentService, newcomerChecker, statsService } = services
+    const { issueService, commentService, newcomerChecker, statsService } =
+      services
 
     const targetUsername = this.parsedCommand.targetUsername
 

@@ -23,7 +23,7 @@ if (!GITHUB_TOKEN) {
 
 async function debugRealStatsService() {
   console.log('🔍 Debugging with REAL StatsService')
-  console.log('=' .repeat(50))
+  console.log('='.repeat(50))
   console.log(`Repository: ${TEST_CONFIG.owner}/${TEST_CONFIG.repo}`)
   console.log(`Username: ${TEST_CONFIG.username}`)
   console.log('')
@@ -61,15 +61,16 @@ async function debugRealStatsService() {
       prs_merged_percentage: stats.prs_merged_percentage,
     }
 
-    console.log(`  "you have raised ${templateData.prs_total} pull requests of which ${templateData.prs_merged_percentage}% (${templateData.prs_merged}) have been merged."`)
-
+    console.log(
+      `  "you have raised ${templateData.prs_total} pull requests of which ${templateData.prs_merged_percentage}% (${templateData.prs_merged}) have been merged."`,
+    )
   } catch (error: any) {
     console.error('❌ Error:', error.message)
     console.error(error.stack)
   }
 
   console.log('')
-  console.log('=' .repeat(50))
+  console.log('='.repeat(50))
 }
 
 debugRealStatsService().catch(console.error)
