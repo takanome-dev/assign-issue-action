@@ -103,7 +103,7 @@ export class AssignmentValidator {
     issueNumber: number,
     username: string,
   ): Promise<ValidationResult> {
-    const { blockAssignment, unassignUserCmd, unassignedComment } = this.config
+    const { blockAssignment, unassignUserCmd, unassignedText } = this.config
 
     if (!blockAssignment) {
       return { valid: true }
@@ -123,7 +123,7 @@ export class AssignmentValidator {
       // Check 3: Backward compatibility - check if rendered template with handle exists
       // This handles old comments that don't have the hidden marker
       const hasRenderedComment = comment.body?.includes(
-        mustache.render(unassignedComment, { handle: username }),
+        mustache.render(unassignedText, { handle: username }),
       )
       return hasMarker || hasManualUnassign || hasRenderedComment
     })

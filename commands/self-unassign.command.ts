@@ -45,13 +45,12 @@ export class SelfUnassignCommand implements Command {
     }
 
     // Generate unassign comment with hidden marker for tracking
-    const unassignBody = validator.getUnassignCommentBody(
-      config.unassignedComment,
-      {
-        handle: commenterLogin,
-        pin_label: config.pinLabel,
-      },
-    )
+    // Use selfUnassignedText if set, otherwise fall back to unassignedText
+    const unassignTemplate = config.selfUnassignedText || config.unassignedText
+    const unassignBody = validator.getUnassignCommentBody(unassignTemplate, {
+      handle: commenterLogin,
+      pin_label: config.pinLabel,
+    })
 
     // Unassign and post comment
     await Promise.all([
