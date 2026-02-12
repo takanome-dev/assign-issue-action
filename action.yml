@@ -353,6 +353,98 @@ inputs:
       - Look for similar open issues to contribute to
       </details>
 
+  # Deprecated inputs (for backward compatibility)
+  assigned_comment:
+    description: |
+      Deprecated: Use `assigned_text` instead.
+      The comment posted after a returning contributor has assigned themselves to an issue.
+    required: false
+    default: ""
+
+  assigned_comment_newcomer:
+    description: |
+      Deprecated: Use `assigned_newcomer_text` instead.
+      The comment posted after a first-time contributor has assigned themselves to an issue.
+    required: false
+    default: ""
+
+  unassigned_comment:
+    description: |
+      Deprecated: Use `unassigned_text` instead.
+      The comment posted after a user is unassigned from an issue.
+    required: false
+    default: ""
+
+  already_assigned_comment:
+    description: |
+      Deprecated: Use `already_assigned_text` instead.
+      The comment posted when a user tries to assign themselves to an issue that is already assigned.
+    required: false
+    default: ""
+
+  already_assigned_comment_pinned:
+    description: |
+      Deprecated: Use `already_assigned_pinned_text` instead.
+      The comment posted when a user tries to assign themselves to a pinned issue that is already assigned.
+    required: false
+    default: ""
+
+  assignment_suggestion_comment:
+    description: |
+      Deprecated: Use `assignment_suggestion_text` instead.
+      The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.
+    required: false
+    default: ""
+
+  block_assignment_comment:
+    description: |
+      Deprecated: Use `block_assignment_text` instead.
+      The comment posted when a user tries to re-assign themselves after being unassigned.
+    required: false
+    default: ""
+
+  reminder_comment:
+    description: |
+      Deprecated: Use `reminder_text` instead.
+      The comment posted as a reminder before automatic unassignment occurs.
+    required: false
+    default: ""
+
+  max_assignments_message:
+    description: |
+      Deprecated: Use `max_assignments_text` instead.
+      The message posted when a user has reached their maximum assignments.
+    required: false
+    default: ""
+
+  max_overall_assignment_message:
+    description: |
+      Deprecated: Use `max_overall_assignment_text` instead.
+      The message posted when a user has reached the per-label assignment limit.
+    required: false
+    default: ""
+
+  self_assign_author_blocked_comment:
+    description: |
+      Deprecated: Use `self_assign_author_blocked_text` instead.
+      The message posted when an issue author tries to self-assign their own issue but it's not allowed.
+    required: false
+    default: ""
+
+  ignored_message:
+    description: |
+      Deprecated: Use `ignored_text` instead.
+      The message posted when an ignored user tries to use `/assign-me`.
+    required: false
+    default: ""
+
+  closed_issue_assignment_comment:
+    description: |
+      Deprecated: Use `closed_issue_assignment_text` instead.
+      The text shown when a user tries to assign themselves to a closed issue.
+    required: false
+    default: ""
+
 outputs:
   assigned:
     description: Boolean indicating if the issue was assigned (yes/no)
