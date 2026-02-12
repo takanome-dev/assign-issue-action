@@ -58478,7 +58478,7 @@ var SelfUnassignCommand = class {
 			else _actions_core.info(`🤖 Issue is not assigned to anyone, staying silent (issue #326)`);
 			return {
 				success: false,
-				message: "Commenter is not the assignee",
+				message: "Issue is not assigned to anyone",
 				output: {
 					unassigned: "no",
 					unassigned_issues: []
@@ -58601,6 +58601,19 @@ let INPUTS = /* @__PURE__ */ function(INPUTS$1) {
 	INPUTS$1["IGNORED_USERS"] = "ignored_users";
 	INPUTS$1["IGNORED_TEXT"] = "ignored_text";
 	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_TEXT"] = "closed_issue_assignment_text";
+	INPUTS$1["ASSIGNED_COMMENT"] = "assigned_comment";
+	INPUTS$1["ASSIGNED_COMMENT_NEWCOMER"] = "assigned_comment_newcomer";
+	INPUTS$1["UNASSIGNED_COMMENT"] = "unassigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT"] = "already_assigned_comment";
+	INPUTS$1["ALREADY_ASSIGNED_COMMENT_PINNED"] = "already_assigned_comment_pinned";
+	INPUTS$1["ASSIGNMENT_SUGGESTION_COMMENT"] = "assignment_suggestion_comment";
+	INPUTS$1["BLOCK_ASSIGNMENT_COMMENT"] = "block_assignment_comment";
+	INPUTS$1["REMINDER_COMMENT"] = "reminder_comment";
+	INPUTS$1["MAX_ASSIGNMENTS_MESSAGE"] = "max_assignments_message";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_MESSAGE"] = "max_overall_assignment_message";
+	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
+	INPUTS$1["IGNORED_MESSAGE"] = "ignored_message";
+	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_COMMENT"] = "closed_issue_assignment_comment";
 	return INPUTS$1;
 }({});
 
@@ -58611,6 +58624,19 @@ function getConfig() {
 	if (cachedConfig) return cachedConfig;
 	cachedConfig = loadConfig();
 	return cachedConfig;
+}
+/**
+* Helper function to get input with backward compatibility for deprecated names
+* Checks new name first, then falls back to deprecated name with a warning
+*/
+function getInputWithDeprecation(newName, deprecatedName) {
+	const newValue = _actions_core.getInput(newName);
+	const deprecatedValue = _actions_core.getInput(deprecatedName);
+	if (deprecatedValue && !newValue) {
+		_actions_core.warning(`⚠️ The input '${deprecatedName}' is deprecated and will be removed in a future version. Please use '${newName}' instead.`);
+		return deprecatedValue;
+	}
+	return newValue;
 }
 function loadConfig() {
 	const githubToken = _actions_core.getInput(INPUTS.GITHUB_TOKEN);
@@ -58643,21 +58669,21 @@ function loadConfig() {
 		maxOverallAssignmentCount: Number.parseInt(_actions_core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10),
 		enableReminder: _actions_core.getInput(INPUTS.ENABLE_REMINDER) === "true",
 		reminderDays,
-		assignedText: _actions_core.getInput(INPUTS.ASSIGNED_TEXT),
-		assignedNewcomerText: _actions_core.getInput(INPUTS.ASSIGNED_NEWCOMER_TEXT),
-		unassignedText: _actions_core.getInput(INPUTS.UNASSIGNED_TEXT),
-		selfUnassignedText: _actions_core.getInput(INPUTS.SELF_UNASSIGNED_TEXT),
-		alreadyAssignedText: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_TEXT),
-		alreadyAssignedPinnedText: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_PINNED_TEXT),
-		assignmentSuggestionText: _actions_core.getInput(INPUTS.ASSIGNMENT_SUGGESTION_TEXT),
-		blockAssignmentText: _actions_core.getInput(INPUTS.BLOCK_ASSIGNMENT_TEXT),
-		reminderText: _actions_core.getInput(INPUTS.REMINDER_TEXT),
-		maxAssignmentsText: _actions_core.getInput(INPUTS.MAX_ASSIGNMENTS_TEXT),
-		maxOverallAssignmentText: _actions_core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_TEXT),
-		selfAssignAuthorBlockedText: _actions_core.getInput(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_TEXT),
+		assignedText: getInputWithDeprecation(INPUTS.ASSIGNED_TEXT, INPUTS.ASSIGNED_COMMENT),
+		assignedNewcomerText: getInputWithDeprecation(INPUTS.ASSIGNED_NEWCOMER_TEXT, INPUTS.ASSIGNED_COMMENT_NEWCOMER),
+		unassignedText: getInputWithDeprecation(INPUTS.UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT),
+		selfUnassignedText: getInputWithDeprecation(INPUTS.SELF_UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT) || getInputWithDeprecation(INPUTS.UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT),
+		alreadyAssignedText: getInputWithDeprecation(INPUTS.ALREADY_ASSIGNED_TEXT, INPUTS.ALREADY_ASSIGNED_COMMENT),
+		alreadyAssignedPinnedText: getInputWithDeprecation(INPUTS.ALREADY_ASSIGNED_PINNED_TEXT, INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED),
+		assignmentSuggestionText: getInputWithDeprecation(INPUTS.ASSIGNMENT_SUGGESTION_TEXT, INPUTS.ASSIGNMENT_SUGGESTION_COMMENT),
+		blockAssignmentText: getInputWithDeprecation(INPUTS.BLOCK_ASSIGNMENT_TEXT, INPUTS.BLOCK_ASSIGNMENT_COMMENT),
+		reminderText: getInputWithDeprecation(INPUTS.REMINDER_TEXT, INPUTS.REMINDER_COMMENT),
+		maxAssignmentsText: getInputWithDeprecation(INPUTS.MAX_ASSIGNMENTS_TEXT, INPUTS.MAX_ASSIGNMENTS_MESSAGE),
+		maxOverallAssignmentText: getInputWithDeprecation(INPUTS.MAX_OVERALL_ASSIGNMENT_TEXT, INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE),
+		selfAssignAuthorBlockedText: getInputWithDeprecation(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_TEXT, INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT),
 		ignoredUsers: _actions_core.getInput(INPUTS.IGNORED_USERS) ? _actions_core.getInput(INPUTS.IGNORED_USERS).split(",").map((u) => u.trim()).filter(Boolean) : [],
-		ignoredText: _actions_core.getInput(INPUTS.IGNORED_TEXT),
-		closedIssueAssignmentText: _actions_core.getInput(INPUTS.CLOSED_ISSUE_ASSIGNMENT_TEXT)
+		ignoredText: getInputWithDeprecation(INPUTS.IGNORED_TEXT, INPUTS.IGNORED_MESSAGE),
+		closedIssueAssignmentText: getInputWithDeprecation(INPUTS.CLOSED_ISSUE_ASSIGNMENT_TEXT, INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT)
 	};
 }
 

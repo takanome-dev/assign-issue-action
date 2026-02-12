@@ -119,6 +119,19 @@ describe('config', () => {
       expect(config.assignedText).toBe('Assigned to {{handle}}')
       expect(config.assignedNewcomerText).toBe('Welcome {{handle}}!')
     })
+
+    it('should default selfUnassignedComment to unassignedComment when not set', () => {
+      mockGetInput.mockImplementation((name: string) => {
+        const inputs: Record<string, string> = {
+          github_token: 'test-token',
+          unassigned_comment: 'Default unassigned message',
+        }
+        return inputs[name] ?? ''
+      })
+
+      const config = loadConfig()
+      expect(config.selfUnassignedText).toBe('Default unassigned message')
+    })
   })
 
   describe('loadConfig with missing token', () => {
