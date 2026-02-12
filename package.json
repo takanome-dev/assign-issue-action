@@ -6,13 +6,13 @@
     "node": "24.x",
     "bun": "1.x"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "type": "module",
   "scripts": {
     "format": "bunx biome format --write",
     "lint": "bunx biome lint --write",
     "build": "ncc build --license licenses.txt",
-    "tsdown": "tsdown index.ts --format cjs",
+    "tsdown": "tsdown index.ts --format esm",
     "bundle": "bun run test && bun run tsdown && bun run build",
     "all": "bun run format && bun run lint && bun run bundle",
     "test": "tsc --noEmit",

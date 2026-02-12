@@ -41,9 +41,9 @@ bun run all
 
 The project uses a two-step build:
 1. `tsdown` - Bundles TypeScript to CommonJS
-2. `ncc` - Creates the final distribution in `dist/index.cjs`
+2. `ncc` - Creates the final distribution in `dist/index.mjs`
 
-Always run `bun run bundle` before committing to ensure `dist/index.cjs` is up to date.
+Always run `bun run all` before committing to ensure `dist/index.mjs` is up to date.
 
 ## Code Style Guidelines
 
@@ -158,7 +158,7 @@ mock.module('@actions/core', () => ({
 ## Important Notes
 
 1. **Always run type checking** (`bun run test`) before committing
-2. **Always run the full bundle** (`bun run bundle`) to update `dist/index.cjs`
+2. **Always run the full bundle** (`bun run all`) to update `dist/index.mjs`
 3. **Use Biome for formatting/linting** - no ESLint/Prettier
 4. **Test files** use `__tests__/` subdirectories
 5. **No comments** unless absolutely necessary - code should be self-documenting
