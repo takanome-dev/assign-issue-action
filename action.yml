@@ -173,7 +173,18 @@ inputs:
     description: >
       The text posted after a user unassigns themselves from an issue.
       If not set, defaults to the `unassigned_text` text.
-    default: ""
+    default: |
+      ### 📋 Self-Unassignment
+
+      Hi @{{ handle }}, you've unassigned yourself from this issue.
+
+      <details open>
+      <summary>Next steps</summary>
+
+      **If you change your mind:**
+      - Comment with `/assign-me` to reassign yourself
+      - Ask a maintainer to assign you again
+      </details>
   assignment_suggestion_text:
     description: >
       The text posted when someone shows interest in being assigned to an issue without using the assignment commands.
