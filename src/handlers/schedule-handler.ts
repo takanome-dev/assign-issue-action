@@ -1,13 +1,11 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { Octokit } from '@octokit/core'
+import type { components } from '@octokit/openapi-types'
 import { throttling } from '@octokit/plugin-throttling'
 import mustache from 'mustache'
-
-import type { components } from '@octokit/openapi-types'
-
-import { INPUTS } from '../utils/lib/inputs'
 import { chunkArray, getDaysBetween } from '../utils/helpers/common'
+import { INPUTS } from '../utils/lib/inputs'
 
 const MyOctokit = Octokit.plugin(throttling)
 
@@ -118,7 +116,7 @@ export default class ScheduleHandler {
     } = await this.octokit.request('GET /search/issues', {
       q: `repo:${owner}/${repo} is:issue is:open label:"${this.assignedLabel}" -label:"${this.exemptLabel}" assignee:*`,
       per_page: 100,
-      advanced_search: true,
+      advanced_search: 'true',
       headers: {
         'X-GitHub-Api-Version': '2022-11-28',
       },
