@@ -844,7 +844,7 @@ export default class CommentHandler {
       const prs = await this.octokit.request('GET /search/issues', {
         q: query,
         per_page: 1,
-        advanced_search: true,
+        advanced_search: 'true',
         headers: {
           'X-GitHub-Api-Version': '2022-11-28',
         },
