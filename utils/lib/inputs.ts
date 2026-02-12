@@ -55,5 +55,6 @@ export enum INPUTS {
   MAX_OVERALL_ASSIGNMENT_MESSAGE = 'max_overall_assignment_message',
   SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT = 'self_assign_author_blocked_comment',
   IGNORED_MESSAGE = 'ignored_message',
+
   CLOSED_ISSUE_ASSIGNMENT_COMMENT = 'closed_issue_assignment_comment',
 }

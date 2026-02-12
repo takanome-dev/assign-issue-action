@@ -2706,7 +2706,6 @@ function removeHook(state, name, method) {
 /***/ 9071:
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -2732,7 +2731,6 @@ exports.getUserAgent = getUserAgent;
 /***/ 4552:
 /***/ (function(__unused_webpack_module, exports) {
 
-"use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2820,7 +2818,6 @@ exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHand
 /***/ 4844:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-"use strict";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -3479,7 +3476,6 @@ const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCa
 /***/ 4988:
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.checkBypass = exports.getProxyUrl = void 0;
@@ -3581,7 +3577,6 @@ class DecodedURL extends URL {
 /***/ 5207:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -3771,7 +3766,6 @@ exports.getCmdPath = getCmdPath;
 /***/ 4994:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -7156,7 +7150,6 @@ var RequestError = class extends Error {
 /***/ 8636:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-"use strict";
 
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7387,6 +7380,7 @@ var request = withDefaults(import_endpoint.endpoint, {
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
+
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -58700,13 +58694,158 @@ function createOctokitClient(token) {
 					_actions_core.warning(`Retrying after ${retryAfter} seconds!`);
 					return true;
 				}
-				return false;
-			},
-			onSecondaryRateLimit: (retryAfter, options, _octokit, retryCount) => {
-				_actions_core.warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
-				if (retryCount < 2) {
-					_actions_core.warning(`Secondary rate limit hit. Retrying after ${retryAfter} seconds!`);
-					return true;
+			}
+		});
+	}
+	async handle_issue_comment() {
+		core.info(`🤖 Checking commands in the issue (#${this.issue?.number}) comments"`);
+		if (!this.token) return core.setFailed(`🚫 Missing required input "token", received "${this.token}"`);
+		const requiredLabel = core.getInput(INPUTS.REQUIRED_LABEL);
+		if (requiredLabel) {
+			if (!this.issue?.labels?.find((label) => label.name === requiredLabel)) return core.setFailed(`🚫 Missing required label: "${core.getInput("required_label")}" not found in issue #${this.issue?.number}.`);
+		}
+		const selfAssignCmd = core.getInput(INPUTS.SELF_ASSIGN_CMD);
+		const selfUnassignCmd = core.getInput(INPUTS.SELF_UNASSIGN_CMD);
+		const assignCommenterCmd = core.getInput(INPUTS.ASSIGN_USER_CMD);
+		const unassignCommenterCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const enableAutoSuggestion = core.getBooleanInput(INPUTS.ENABLE_AUTO_SUGGESTION);
+		const maintainersInput = core.getInput(INPUTS.MAINTAINERS);
+		const maintainers = maintainersInput.split(",");
+		const body = (this.context.payload.comment?.body).replace(/^\\/, "/").toLowerCase();
+		if (body.trim().startsWith(">") || maintainers.includes(this.comment?.user?.login) && (body.includes(selfAssignCmd) || body.includes(selfUnassignCmd))) {
+			core.info(`🤖 Ignoring comment because it's either a quoted reply or a maintainer using self-assignment commands`);
+			return;
+		}
+		if (enableAutoSuggestion && this._contribution_phrases().some((phrase) => body.toLowerCase().includes(phrase.toLowerCase()))) {
+			core.info(`🤖 Comment indicates interest in contribution: ${body}`);
+			return this.$_handle_assignment_interest();
+		}
+		if (body === selfAssignCmd || body.includes(selfAssignCmd)) return this.$_handle_self_assignment();
+		if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) return this.$_handle_self_unassignment();
+		if (body.includes(assignCommenterCmd) || body.includes(unassignCommenterCmd)) {
+			if (!maintainersInput) return core.info(`🤖 Ignoring maintainer command because the "maintainers" input is empty`);
+			if (!(await this._resolve_maintainers(maintainersInput)).includes(this.comment?.user?.login)) return core.info(`🤖 Ignoring maintainer command because user @${this.comment?.user?.login} is not in the maintainers list`);
+			if (body.includes(assignCommenterCmd)) return this.$_handle_user_assignment(assignCommenterCmd);
+			return this.$_handle_user_unassignment(unassignCommenterCmd);
+		}
+		return core.info(`🤖 Ignoring comment: ${this.context.payload.comment?.id} because it does not contain a supported command.`);
+	}
+	async _resolve_maintainers(maintainersInput) {
+		const maintainers = maintainersInput.split(",").map((m) => m.trim()).filter(Boolean);
+		const resolvedMaintainers = /* @__PURE__ */ new Set();
+		for (const maintainer of maintainers) if (maintainer.startsWith("@") && maintainer.includes("/")) {
+			const [org, team] = maintainer.substring(1).split("/");
+			const members = await this._get_team_members(org, team);
+			for (const m of members) resolvedMaintainers.add(m);
+		} else resolvedMaintainers.add(maintainer);
+		return Array.from(resolvedMaintainers);
+	}
+	async _get_team_members(org, team_slug) {
+		try {
+			return (await this.octokit.request("GET /orgs/{org}/teams/{team_slug}/members", {
+				org,
+				team_slug
+			})).data.map((m) => m.login);
+		} catch (error) {
+			core.warning(`Failed to fetch members for team @${org}/${team_slug}. Ensure the token has read:org permissions. Error: ${error}`);
+			return [];
+		}
+	}
+	_is_issue_pinned() {
+		const pinLabel = core.getInput(INPUTS.PIN_LABEL);
+		return this.issue?.labels?.some((label) => label.name === pinLabel) || false;
+	}
+	async $_handle_assignment_interest() {
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		if (this.issue?.assignee || (this.issue?.assignees?.length || 0) > 0) {
+			const commentTemplate = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		return this._create_comment(INPUTS.ASSIGNMENT_SUGGESTION_COMMENT, {
+			handle: this.comment?.user?.login,
+			trigger: core.getInput(INPUTS.SELF_ASSIGN_CMD)
+		});
+	}
+	async $_handle_self_assignment() {
+		core.info(`🤖 Starting assignment for issue #${this.issue?.number} in repo "${this.context.repo.owner}/${this.context.repo.repo}"`);
+		if (this.issue?.state === "closed") {
+			await this._create_comment(INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`[CLOSED ISSUE] User @${this.comment?.user?.login} tried to assign themselves to closed issue #${this.issue?.number}`);
+		}
+		const allowSelfAssignAuthor = core.getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== "false";
+		const isIssueAuthor = this.issue?.user?.login === this.comment?.user?.login;
+		if (!allowSelfAssignAuthor && isIssueAuthor) {
+			await this._create_comment(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} cannot self-assign their own issue #${this.issue?.number}`);
+		}
+		const ignoredUsersInput = core.getInput(INPUTS.IGNORED_USERS);
+		if (ignoredUsersInput) {
+			const ignoredUsers = ignoredUsersInput.split(",").map((u) => u.trim()).filter(Boolean);
+			const userHandle$1 = this.comment?.user?.login;
+			if (ignoredUsers.includes(userHandle$1)) {
+				await this._create_comment(INPUTS.IGNORED_MESSAGE, { handle: userHandle$1 });
+				core.setOutput("assigned", "no");
+				return core.info(`🤖 User @${userHandle$1} is in the ignored users list and cannot self-assign issue #${this.issue?.number}`);
+			}
+		}
+		const daysUntilUnassign = Number(core.getInput(INPUTS.DAYS_UNTIL_UNASSIGN));
+		const blockAssignment = core.getInput("block_assignment");
+		const comments = await this.octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+			owner: this.context.repo.owner,
+			repo: this.context.repo.repo,
+			issue_number: Number(this.issue?.number),
+			headers: { "X-GitHub-Api-Version": "2022-11-28" }
+		});
+		const unassignCmd = core.getInput(INPUTS.UNASSIGN_USER_CMD);
+		const unassignedComment = core.getInput(INPUTS.UNASSIGNED_COMMENT);
+		const userHandle = this.comment?.user?.login;
+		const wasUnassigned = comments.data.some((comment) => {
+			const hasManualUnassign = comment.body?.includes(`${unassignCmd} @${userHandle}`);
+			const hasAutoUnassign = comment.body?.includes(mustache_mustache.render(unassignedComment, { handle: userHandle }));
+			return hasManualUnassign || hasAutoUnassign;
+		});
+		if (blockAssignment === "true" && wasUnassigned) {
+			await this._create_comment(INPUTS.BLOCK_ASSIGNMENT_COMMENT, { handle: this.comment?.user?.login });
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 User @${this.comment?.user?.login} was previously unassigned from issue #${this.issue?.number}`);
+		}
+		if (this.issue?.assignee) {
+			const commentTemplate$1 = this._is_issue_pinned() ? INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED : INPUTS.ALREADY_ASSIGNED_COMMENT;
+			await this._create_comment(commentTemplate$1, {
+				total_days: String(daysUntilUnassign),
+				handle: this.comment?.user?.login,
+				assignee: this.issue?.assignee?.login
+			});
+			core.setOutput("assigned", "no");
+			return core.info(`🤖 Issue #${this.issue?.number} is already assigned to @${this.issue?.assignee?.login}`);
+		}
+		const overallLabelsRaw = core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS);
+		const overallCountLimit = parseInt(core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10);
+		if (overallLabelsRaw && overallCountLimit > 0) {
+			const currentIssueLabels = this.issue?.labels?.map((l) => typeof l === "string" ? l : l.name) || [];
+			const trackedLabels = overallLabelsRaw.split(",").map((l) => l.trim()).filter(Boolean);
+			const matchingLabels = currentIssueLabels.filter((label) => trackedLabels.includes(label));
+			if (matchingLabels.length > 0) {
+				const labelCounts = await this._get_assignment_count_per_label(overallLabelsRaw);
+				for (const label of matchingLabels) {
+					const count = labelCounts.get(label) || 0;
+					if (count >= overallCountLimit) {
+						await this._create_comment(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE, {
+							handle: this.comment?.user?.login,
+							max_overall_assignment_count: overallCountLimit.toString(),
+							label
+						});
+						core.setOutput("assigned", "no");
+						return core.info(`🤖 User @${this.comment?.user?.login} has reached the assignment limit for label "${label}" (${count}/${overallCountLimit})`);
+					}
 				}
 				return false;
 			}
@@ -58730,11 +58869,24 @@ var AssignmentValidator = class {
 	/**
 	* Check if the issue has a pin label (exempt from unassignment)
 	*/
-	isIssuePinned(issue) {
-		const { pinLabel } = this.config;
-		return issue.labels?.some((label) => {
-			return (typeof label === "string" ? label : label.name) === pinLabel;
-		}) ?? false;
+	async _is_newcomer(username) {
+		const { owner, repo } = this.context.repo;
+		try {
+			const query = [
+				`repo:${owner}/${repo}`,
+				"is:pr",
+				`author:${username}`
+			].join(" ");
+			return (await this.octokit.request("GET /search/issues", {
+				q: query,
+				per_page: 1,
+				advanced_search: "true",
+				headers: { "X-GitHub-Api-Version": "2022-11-28" }
+			})).data.total_count === 0;
+		} catch (error) {
+			core.warning(`Failed to check PR history for @${username}: ${error}`);
+			return false;
+		}
 	}
 	/**
 	* Check if issue has the required label (if configured)
