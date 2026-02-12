@@ -16,7 +16,8 @@ export class AssignUserCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, config } = context
-    const { issueService, commentService, newcomerChecker } = services
+    const { issueService, commentService, newcomerChecker, statsService } =
+      services
 
     const targetUsername = this.parsedCommand.targetUsername
 
@@ -33,11 +34,17 @@ export class AssignUserCommand implements Command {
     // Check if newcomer
     const isNewcomer = await newcomerChecker.isNewcomer(targetUsername)
     const commentTemplate = isNewcomer
-      ? config.assignedCommentNewcomer
-      : config.assignedComment
+      ? config.assignedNewcomerText
+      : config.assignedText
 
     core.info(
       `🤖 User @${targetUsername} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
+    )
+
+    // Fetch PR stats for the contributor
+    const stats = await statsService.getContributorStats(targetUsername)
+    core.info(
+      `🤖 @${targetUsername} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`,
     )
 
     await Promise.all([
@@ -57,6 +64,10 @@ export class AssignUserCommand implements Command {
           ),
           handle: targetUsername,
           pin_label: config.pinLabel,
+          prs_total: stats.prs_total,
+          prs_merged: stats.prs_merged,
+          prs_unmerged: stats.prs_unmerged,
+          prs_merged_percentage: stats.prs_merged_percentage,
         },
       ),
     ])

@@ -58431,7 +58431,7 @@ var AssignUserCommand = class {
 	}
 	async execute(context$3, services) {
 		const { issue, config } = context$3;
-		const { issueService, commentService, newcomerChecker } = services;
+		const { issueService, commentService, newcomerChecker, statsService } = services;
 		const targetUsername = this.parsedCommand.targetUsername;
 		_actions_core.info(`Starting issue assignment to user`);
 		if (!targetUsername) {
@@ -58444,13 +58444,19 @@ var AssignUserCommand = class {
 		}
 		_actions_core.info(`🤖 Assigning @${targetUsername} to issue #${issue?.number}`);
 		const isNewcomer = await newcomerChecker.isNewcomer(targetUsername);
-		const commentTemplate = isNewcomer ? config.assignedCommentNewcomer : config.assignedComment;
+		const commentTemplate = isNewcomer ? config.assignedNewcomerText : config.assignedText;
 		_actions_core.info(`🤖 User @${targetUsername} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		const stats = await statsService.getContributorStats(targetUsername);
+		_actions_core.info(`🤖 @${targetUsername} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`);
 		await Promise.all([issueService.assignWithLabel(Number(issue?.number), targetUsername.trim(), config.assignedLabel), commentService.createTemplatedComment(Number(issue?.number), commentTemplate, {
 			total_days: config.daysUntilUnassign,
 			unassigned_date: (0, date_fns.format)((0, date_fns.add)(/* @__PURE__ */ new Date(), { days: config.daysUntilUnassign }), "dd LLLL y"),
 			handle: targetUsername,
-			pin_label: config.pinLabel
+			pin_label: config.pinLabel,
+			prs_total: stats.prs_total,
+			prs_merged: stats.prs_merged,
+			prs_unmerged: stats.prs_unmerged,
+			prs_merged_percentage: stats.prs_merged_percentage
 		})]);
 		_actions_core.info(`🤖 Issue #${issue?.number} assigned!`);
 		_actions_core.setOutput("assigned", "yes");
@@ -58477,7 +58483,7 @@ var AutoSuggestCommand = class {
 			const template = validator.isIssuePinned({
 				labels: issue?.labels,
 				number: Number(issue?.number)
-			}) ? config.alreadyAssignedCommentPinned : config.alreadyAssignedComment;
+			}) ? config.alreadyAssignedPinnedText : config.alreadyAssignedText;
 			await commentService.createTemplatedComment(Number(issue?.number), template, {
 				total_days: String(config.daysUntilUnassign),
 				handle: username,
@@ -58490,7 +58496,7 @@ var AutoSuggestCommand = class {
 				message: `Issue is already assigned to @${issue?.assignee?.login}`
 			};
 		}
-		await commentService.createTemplatedComment(Number(issue?.number), config.assignmentSuggestionComment, {
+		await commentService.createTemplatedComment(Number(issue?.number), config.assignmentSuggestionText, {
 			handle: username,
 			trigger: config.selfAssignCmd
 		});
@@ -58604,7 +58610,7 @@ var CommandParser = class {
 var SelfAssignCommand = class {
 	async execute(context$3, services) {
 		const { issue, comment, config } = context$3;
-		const { issueService, commentService, validator, newcomerChecker } = services;
+		const { issueService, commentService, validator, newcomerChecker, statsService } = services;
 		const username = comment?.user?.login;
 		_actions_core.info(`🤖 Starting assignment for issue #${issue?.number} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
 		const validation = await validator.validateAssignment({
@@ -58616,9 +58622,9 @@ var SelfAssignCommand = class {
 			labels: issue?.labels
 		}, username);
 		if (!validation.valid) {
-			if (validation.reason?.includes("is closed")) await commentService.createTemplatedComment(Number(issue?.number), config.closedIssueAssignmentComment, { handle: username });
-			else if (validation.reason?.includes("ignored users list")) await commentService.createTemplatedComment(Number(issue?.number), config.ignoredMessage, { handle: username });
-			else if (validation.reason?.includes("cannot self-assign their own issue")) await commentService.createTemplatedComment(Number(issue?.number), config.selfAssignAuthorBlockedComment, { handle: username });
+			if (validation.reason?.includes("is closed")) await commentService.createTemplatedComment(Number(issue?.number), config.closedIssueAssignmentText, { handle: username });
+			else if (validation.reason?.includes("ignored users list")) await commentService.createTemplatedComment(Number(issue?.number), config.ignoredText, { handle: username });
+			else if (validation.reason?.includes("cannot self-assign their own issue")) await commentService.createTemplatedComment(Number(issue?.number), config.selfAssignAuthorBlockedText, { handle: username });
 			else if (validation.reason?.includes("already assigned")) {
 				const currentAssignee = issue?.assignee?.login;
 				if (currentAssignee === username) {
@@ -58632,7 +58638,7 @@ var SelfAssignCommand = class {
 				const template = validator.isIssuePinned({
 					labels: issue?.labels,
 					number: Number(issue?.number)
-				}) ? config.alreadyAssignedCommentPinned : config.alreadyAssignedComment;
+				}) ? config.alreadyAssignedPinnedText : config.alreadyAssignedText;
 				if (!await this._hasRecentAlreadyAssignedComment(issueService, Number(issue?.number), username, template)) {
 					const lastActivity = issue?.updated_at ? new Date(issue.updated_at) : /* @__PURE__ */ new Date();
 					const daysSinceActivity = (0, date_fns.differenceInDays)(/* @__PURE__ */ new Date(), lastActivity);
@@ -58644,14 +58650,14 @@ var SelfAssignCommand = class {
 						assignee: currentAssignee
 					});
 				} else _actions_core.info(`🤖 Skipping "already assigned" comment - already posted recently for issue #${issue?.number}`);
-			} else if (validation.reason?.includes("was previously unassigned")) await commentService.createTemplatedComment(Number(issue?.number), config.blockAssignmentComment, { handle: username });
-			else if (validation.reason?.includes("maximum number of assignments")) await commentService.createTemplatedComment(Number(issue?.number), config.maxAssignmentsMessage, {
+			} else if (validation.reason?.includes("was previously unassigned")) await commentService.createTemplatedComment(Number(issue?.number), config.blockAssignmentText, { handle: username });
+			else if (validation.reason?.includes("maximum number of assignments")) await commentService.createTemplatedComment(Number(issue?.number), config.maxAssignmentsText, {
 				handle: username,
 				max_assignments: config.maxAssignments.toString()
 			});
 			else if (validation.reason?.includes("assignment limit for label")) {
 				const label = validation.reason.match(/label "([^"]+)"/)?.[1] ?? "";
-				await commentService.createTemplatedComment(Number(issue?.number), config.maxOverallAssignmentMessage, {
+				await commentService.createTemplatedComment(Number(issue?.number), config.maxOverallAssignmentText, {
 					handle: username,
 					max_overall_assignment_count: config.maxOverallAssignmentCount.toString(),
 					label
@@ -58666,13 +58672,19 @@ var SelfAssignCommand = class {
 		}
 		_actions_core.info(`🤖 Assigning @${username} to issue #${issue?.number}`);
 		const isNewcomer = await newcomerChecker.isNewcomer(username);
-		const commentTemplate = isNewcomer ? config.assignedCommentNewcomer : config.assignedComment;
+		const commentTemplate = isNewcomer ? config.assignedNewcomerText : config.assignedText;
 		_actions_core.info(`🤖 User @${username} is ${isNewcomer ? "a newcomer" : "a returning contributor"}`);
+		const stats = await statsService.getContributorStats(username);
+		_actions_core.info(`🤖 @${username} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`);
 		await Promise.all([issueService.assignWithLabel(Number(issue?.number), username, config.assignedLabel), commentService.createTemplatedComment(Number(issue?.number), commentTemplate, {
 			total_days: config.daysUntilUnassign,
 			unassigned_date: (0, date_fns.format)((0, date_fns.add)(/* @__PURE__ */ new Date(), { days: config.daysUntilUnassign }), "dd LLLL y"),
 			handle: username,
-			pin_label: config.pinLabel
+			pin_label: config.pinLabel,
+			prs_total: stats.prs_total,
+			prs_merged: stats.prs_merged,
+			prs_unmerged: stats.prs_unmerged,
+			prs_merged_percentage: stats.prs_merged_percentage
 		})]);
 		_actions_core.info(`🤖 Issue #${issue?.number} assigned!`);
 		_actions_core.setOutput("assigned", "yes");
@@ -58712,11 +58724,12 @@ var SelfUnassignCommand = class {
 		const { issueService, commentService, validator } = services;
 		const commenterLogin = comment?.user?.login;
 		const assigneeLogin = issue?.assignee?.login;
-		_actions_core.info(`🤖 Starting issue #${issue?.number} unassignment for user @${assigneeLogin} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
+		_actions_core.info(`🤖 Starting issue #${issue?.number} unassignment for user @${commenterLogin} in repo "${context$3.repoOwner}/${context$3.repoName}"`);
 		if (assigneeLogin !== commenterLogin) {
 			_actions_core.setOutput("unassigned", "no");
 			_actions_core.setOutput("unassigned_issues", []);
-			_actions_core.info(`🤖 Commenter is different from the assignee, ignoring...`);
+			if (assigneeLogin) _actions_core.info(`🤖 Commenter @${commenterLogin} is not the assignee @${assigneeLogin}, staying silent (issue #326)`);
+			else _actions_core.info(`🤖 Issue is not assigned to anyone, staying silent (issue #326)`);
 			return {
 				success: false,
 				message: "Commenter is not the assignee",
@@ -58726,7 +58739,8 @@ var SelfUnassignCommand = class {
 				}
 			};
 		}
-		const unassignBody = validator.getUnassignCommentBody(config.unassignedComment, {
+		const unassignTemplate = config.selfUnassignedText || config.unassignedText;
+		const unassignBody = validator.getUnassignCommentBody(unassignTemplate, {
 			handle: commenterLogin,
 			pin_label: config.pinLabel
 		});
@@ -58821,25 +58835,26 @@ let INPUTS = /* @__PURE__ */ function(INPUTS$1) {
 	INPUTS$1["PIN_LABEL"] = "pin_label";
 	INPUTS$1["DAYS_UNTIL_UNASSIGN"] = "days_until_unassign";
 	INPUTS$1["STALE_ASSIGNMENT_LABEL"] = "stale_assignment_label";
-	INPUTS$1["ASSIGNED_COMMENT"] = "assigned_comment";
-	INPUTS$1["ASSIGNED_COMMENT_NEWCOMER"] = "assigned_comment_newcomer";
-	INPUTS$1["UNASSIGNED_COMMENT"] = "unassigned_comment";
-	INPUTS$1["ALREADY_ASSIGNED_COMMENT"] = "already_assigned_comment";
-	INPUTS$1["ALREADY_ASSIGNED_COMMENT_PINNED"] = "already_assigned_comment_pinned";
-	INPUTS$1["ASSIGNMENT_SUGGESTION_COMMENT"] = "assignment_suggestion_comment";
-	INPUTS$1["BLOCK_ASSIGNMENT_COMMENT"] = "block_assignment_comment";
+	INPUTS$1["ASSIGNED_TEXT"] = "assigned_text";
+	INPUTS$1["ASSIGNED_NEWCOMER_TEXT"] = "assigned_newcomer_text";
+	INPUTS$1["UNASSIGNED_TEXT"] = "unassigned_text";
+	INPUTS$1["SELF_UNASSIGNED_TEXT"] = "self_unassigned_text";
+	INPUTS$1["ALREADY_ASSIGNED_TEXT"] = "already_assigned_text";
+	INPUTS$1["ALREADY_ASSIGNED_PINNED_TEXT"] = "already_assigned_pinned_text";
+	INPUTS$1["ASSIGNMENT_SUGGESTION_TEXT"] = "assignment_suggestion_text";
+	INPUTS$1["BLOCK_ASSIGNMENT_TEXT"] = "block_assignment_text";
 	INPUTS$1["ENABLE_REMINDER"] = "enable_reminder";
 	INPUTS$1["REMINDER_DAYS"] = "reminder_days";
-	INPUTS$1["REMINDER_COMMENT"] = "reminder_comment";
+	INPUTS$1["REMINDER_TEXT"] = "reminder_text";
 	INPUTS$1["MAX_ASSIGNMENTS"] = "max_assignments";
-	INPUTS$1["MAX_ASSIGNMENTS_MESSAGE"] = "max_assignments_message";
+	INPUTS$1["MAX_ASSIGNMENTS_TEXT"] = "max_assignments_text";
 	INPUTS$1["MAX_OVERALL_ASSIGNMENT_LABELS"] = "max_overall_assignment_labels";
 	INPUTS$1["MAX_OVERALL_ASSIGNMENT_COUNT"] = "max_overall_assignment_count";
-	INPUTS$1["MAX_OVERALL_ASSIGNMENT_MESSAGE"] = "max_overall_assignment_message";
-	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
+	INPUTS$1["MAX_OVERALL_ASSIGNMENT_TEXT"] = "max_overall_assignment_text";
+	INPUTS$1["SELF_ASSIGN_AUTHOR_BLOCKED_TEXT"] = "self_assign_author_blocked_text";
 	INPUTS$1["IGNORED_USERS"] = "ignored_users";
-	INPUTS$1["IGNORED_MESSAGE"] = "ignored_message";
-	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_COMMENT"] = "closed_issue_assignment_comment";
+	INPUTS$1["IGNORED_TEXT"] = "ignored_text";
+	INPUTS$1["CLOSED_ISSUE_ASSIGNMENT_TEXT"] = "closed_issue_assignment_text";
 	return INPUTS$1;
 }({});
 
@@ -58882,20 +58897,21 @@ function loadConfig() {
 		maxOverallAssignmentCount: Number.parseInt(_actions_core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10),
 		enableReminder: _actions_core.getInput(INPUTS.ENABLE_REMINDER) === "true",
 		reminderDays,
-		assignedComment: _actions_core.getInput(INPUTS.ASSIGNED_COMMENT),
-		assignedCommentNewcomer: _actions_core.getInput(INPUTS.ASSIGNED_COMMENT_NEWCOMER),
-		unassignedComment: _actions_core.getInput(INPUTS.UNASSIGNED_COMMENT),
-		alreadyAssignedComment: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT),
-		alreadyAssignedCommentPinned: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED),
-		assignmentSuggestionComment: _actions_core.getInput(INPUTS.ASSIGNMENT_SUGGESTION_COMMENT),
-		blockAssignmentComment: _actions_core.getInput(INPUTS.BLOCK_ASSIGNMENT_COMMENT),
-		reminderComment: _actions_core.getInput(INPUTS.REMINDER_COMMENT),
-		maxAssignmentsMessage: _actions_core.getInput(INPUTS.MAX_ASSIGNMENTS_MESSAGE),
-		maxOverallAssignmentMessage: _actions_core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE),
-		selfAssignAuthorBlockedComment: _actions_core.getInput(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT),
+		assignedText: _actions_core.getInput(INPUTS.ASSIGNED_TEXT),
+		assignedNewcomerText: _actions_core.getInput(INPUTS.ASSIGNED_NEWCOMER_TEXT),
+		unassignedText: _actions_core.getInput(INPUTS.UNASSIGNED_TEXT),
+		selfUnassignedText: _actions_core.getInput(INPUTS.SELF_UNASSIGNED_TEXT),
+		alreadyAssignedText: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_TEXT),
+		alreadyAssignedPinnedText: _actions_core.getInput(INPUTS.ALREADY_ASSIGNED_PINNED_TEXT),
+		assignmentSuggestionText: _actions_core.getInput(INPUTS.ASSIGNMENT_SUGGESTION_TEXT),
+		blockAssignmentText: _actions_core.getInput(INPUTS.BLOCK_ASSIGNMENT_TEXT),
+		reminderText: _actions_core.getInput(INPUTS.REMINDER_TEXT),
+		maxAssignmentsText: _actions_core.getInput(INPUTS.MAX_ASSIGNMENTS_TEXT),
+		maxOverallAssignmentText: _actions_core.getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_TEXT),
+		selfAssignAuthorBlockedText: _actions_core.getInput(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_TEXT),
 		ignoredUsers: _actions_core.getInput(INPUTS.IGNORED_USERS) ? _actions_core.getInput(INPUTS.IGNORED_USERS).split(",").map((u) => u.trim()).filter(Boolean) : [],
-		ignoredMessage: _actions_core.getInput(INPUTS.IGNORED_MESSAGE),
-		closedIssueAssignmentComment: _actions_core.getInput(INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT)
+		ignoredText: _actions_core.getInput(INPUTS.IGNORED_TEXT),
+		closedIssueAssignmentText: _actions_core.getInput(INPUTS.CLOSED_ISSUE_ASSIGNMENT_TEXT)
 	};
 }
 
@@ -58985,14 +59001,14 @@ var AssignmentValidator = class {
 	* Check if user was previously unassigned and is blocked from reassignment
 	*/
 	async wasBlockedFromReassignment(issueNumber, username) {
-		const { blockAssignment, unassignUserCmd, unassignedComment } = this.config;
+		const { blockAssignment, unassignUserCmd, unassignedText } = this.config;
 		if (!blockAssignment) return { valid: true };
 		const comments = await this.issueService.getComments(issueNumber);
 		const marker = this.getUnassignMarker(username);
 		const wasUnassigned = comments.some((comment) => {
 			const hasMarker = comment.body?.includes(marker);
 			const hasManualUnassign = comment.body?.includes(`${unassignUserCmd} @${username}`);
-			const hasRenderedComment = comment.body?.includes(mustache.default.render(unassignedComment, { handle: username }));
+			const hasRenderedComment = comment.body?.includes(mustache.default.render(unassignedText, { handle: username }));
 			return hasMarker || hasManualUnassign || hasRenderedComment;
 		});
 		return {
@@ -59108,7 +59124,7 @@ var NewcomerChecker = class {
 
 //#endregion
 //#region services/github/comment-service.ts
-const API_VERSION$1 = "2022-11-28";
+const API_VERSION$2 = "2022-11-28";
 var CommentService = class {
 	constructor(octokit, repoContext) {
 		this.octokit = octokit;
@@ -59123,7 +59139,7 @@ var CommentService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			body,
-			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
+			headers: { "X-GitHub-Api-Version": API_VERSION$2 }
 		});
 	}
 	/**
@@ -59143,7 +59159,7 @@ var CommentService = class {
 
 //#endregion
 //#region services/github/issue-service.ts
-const API_VERSION = "2022-11-28";
+const API_VERSION$1 = "2022-11-28";
 var IssueService = class {
 	constructor(octokit, repoContext) {
 		this.octokit = octokit;
@@ -59155,7 +59171,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			assignees: [username],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async removeAssignee(issueNumber, username) {
@@ -59164,7 +59180,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			assignees: [username],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async addLabel(issueNumber, label) {
@@ -59173,7 +59189,7 @@ var IssueService = class {
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
 			labels: [label],
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		});
 	}
 	async removeLabel(issueNumber, label) {
@@ -59183,7 +59199,7 @@ var IssueService = class {
 				repo: this.repoContext.repo,
 				issue_number: issueNumber,
 				name: label,
-				headers: { "X-GitHub-Api-Version": API_VERSION }
+				headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 			});
 		} catch {}
 	}
@@ -59192,7 +59208,7 @@ var IssueService = class {
 			owner: this.repoContext.owner,
 			repo: this.repoContext.repo,
 			issue_number: issueNumber,
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		})).data;
 	}
 	async searchIssues(query) {
@@ -59201,7 +59217,7 @@ var IssueService = class {
 		return (await this.octokit.request("GET /search/issues", {
 			q: fullQuery,
 			advanced_search: "true",
-			headers: { "X-GitHub-Api-Version": API_VERSION }
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		})).data;
 	}
 	async getAssignmentCount(username) {
@@ -59275,6 +59291,53 @@ var TeamService = class {
 };
 
 //#endregion
+//#region services/github/stats-service.ts
+const API_VERSION = "2022-11-28";
+var StatsService = class {
+	constructor(octokit, repoContext) {
+		this.octokit = octokit;
+		this.repoContext = repoContext;
+	}
+	/**
+	* Get PR statistics for a contributor in the repository
+	*/
+	async getContributorStats(username) {
+		try {
+			const allPrs = await this.searchPullRequests(`is:pr author:${username}`);
+			const mergedPrs = await this.searchPullRequests(`is:pr author:${username} is:merged`);
+			const total = allPrs.total_count;
+			const merged = mergedPrs.total_count;
+			return {
+				prs_total: total,
+				prs_merged: merged,
+				prs_unmerged: total - merged,
+				prs_merged_percentage: total > 0 ? Math.round(merged / total * 100) : 0
+			};
+		} catch (error) {
+			_actions_core.warning(`Failed to fetch PR stats for @${username}: ${error}`);
+			return {
+				prs_total: 0,
+				prs_merged: 0,
+				prs_unmerged: 0,
+				prs_merged_percentage: 0
+			};
+		}
+	}
+	/**
+	* Search for pull requests
+	*/
+	async searchPullRequests(query) {
+		const { owner, repo } = this.repoContext;
+		const fullQuery = `repo:${owner}/${repo} ${query}`;
+		return (await this.octokit.request("GET /search/issues", {
+			q: fullQuery,
+			advanced_search: "true",
+			headers: { "X-GitHub-Api-Version": API_VERSION }
+		})).data;
+	}
+};
+
+//#endregion
 //#region handlers/comment-handler.ts
 var CommentHandler = class {
 	constructor() {
@@ -59293,6 +59356,7 @@ var CommentHandler = class {
 			issueService,
 			commentService,
 			teamService: this.teamService,
+			statsService: new StatsService(this.octokit, repoContext),
 			validator: new AssignmentValidator(issueService, this.config),
 			newcomerChecker: new NewcomerChecker(issueService)
 		};
@@ -59517,9 +59581,9 @@ var ScheduleHandler = class {
 			_actions_core.info(`📋 Issue #${issue.number} already unassigned, skipping...`);
 			return;
 		}
-		const { unassignedComment, pinLabel, assignedLabel } = this.config;
+		const { unassignedText, pinLabel, assignedLabel } = this.config;
 		const marker = `<!-- unassigned:${issue.assignee.login} -->`;
-		const body = `${this.commentService.renderTemplate(unassignedComment, {
+		const body = `${this.commentService.renderTemplate(unassignedText, {
 			handle: issue.assignee.login,
 			pin_label: pinLabel
 		})}\n${marker}`;
@@ -59535,9 +59599,9 @@ var ScheduleHandler = class {
 			_actions_core.info(`🔔 Skipping reminder for issue #${issue.number} - no longer assigned`);
 			return;
 		}
-		const { daysUntilUnassign, reminderComment, pinLabel } = this.config;
+		const { daysUntilUnassign, reminderText, pinLabel } = this.config;
 		const daysRemaining = Math.max(0, daysUntilUnassign - daysSinceActivity);
-		const body = this.commentService.renderTemplate(reminderComment, {
+		const body = this.commentService.renderTemplate(reminderText, {
 			handle: issue.assignee.login,
 			days_remaining: daysRemaining,
 			pin_label: pinLabel

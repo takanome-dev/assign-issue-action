@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
-import { getConfig, loadConfig, resetConfig } from '../config'
 
-// Mock @actions/core
-const mockGetInput = mock((name: string) => {
+// Mock @actions/core before importing config
+const mockGetInput = mock((name: string): string => {
   const inputs: Record<string, string> = {
     github_token: 'test-token',
     self_assign_cmd: '/assign-me',
@@ -23,23 +22,26 @@ const mockGetInput = mock((name: string) => {
     max_overall_assignment_count: '2',
     enable_reminder: 'true',
     reminder_days: '7',
-    assigned_comment: 'Assigned to {{handle}}',
-    assigned_comment_newcomer: 'Welcome {{handle}}!',
-    unassigned_comment: 'Unassigned {{handle}}',
-    self_unassigned_comment: 'Self-unassigned {{handle}}',
-    already_assigned_comment: 'Already assigned',
-    already_assigned_comment_pinned: 'Pinned and assigned',
-    assignment_suggestion_comment: 'Use /assign-me',
-    block_assignment_comment: 'Blocked',
-    reminder_comment: 'Reminder!',
-    max_assignments_message: 'Max reached',
-    max_overall_assignment_message: 'Label limit reached',
-    self_assign_author_blocked_comment: 'Authors cannot self-assign',
+    assigned_text: 'Assigned to {{handle}}',
+    assigned_newcomer_text: 'Welcome {{handle}}!',
+    unassigned_text: 'Unassigned {{handle}}',
+    already_assigned_text: 'Already assigned',
+    already_assigned_pinned_text: 'Pinned and assigned',
+    assignment_suggestion_text: 'Use /assign-me',
+    block_assignment_text: 'Blocked',
+    reminder_text: 'Reminder!',
+    max_assignments_text: 'Max reached',
+    max_overall_assignment_text: 'Label limit reached',
+    self_assign_author_blocked_text: 'Authors cannot self-assign',
+    ignored_users: '',
+    ignored_text: 'Ignored',
+    closed_issue_assignment_text: 'Closed issue',
+    self_unassigned_text: '',
   }
   return inputs[name] ?? ''
 })
 
-const mockGetBooleanInput = mock((name: string) => {
+const mockGetBooleanInput = mock((name: string): boolean => {
   const inputs: Record<string, boolean> = {
     enable_auto_suggestion: false,
   }
@@ -50,6 +52,9 @@ mock.module('@actions/core', () => ({
   getInput: mockGetInput,
   getBooleanInput: mockGetBooleanInput,
 }))
+
+// Import config after mocking
+const { getConfig, loadConfig, resetConfig } = await import('../config')
 
 describe('config', () => {
   beforeEach(() => {
@@ -108,13 +113,11 @@ describe('config', () => {
       expect(config.reminderDays).toBe(7)
     })
 
-    it('should load comment templates', () => {
+    it('should load text templates', () => {
       const config = loadConfig()
 
-      expect(config.assignedComment).toBe('Assigned to {{handle}}')
-      expect(config.assignedCommentNewcomer).toBe('Welcome {{handle}}!')
-      expect(config.unassignedComment).toBe('Unassigned {{handle}}')
-      expect(config.selfUnassignedComment).toBe('Self-unassigned {{handle}}')
+      expect(config.assignedText).toBe('Assigned to {{handle}}')
+      expect(config.assignedNewcomerText).toBe('Welcome {{handle}}!')
     })
 
     it('should default selfUnassignedComment to unassignedComment when not set', () => {
@@ -127,13 +130,13 @@ describe('config', () => {
       })
 
       const config = loadConfig()
-      expect(config.selfUnassignedComment).toBe('Default unassigned message')
+      expect(config.selfUnassignedText).toBe('Default unassigned message')
     })
   })
 
   describe('loadConfig with missing token', () => {
     it('should throw error when github_token is missing', () => {
-      mockGetInput.mockImplementation((name: string) => {
+      mockGetInput.mockImplementation((name: string): string => {
         if (name === 'github_token') return ''
         return 'some-value'
       })
@@ -144,7 +147,7 @@ describe('config', () => {
 
   describe('reminderDays edge cases', () => {
     it('should default to "auto" when reminder_days is not set', () => {
-      mockGetInput.mockImplementation((name: string) => {
+      mockGetInput.mockImplementation((name: string): string => {
         if (name === 'reminder_days') return ''
         if (name === 'github_token') return 'test-token'
         return 'some-value'
@@ -155,7 +158,7 @@ describe('config', () => {
     })
 
     it('should handle "auto" string value for reminder_days', () => {
-      mockGetInput.mockImplementation((name: string) => {
+      mockGetInput.mockImplementation((name: string): string => {
         if (name === 'reminder_days') return 'auto'
         if (name === 'github_token') return 'test-token'
         return 'some-value'
@@ -166,7 +169,7 @@ describe('config', () => {
     })
 
     it('should handle invalid numeric string for reminder_days', () => {
-      mockGetInput.mockImplementation((name: string) => {
+      mockGetInput.mockImplementation((name: string): string => {
         if (name === 'reminder_days') return 'not-a-number'
         if (name === 'github_token') return 'test-token'
         return 'some-value'

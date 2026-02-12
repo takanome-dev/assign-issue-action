@@ -25,6 +25,7 @@ import {
   CommentService,
   IssueService,
   type RepoContext,
+  StatsService,
   TeamService,
 } from '../services/github'
 import type { GhComment, GhIssue } from '../types'
@@ -60,6 +61,7 @@ export default class CommentHandler {
       issueService,
       commentService,
       teamService: this.teamService,
+      statsService: new StatsService(this.octokit, repoContext),
       validator: new AssignmentValidator(issueService, this.config),
       newcomerChecker: new NewcomerChecker(issueService),
     }

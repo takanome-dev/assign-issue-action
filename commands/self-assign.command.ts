@@ -13,8 +13,13 @@ export class SelfAssignCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, comment, config } = context
-    const { issueService, commentService, validator, newcomerChecker } =
-      services
+    const {
+      issueService,
+      commentService,
+      validator,
+      newcomerChecker,
+      statsService,
+    } = services
     const username = comment?.user?.login
 
     core.info(
@@ -39,13 +44,13 @@ export class SelfAssignCommand implements Command {
       if (validation.reason?.includes('is closed')) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.closedIssueAssignmentComment,
+          config.closedIssueAssignmentText,
           { handle: username },
         )
       } else if (validation.reason?.includes('ignored users list')) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.ignoredMessage,
+          config.ignoredText,
           { handle: username },
         )
       } else if (
@@ -53,7 +58,7 @@ export class SelfAssignCommand implements Command {
       ) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.selfAssignAuthorBlockedComment,
+          config.selfAssignAuthorBlockedText,
           { handle: username },
         )
       } else if (validation.reason?.includes('already assigned')) {
@@ -76,8 +81,8 @@ export class SelfAssignCommand implements Command {
           number: Number(issue?.number),
         })
         const template = isPinned
-          ? config.alreadyAssignedCommentPinned
-          : config.alreadyAssignedComment
+          ? config.alreadyAssignedPinnedText
+          : config.alreadyAssignedText
 
         // Check if we already posted an "already assigned" comment recently
         const hasRecentComment = await this._hasRecentAlreadyAssignedComment(
@@ -117,13 +122,13 @@ export class SelfAssignCommand implements Command {
       } else if (validation.reason?.includes('was previously unassigned')) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.blockAssignmentComment,
+          config.blockAssignmentText,
           { handle: username },
         )
       } else if (validation.reason?.includes('maximum number of assignments')) {
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.maxAssignmentsMessage,
+          config.maxAssignmentsText,
           {
             handle: username,
             max_assignments: config.maxAssignments.toString(),
@@ -135,7 +140,7 @@ export class SelfAssignCommand implements Command {
         const label = labelMatch?.[1] ?? ''
         await commentService.createTemplatedComment(
           Number(issue?.number),
-          config.maxOverallAssignmentMessage,
+          config.maxOverallAssignmentText,
           {
             handle: username,
             max_overall_assignment_count:
@@ -155,11 +160,17 @@ export class SelfAssignCommand implements Command {
     // Check if newcomer
     const isNewcomer = await newcomerChecker.isNewcomer(username)
     const commentTemplate = isNewcomer
-      ? config.assignedCommentNewcomer
-      : config.assignedComment
+      ? config.assignedNewcomerText
+      : config.assignedText
 
     core.info(
       `🤖 User @${username} is ${isNewcomer ? 'a newcomer' : 'a returning contributor'}`,
+    )
+
+    // Fetch PR stats for the contributor
+    const stats = await statsService.getContributorStats(username)
+    core.info(
+      `🤖 @${username} has ${stats.prs_total} PRs (${stats.prs_merged} merged, ${stats.prs_merged_percentage}%)`,
     )
 
     // Assign and post comment
@@ -180,6 +191,10 @@ export class SelfAssignCommand implements Command {
           ),
           handle: username,
           pin_label: config.pinLabel,
+          prs_total: stats.prs_total,
+          prs_merged: stats.prs_merged,
+          prs_unmerged: stats.prs_unmerged,
+          prs_merged_percentage: stats.prs_merged_percentage,
         },
       ),
     ])

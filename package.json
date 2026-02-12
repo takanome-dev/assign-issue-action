@@ -22,7 +22,9 @@
     "ci": "bun run lint && bun run test",
     "test:search": "bun scripts/test-action.js search",
     "test:unassign": "bun scripts/test-action.js unassign",
-    "test:help": "bun scripts/test-action.js help"
+    "test:help": "bun scripts/test-action.js help",
+    "debug:stats": "bun scripts/debug-stats.ts",
+    "debug:stats:curl": "./scripts/debug-stats-curl.sh"
   },
   "homepage": "https://github.com/takanome-dev/assign-issue-action#readme",
   "bugs": "https://github.com/takanome-dev/assign-issue-action/issues",

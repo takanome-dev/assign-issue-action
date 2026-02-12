@@ -19,6 +19,7 @@ export enum INPUTS {
   ASSIGNED_TEXT = 'assigned_text',
   ASSIGNED_NEWCOMER_TEXT = 'assigned_newcomer_text',
   UNASSIGNED_TEXT = 'unassigned_text',
+  SELF_UNASSIGNED_TEXT = 'self_unassigned_text',
   ALREADY_ASSIGNED_TEXT = 'already_assigned_text',
   ALREADY_ASSIGNED_PINNED_TEXT = 'already_assigned_pinned_text',
   ASSIGNMENT_SUGGESTION_TEXT = 'assignment_suggestion_text',
