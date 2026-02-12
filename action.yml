@@ -65,9 +65,9 @@ inputs:
   pin_label:
     default: 📌 Pinned
     description: A label that prevents automatic unassignment, typically for long-term issues.
-  assigned_comment:
+  assigned_text:
     description: >
-      The comment posted after a returning contributor (has opened a PR before) has assigned themselves to an issue.
+      The text posted after a returning contributor (has opened a PR before) has assigned themselves to an issue.
     default: |
       ### 🎉 Issue Assignment Confirmation
 
@@ -84,10 +84,10 @@ inputs:
       - Updates and status reports are encouraged to show progress
       </details>
 
-  assigned_comment_newcomer:
+  assigned_newcomer_text:
     description: >
-      The comment posted after a first-time contributor (has never opened a PR) has assigned themselves to an issue.
-      If not set, defaults to the `assigned_comment` message.
+      The text posted after a first-time contributor (has never opened a PR) has assigned themselves to an issue.
+      If not set, defaults to the `assigned_text` text.
     default: |
       ### 🎉 Welcome to the Project!
 
@@ -117,9 +117,9 @@ inputs:
 
       Happy coding! 🚀
 
-  already_assigned_comment:
+  already_assigned_text:
     description: >
-      The comment posted when a user tries to assign themselves to an issue that is already assigned.
+      The text posted when a user tries to assign themselves to an issue that is already assigned.
     default: |
       ### ⚠️ Issue Already Assigned
 
@@ -135,9 +135,9 @@ inputs:
       - **Collaborate**: You can ask the assignee if they want help
       - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
       </details>
-  already_assigned_comment_pinned:
+  already_assigned_pinned_text:
     description: >
-      The comment posted when a user tries to assign themselves to a pinned issue that is already assigned.
+      The text posted when a user tries to assign themselves to a pinned issue that is already assigned.
     default: |
       ### ⚠️ Issue Already Assigned
 
@@ -153,9 +153,9 @@ inputs:
       - **Maintainer assistance**: A maintainer can add you as co-assignee if appropriate
       - **Wait for completion**: The issue will remain assigned until the work is complete
       </details>
-  unassigned_comment:
+  unassigned_text:
     description: >
-      The comment posted after a user is unassigned from an issue.
+      The text posted after a user is unassigned from an issue (by maintainer or due to inactivity).
     default: |
       ### 📋 Assignment Update
 
@@ -169,9 +169,25 @@ inputs:
       - Ask a maintainer to assign you again
       - If you're making progress, a maintainer can add the **{{{ pin_label }}}** label to prevent future automatic unassignment
       </details>
-  assignment_suggestion_comment:
+  self_unassigned_text:
     description: >
-      The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.
+      The text posted after a user unassigns themselves from an issue.
+      If not set, defaults to the `unassigned_text` text.
+    default: |
+      ### 📋 Self-Unassignment
+
+      Hi @{{ handle }}, you've unassigned yourself from this issue.
+
+      <details open>
+      <summary>Next steps</summary>
+
+      **If you change your mind:**
+      - Comment with `/assign-me` to reassign yourself
+      - Ask a maintainer to assign you again
+      </details>
+  assignment_suggestion_text:
+    description: >
+      The text posted when someone shows interest in being assigned to an issue without using the assignment commands.
     default: |
       ### 👋 Interested in Contributing?
 
@@ -184,8 +200,8 @@ inputs:
   block_assignment:
     description: Whether to block self-assignment after unassignment
     default: "true"
-  block_assignment_comment:
-    description: Message shown when blocked from self-assignment
+  block_assignment_text:
+    description: Text shown when blocked from self-assignment
     default: |
       ### ⚠️ Reassignment Blocked
 
@@ -204,9 +220,9 @@ inputs:
     description: Number of days after assignment the reminder should be sent
     default: "auto"
 
-  reminder_comment:
+  reminder_text:
     description: >
-      The comment posted as a reminder before automatic unassignment occurs
+      The text posted as a reminder before automatic unassignment occurs
     default: |
       ### ⏰ Assignment Reminder
 
@@ -230,8 +246,8 @@ inputs:
     description: "Maximum number of issues a user can be assigned to at once"
     required: false
     default: "3"
-  max_assignments_message:
-    description: "Message to display when a user has reached their maximum assignments"
+  max_assignments_text:
+    description: "Text to display when a user has reached their maximum assignments"
     required: false
     default: |
       ### ⚠️ Assignment Limit Reached
@@ -261,8 +277,8 @@ inputs:
       `max_overall_assignment_labels` that a single user can hold at once.
     required: false
     default: "2"
-  max_overall_assignment_message:
-    description: Message shown when a user has reached the overall assignment limit
+  max_overall_assignment_text:
+    description: Text shown when a user has reached the overall assignment limit
     required: false
     default: |
       ### ⚠️ Assignment Limit Reached for Beginner Issues
@@ -285,8 +301,8 @@ inputs:
 
       Thanks for your great work and for helping keep the community open to newcomers! 💜
 
-  self_assign_author_blocked_comment:
-    description: Message shown when the issue author tries to self-assign their own issue but it's not allowed
+  self_assign_author_blocked_text:
+    description: Text shown when the issue author tries to self-assign their own issue but it's not allowed
     required: false
     default: |
       ### ⚠️ Self-Assignment Not Allowed
@@ -310,16 +326,16 @@ inputs:
       These users will not be able to self-assign issues.
     required: false
     default: ""
-  ignored_message:
-    description: Message shown when an ignored user tries to use `/assign-me`
+  ignored_text:
+    description: Text shown when an ignored user tries to use `/assign-me`
     required: false
     default: |
       ### ⚠️ Self-Assignment Not Allowed
 
       Hi @{{ handle }}, you cannot self-assign issues. Please reach out to maintainers for the next steps.
 
-  closed_issue_assignment_comment:
-    description: Message shown when a user tries to assign themselves to a closed issue
+  closed_issue_assignment_text:
+    description: Text shown when a user tries to assign themselves to a closed issue
     required: false
     default: |
       ### ⚠️ Assignment Not Possible
@@ -336,6 +352,98 @@ inputs:
       - Ask a maintainer if the issue should be reopened
       - Look for similar open issues to contribute to
       </details>
+
+  # Deprecated inputs (for backward compatibility)
+  assigned_comment:
+    description: |
+      Deprecated: Use `assigned_text` instead.
+      The comment posted after a returning contributor has assigned themselves to an issue.
+    required: false
+    default: ""
+
+  assigned_comment_newcomer:
+    description: |
+      Deprecated: Use `assigned_newcomer_text` instead.
+      The comment posted after a first-time contributor has assigned themselves to an issue.
+    required: false
+    default: ""
+
+  unassigned_comment:
+    description: |
+      Deprecated: Use `unassigned_text` instead.
+      The comment posted after a user is unassigned from an issue.
+    required: false
+    default: ""
+
+  already_assigned_comment:
+    description: |
+      Deprecated: Use `already_assigned_text` instead.
+      The comment posted when a user tries to assign themselves to an issue that is already assigned.
+    required: false
+    default: ""
+
+  already_assigned_comment_pinned:
+    description: |
+      Deprecated: Use `already_assigned_pinned_text` instead.
+      The comment posted when a user tries to assign themselves to a pinned issue that is already assigned.
+    required: false
+    default: ""
+
+  assignment_suggestion_comment:
+    description: |
+      Deprecated: Use `assignment_suggestion_text` instead.
+      The comment posted when someone shows interest in being assigned to an issue without using the assignment commands.
+    required: false
+    default: ""
+
+  block_assignment_comment:
+    description: |
+      Deprecated: Use `block_assignment_text` instead.
+      The comment posted when a user tries to re-assign themselves after being unassigned.
+    required: false
+    default: ""
+
+  reminder_comment:
+    description: |
+      Deprecated: Use `reminder_text` instead.
+      The comment posted as a reminder before automatic unassignment occurs.
+    required: false
+    default: ""
+
+  max_assignments_message:
+    description: |
+      Deprecated: Use `max_assignments_text` instead.
+      The message posted when a user has reached their maximum assignments.
+    required: false
+    default: ""
+
+  max_overall_assignment_message:
+    description: |
+      Deprecated: Use `max_overall_assignment_text` instead.
+      The message posted when a user has reached the per-label assignment limit.
+    required: false
+    default: ""
+
+  self_assign_author_blocked_comment:
+    description: |
+      Deprecated: Use `self_assign_author_blocked_text` instead.
+      The message posted when an issue author tries to self-assign their own issue but it's not allowed.
+    required: false
+    default: ""
+
+  ignored_message:
+    description: |
+      Deprecated: Use `ignored_text` instead.
+      The message posted when an ignored user tries to use `/assign-me`.
+    required: false
+    default: ""
+
+  closed_issue_assignment_comment:
+    description: |
+      Deprecated: Use `closed_issue_assignment_text` instead.
+      The text shown when a user tries to assign themselves to a closed issue.
+    required: false
+    default: ""
 
 outputs:
   assigned:

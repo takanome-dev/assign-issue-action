@@ -41,4 +41,19 @@ export enum INPUTS {
   IGNORED_TEXT = 'ignored_text',
 
   CLOSED_ISSUE_ASSIGNMENT_TEXT = 'closed_issue_assignment_text',
+
+  // Deprecated inputs (for backward compatibility)
+  ASSIGNED_COMMENT = 'assigned_comment',
+  ASSIGNED_COMMENT_NEWCOMER = 'assigned_comment_newcomer',
+  UNASSIGNED_COMMENT = 'unassigned_comment',
+  ALREADY_ASSIGNED_COMMENT = 'already_assigned_comment',
+  ALREADY_ASSIGNED_COMMENT_PINNED = 'already_assigned_comment_pinned',
+  ASSIGNMENT_SUGGESTION_COMMENT = 'assignment_suggestion_comment',
+  BLOCK_ASSIGNMENT_COMMENT = 'block_assignment_comment',
+  REMINDER_COMMENT = 'reminder_comment',
+  MAX_ASSIGNMENTS_MESSAGE = 'max_assignments_message',
+  MAX_OVERALL_ASSIGNMENT_MESSAGE = 'max_overall_assignment_message',
+  SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT = 'self_assign_author_blocked_comment',
+  IGNORED_MESSAGE = 'ignored_message',
+  CLOSED_ISSUE_ASSIGNMENT_COMMENT = 'closed_issue_assignment_comment',
 }

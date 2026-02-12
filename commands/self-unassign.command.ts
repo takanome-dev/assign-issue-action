@@ -39,12 +39,11 @@ export class SelfUnassignCommand implements Command {
 
       return {
         success: false,
-        message: 'Commenter is not the assignee',
+        message: 'Issue is not assigned to anyone',
         output: { unassigned: 'no', unassigned_issues: [] },
       }
     }
 
-    // Generate unassign comment with hidden marker for tracking
     // Use selfUnassignedText if set, otherwise fall back to unassignedText
     const unassignTemplate = config.selfUnassignedText || config.unassignedText
     const unassignBody = validator.getUnassignCommentBody(unassignTemplate, {
