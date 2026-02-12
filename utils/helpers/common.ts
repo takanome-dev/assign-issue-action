@@ -3,7 +3,7 @@
  * @param days - The number of days to subtract from the current date
  * @returns A date string in the format YYYY-MM-DD
  */
-export function since(days: number) {
+export function since(days: number): string {
   const totalDaysInMilliseconds = days * 24 * 60 * 60 * 1000
   const date = new Date(Date.now() - totalDaysInMilliseconds)
 
@@ -31,7 +31,7 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
  * @returns The number of days between the two dates
  */
 // TODO: use date-fns utility function
-export function getDaysBetween(start: Date, end: Date) {
+export function getDaysBetween(start: Date, end: Date): number {
   const diffTime = Math.abs(end.getTime() - start.getTime())
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }

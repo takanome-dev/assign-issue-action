@@ -2,6 +2,63 @@
 
 This directory contains scripts to help test and debug the assign-issue-action locally before deploying.
 
+## debug-stats.ts
+
+A TypeScript script to debug PR statistics retrieval issues. This is useful when the `{{ prs_total }}`, `{{ prs_merged }}`, etc. placeholders in `assigned_comment` are not being populated.
+
+### Usage
+
+```bash
+# Set your GitHub token
+export GITHUB_TOKEN=your_github_token_here
+
+# Run the debug script
+bun scripts/debug-stats.ts
+```
+
+### What it tests
+
+1. **Search API for all PRs**: Tests `repo:owner/repo is:pr author:username`
+2. **Search API for merged PRs**: Tests `repo:owner/repo is:pr author:username is:merged`
+3. **Alternative pulls endpoint**: Lists PRs directly via the pulls API
+4. **Rate limit status**: Shows remaining API quota
+
+### Expected output
+
+If working correctly:
+```
+🔍 Debugging PR Stats Retrieval
+==================================================
+Repository: JabRef/jabref
+Username: LoayTarek5
+Issue: #15033
+
+Test 1: Search for ALL PRs by user
+  Query: repo:JabRef/jabref is:pr author:LoayTarek5
+  ✅ Success! Total count: 5
+
+Test 2: Search for MERGED PRs by user
+  Query: repo:JabRef/jabref is:pr author:LoayTarek5 is:merged
+  ✅ Success! Total count: 3
+...
+```
+
+If stats show 0 when they shouldn't:
+- Check your token has `repo` or `public_repo` scope
+- Check rate limits (search API has stricter limits)
+- Verify the user actually has PRs in the target repo
+
+## debug-stats-curl.sh
+
+A simpler bash/curl version of the debug script for quick testing without dependencies.
+
+### Usage
+
+```bash
+export GITHUB_TOKEN=your_github_token_here
+./scripts/debug-stats-curl.sh
+```
+
 ## test-action.js
 
 A CLI tool to test the action's search queries and logic without running the full GitHub Action.
