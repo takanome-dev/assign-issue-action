@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { add, format, differenceInDays } from 'date-fns'
+import { add, differenceInDays, format } from 'date-fns'
 import type {
   Command,
   CommandContext,
@@ -195,6 +195,7 @@ export class SelfAssignCommand implements Command {
           prs_merged: stats.prs_merged,
           prs_unmerged: stats.prs_unmerged,
           prs_merged_percentage: stats.prs_merged_percentage,
+          prs: stats.prs,
         },
       ),
     ])

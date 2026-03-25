@@ -1,6 +1,6 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { StatsService } from '../stats-service'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import type { OctokitClient } from '../../../core'
+import { StatsService } from '../stats-service'
 
 describe('StatsService', () => {
   let mockOctokit: OctokitClient
@@ -28,7 +28,41 @@ describe('StatsService', () => {
         callCount++
         if (callCount === 1) {
           return Promise.resolve({
-            data: { total_count: 5, items: [{}, {}, {}, {}, {}] },
+            data: {
+              total_count: 5,
+              items: [
+                {
+                  number: 5,
+                  title: 'PR 5',
+                  html_url: 'http://test.com/5',
+                  created_at: '2024-03-25',
+                },
+                {
+                  number: 4,
+                  title: 'PR 4',
+                  html_url: 'http://test.com/4',
+                  created_at: '2024-03-24',
+                },
+                {
+                  number: 3,
+                  title: 'PR 3',
+                  html_url: 'http://test.com/3',
+                  created_at: '2024-03-23',
+                },
+                {
+                  number: 2,
+                  title: 'PR 2',
+                  html_url: 'http://test.com/2',
+                  created_at: '2024-03-22',
+                },
+                {
+                  number: 1,
+                  title: 'PR 1',
+                  html_url: 'http://test.com/1',
+                  created_at: '2024-03-21',
+                },
+              ],
+            },
           })
         }
         return Promise.resolve({
@@ -42,6 +76,10 @@ describe('StatsService', () => {
       expect(stats.prs_merged).toBe(3)
       expect(stats.prs_unmerged).toBe(2)
       expect(stats.prs_merged_percentage).toBe(60)
+      expect(stats.prs).toHaveLength(5)
+      expect(stats.prs[0].number).toBe(5)
+      expect(stats.prs[0].title).toBe('PR 5')
+      expect(stats.prs[0].url).toBe('http://test.com/5')
     })
 
     it('should return zeros for a newcomer with no PRs', async () => {
@@ -57,6 +95,7 @@ describe('StatsService', () => {
       expect(stats.prs_merged).toBe(0)
       expect(stats.prs_unmerged).toBe(0)
       expect(stats.prs_merged_percentage).toBe(0)
+      expect(stats.prs).toHaveLength(0)
     })
 
     it('should calculate 0% for all unmerged PRs', async () => {
@@ -96,6 +135,66 @@ describe('StatsService', () => {
       expect(stats.prs_merged).toBe(4)
       expect(stats.prs_unmerged).toBe(0)
       expect(stats.prs_merged_percentage).toBe(100)
+    })
+
+    it('should limit PRs to 5 most recent', async () => {
+      mockOctokit.request = mock(() =>
+        Promise.resolve({
+          data: {
+            total_count: 10,
+            items: [
+              {
+                number: 1,
+                title: 'Oldest PR',
+                html_url: 'http://test.com/1',
+                created_at: '2024-03-20',
+              },
+              {
+                number: 2,
+                title: 'PR 2',
+                html_url: 'http://test.com/2',
+                created_at: '2024-03-21',
+              },
+              {
+                number: 3,
+                title: 'PR 3',
+                html_url: 'http://test.com/3',
+                created_at: '2024-03-22',
+              },
+              {
+                number: 4,
+                title: 'PR 4',
+                html_url: 'http://test.com/4',
+                created_at: '2024-03-23',
+              },
+              {
+                number: 5,
+                title: 'PR 5',
+                html_url: 'http://test.com/5',
+                created_at: '2024-03-24',
+              },
+              {
+                number: 6,
+                title: 'PR 6',
+                html_url: 'http://test.com/6',
+                created_at: '2024-03-25',
+              },
+              {
+                number: 7,
+                title: 'Newest PR',
+                html_url: 'http://test.com/7',
+                created_at: '2024-03-26',
+              },
+            ],
+          },
+        }),
+      ) as unknown as typeof mockOctokit.request
+
+      const stats = await statsService.getContributorStats('testuser')
+
+      expect(stats.prs).toHaveLength(5)
+      expect(stats.prs[0].number).toBe(7) // Newest first
+      expect(stats.prs[4].number).toBe(3) // 5th most recent
     })
 
     it('should use correct search query format', async () => {
