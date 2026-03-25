@@ -58430,7 +58430,9 @@ var SelfAssignCommand = class {
 			prs_total: stats.prs_total,
 			prs_merged: stats.prs_merged,
 			prs_unmerged: stats.prs_unmerged,
-			prs_merged_percentage: stats.prs_merged_percentage
+			prs_merged_percentage: stats.prs_merged_percentage,
+			prs: stats.prs,
+			prs_link: stats.prs_link
 		})]);
 		_actions_core.info(`🤖 Issue #${issue?.number} assigned!`);
 		_actions_core.setOutput("assigned", "yes");
@@ -59070,20 +59072,27 @@ var StatsService = class {
 		this.octokit = octokit;
 		this.repoContext = repoContext;
 	}
-	/**
-	* Get PR statistics for a contributor in the repository
-	*/
 	async getContributorStats(username) {
 		try {
 			const allPrs = await this.searchPullRequests(`is:pr author:${username}`);
 			const mergedPrs = await this.searchPullRequests(`is:pr author:${username} is:merged`);
 			const total = allPrs.total_count;
 			const merged = mergedPrs.total_count;
+			const unmerged = total - merged;
+			const percentage = total > 0 ? Math.round(merged / total * 100) : 0;
+			const mergedPrNumbers = new Set(mergedPrs.items.map((item) => item.number));
 			return {
 				prs_total: total,
 				prs_merged: merged,
-				prs_unmerged: total - merged,
-				prs_merged_percentage: total > 0 ? Math.round(merged / total * 100) : 0
+				prs_unmerged: unmerged,
+				prs_merged_percentage: percentage,
+				prs: allPrs.items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5).map((item) => ({
+					number: item.number,
+					title: item.title,
+					url: item.html_url,
+					state: mergedPrNumbers.has(item.number) ? "merged" : item.state
+				})),
+				prs_link: `https://github.com/${this.repoContext.owner}/${this.repoContext.repo}/pulls?q=is%3Apr+author%3A${username}`
 			};
 		} catch (error) {
 			_actions_core.warning(`Failed to fetch PR stats for @${username}: ${error}`);
@@ -59091,13 +59100,12 @@ var StatsService = class {
 				prs_total: 0,
 				prs_merged: 0,
 				prs_unmerged: 0,
-				prs_merged_percentage: 0
+				prs_merged_percentage: 0,
+				prs: [],
+				prs_link: `https://github.com/${this.repoContext.owner}/${this.repoContext.repo}/pulls?q=is%3Apr+author%3A${username}`
 			};
 		}
 	}
-	/**
-	* Search for pull requests
-	*/
 	async searchPullRequests(query) {
 		const { owner, repo } = this.repoContext;
 		const fullQuery = `repo:${owner}/${repo} ${query}`;
