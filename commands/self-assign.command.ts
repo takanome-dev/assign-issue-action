@@ -196,6 +196,7 @@ export class SelfAssignCommand implements Command {
           prs_unmerged: stats.prs_unmerged,
           prs_merged_percentage: stats.prs_merged_percentage,
           prs: stats.prs,
+          prs_link: stats.prs_link,
         },
       ),
     ])

@@ -8,6 +8,7 @@ export interface PullRequest {
   number: number
   title: string
   url: string
+  state: 'merged' | 'open' | 'closed'
 }
 
 export interface ContributorStats {
@@ -16,6 +17,7 @@ export interface ContributorStats {
   prs_unmerged: number
   prs_merged_percentage: number
   prs: PullRequest[]
+  prs_link: string
 }
 
 export class StatsService {
@@ -43,7 +45,12 @@ export class StatsService {
         title: string
         html_url: string
         created_at: string
+        state: string
       }
+
+      const mergedPrNumbers = new Set(
+        (mergedPrs.items as SearchItem[]).map((item) => item.number),
+      )
 
       const prs = (allPrs.items as SearchItem[])
         .sort(
@@ -55,7 +62,12 @@ export class StatsService {
           number: item.number,
           title: item.title,
           url: item.html_url,
+          state: (mergedPrNumbers.has(item.number)
+            ? 'merged'
+            : item.state) as PullRequest['state'],
         }))
+
+      const prsLink = `https://github.com/${this.repoContext.owner}/${this.repoContext.repo}/pulls?q=is%3Apr+author%3A${username}`
 
       return {
         prs_total: total,
@@ -63,6 +75,7 @@ export class StatsService {
         prs_unmerged: unmerged,
         prs_merged_percentage: percentage,
         prs,
+        prs_link: prsLink,
       }
     } catch (error) {
       core.warning(`Failed to fetch PR stats for @${username}: ${error}`)
@@ -72,6 +85,7 @@ export class StatsService {
         prs_unmerged: 0,
         prs_merged_percentage: 0,
         prs: [],
+        prs_link: `https://github.com/${this.repoContext.owner}/${this.repoContext.repo}/pulls?q=is%3Apr+author%3A${username}`,
       }
     }
   }
