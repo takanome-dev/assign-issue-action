@@ -93,11 +93,29 @@ export class SelfAssignCommand implements Command {
         )
 
         if (!hasRecentComment) {
-          // Calculate remaining days based on last activity
-          // Issue updated_at reflects last comment/activity
-          const lastActivity = issue?.updated_at
+          // Calculate remaining days based on the most recent assignment event for the current assignee
+          // If no assignment event is available, fall back to issue.updated_at.
+          // Using the assignment event avoids other users' edits/comments changing updated_at
+          // and skewing the inactivity window.
+          let lastActivity = issue?.updated_at
             ? new Date(issue.updated_at)
             : new Date()
+
+          try {
+            const events = await issueService.getIssueEvents(Number(issue?.number))
+            const assignedEvents = (events || []).filter(
+              (e) => e.event === 'assigned' && e.assignee?.login === currentAssignee,
+            )
+            if (assignedEvents.length > 0) {
+              const latest = assignedEvents.reduce((a, b) =>
+                new Date(a.created_at || 0) > new Date(b.created_at || 0) ? a : b,
+              )
+              lastActivity = new Date(latest.created_at || Date.now())
+            }
+          } catch {
+            // If events API fails, keep using issue.updated_at
+          }
+
           const daysSinceActivity = differenceInDays(new Date(), lastActivity)
           const daysRemaining = Math.max(
             0,

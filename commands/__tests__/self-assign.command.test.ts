@@ -4,6 +4,7 @@ import { SelfAssignCommand } from '../self-assign.command'
 const mockCreateComment = mock(() => Promise.resolve())
 const mockAssignWithLabel = mock(() => Promise.resolve())
 const mockGetComments = mock(() => Promise.resolve([]))
+const mockGetIssueEvents = mock(() => Promise.resolve([]))
 const mockGetAssignmentCount = mock(() => Promise.resolve(0))
 const mockGetAssignmentCountPerLabel = mock(() => Promise.resolve(new Map()))
 const mockSearchIssues = mock(() =>
@@ -87,6 +88,7 @@ describe('SelfAssignCommand', () => {
         issueService: {
           assignWithLabel: mockAssignWithLabel,
           getComments: mockGetComments,
+          getIssueEvents: mockGetIssueEvents,
           getAssignmentCount: mockGetAssignmentCount,
           getAssignmentCountPerLabel: mockGetAssignmentCountPerLabel,
           searchIssues: mockSearchIssues,
@@ -182,6 +184,7 @@ describe('SelfAssignCommand', () => {
         issueService: {
           assignWithLabel: mockAssignWithLabel,
           getComments: mockGetComments,
+          getIssueEvents: mockGetIssueEvents,
           getAssignmentCount: mockGetAssignmentCount,
           getAssignmentCountPerLabel: mockGetAssignmentCountPerLabel,
           searchIssues: mockSearchIssues,

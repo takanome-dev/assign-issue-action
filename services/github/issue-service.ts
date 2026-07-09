@@ -94,6 +94,23 @@ export class IssueService {
     return response.data
   }
 
+  async getIssueEvents(
+    issueNumber: number,
+  ): Promise<Array<{ event?: string; assignee?: { login?: string }; created_at?: string }>> {
+    const response = await this.octokit.request(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/events',
+      {
+        owner: this.repoContext.owner,
+        repo: this.repoContext.repo,
+        issue_number: issueNumber,
+        headers: {
+          'X-GitHub-Api-Version': API_VERSION,
+        },
+      },
+    )
+    return response.data
+  }
+
   async searchIssues(
     query: string,
   ): Promise<{ total_count: number; items: unknown[] }> {
