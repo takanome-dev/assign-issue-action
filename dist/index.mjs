@@ -42068,7 +42068,7 @@ var SelfAssignCommand = class {
 					number: Number(issue?.number)
 				}) ? config.alreadyAssignedPinnedText : config.alreadyAssignedText;
 				if (!await this._hasRecentAlreadyAssignedComment(issueService, Number(issue?.number), username, template)) {
-					const lastActivity = issue?.updated_at ? new Date(issue.updated_at) : /* @__PURE__ */ new Date();
+					const lastActivity = await issueService.getLatestAssignmentDate(Number(issue?.number), currentAssignee, issue?.updated_at ? new Date(issue.updated_at) : /* @__PURE__ */ new Date());
 					const daysSinceActivity = differenceInDays(/* @__PURE__ */ new Date(), lastActivity);
 					const daysRemaining = Math.max(0, config.daysUntilUnassign - daysSinceActivity);
 					await commentService.createTemplatedComment(Number(issue?.number), template, {
@@ -42665,6 +42665,26 @@ var IssueService = class {
 			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
 		})).data;
 	}
+	async getIssueEvents(issueNumber) {
+		return (await this.octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/events", {
+			owner: this.repoContext.owner,
+			repo: this.repoContext.repo,
+			issue_number: issueNumber,
+			per_page: 100,
+			headers: { "X-GitHub-Api-Version": API_VERSION$1 }
+		})).data;
+	}
+	async getLatestAssignmentDate(issueNumber, assigneeLogin, fallbackDate) {
+		if (!assigneeLogin) return fallbackDate;
+		try {
+			const assignedEvents = (await this.getIssueEvents(issueNumber)).filter((e) => e.event === "assigned" && e.assignee?.login === assigneeLogin);
+			if (assignedEvents.length > 0) {
+				const latest = assignedEvents.reduce((a, b) => new Date(a.created_at || 0) > new Date(b.created_at || 0) ? a : b);
+				return new Date(latest.created_at || fallbackDate.toISOString());
+			}
+		} catch {}
+		return fallbackDate;
+	}
 	async searchIssues(query) {
 		const { owner, repo } = this.repoContext;
 		const fullQuery = `repo:${owner}/${repo} ${query}`;
@@ -42949,10 +42969,14 @@ var ScheduleHandler = class {
 		const reminderIssues = [];
 		const chunks = chunkArray(issues, 10);
 		for (let i = 0; i < chunks.length; i++) {
-			const results = chunks[i].map((issue) => ({
-				issue,
-				lastActivityDate: new Date(issue.updated_at),
-				daysSinceActivity: getDaysBetween(new Date(issue.updated_at), /* @__PURE__ */ new Date())
+			const chunk = chunks[i];
+			const results = await Promise.all(chunk.map(async (issue) => {
+				const lastActivityDate = await this.issueService.getLatestAssignmentDate(issue.number, issue.assignee?.login ?? "", new Date(issue.updated_at));
+				return {
+					issue,
+					lastActivityDate,
+					daysSinceActivity: getDaysBetween(lastActivityDate, /* @__PURE__ */ new Date())
+				};
 			}));
 			for (const result of results.filter(Boolean)) {
 				const hasReminderLabel = result.issue?.labels?.some((label) => label?.name === "🔔 reminder-sent");

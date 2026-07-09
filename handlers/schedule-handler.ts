@@ -167,14 +167,21 @@ export default class ScheduleHandler {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
-      const results = chunk.map((issue) => ({
-        issue,
-        lastActivityDate: new Date(issue.updated_at),
-        daysSinceActivity: getDaysBetween(
-          new Date(issue.updated_at),
-          new Date(),
-        ),
-      }))
+      const results = await Promise.all(
+        chunk.map(async (issue) => {
+          const lastActivityDate =
+            await this.issueService.getLatestAssignmentDate(
+              issue.number,
+              issue.assignee?.login ?? '',
+              new Date(issue.updated_at),
+            )
+          return {
+            issue,
+            lastActivityDate,
+            daysSinceActivity: getDaysBetween(lastActivityDate, new Date()),
+          }
+        }),
+      )
 
       for (const result of results.filter(Boolean)) {
         const hasReminderLabel = result.issue?.labels?.some(

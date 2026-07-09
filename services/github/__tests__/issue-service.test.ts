@@ -112,6 +112,123 @@ describe('IssueService', () => {
     })
   })
 
+  describe('getIssueEvents', () => {
+    it('should call the events API with increased page size', async () => {
+      await service.getIssueEvents(123)
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        'GET /repos/{owner}/{repo}/issues/{issue_number}/events',
+        expect.objectContaining({
+          owner: 'test-owner',
+          repo: 'test-repo',
+          issue_number: 123,
+          per_page: 100,
+        }),
+      )
+    })
+  })
+
+  describe('getLatestAssignmentDate', () => {
+    it('should return fallback date when no events exist', async () => {
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(
+        123,
+        'testuser',
+        fallback,
+      )
+      expect(result).toEqual(fallback)
+    })
+
+    it('should return fallback date when no assigned events exist', async () => {
+      mockRequest.mockResolvedValueOnce({
+        data: [
+          {
+            event: 'labeled',
+            assignee: { login: 'testuser' },
+            created_at: '2026-06-01T00:00:00Z',
+          },
+        ],
+      })
+
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(
+        123,
+        'testuser',
+        fallback,
+      )
+      expect(result).toEqual(fallback)
+    })
+
+    it('should return fallback date when assigned events are for a different assignee', async () => {
+      mockRequest.mockResolvedValueOnce({
+        data: [
+          {
+            event: 'assigned',
+            assignee: { login: 'otheruser' },
+            created_at: '2026-06-01T00:00:00Z',
+          },
+        ],
+      })
+
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(
+        123,
+        'testuser',
+        fallback,
+      )
+      expect(result).toEqual(fallback)
+    })
+
+    it('should return the latest assignment event date for the matching assignee', async () => {
+      mockRequest.mockResolvedValueOnce({
+        data: [
+          {
+            event: 'assigned',
+            assignee: { login: 'testuser' },
+            created_at: '2026-06-01T00:00:00Z',
+          },
+          {
+            event: 'assigned',
+            assignee: { login: 'testuser' },
+            created_at: '2026-06-15T00:00:00Z',
+          },
+          {
+            event: 'assigned',
+            assignee: { login: 'otheruser' },
+            created_at: '2026-06-20T00:00:00Z',
+          },
+        ],
+      })
+
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(
+        123,
+        'testuser',
+        fallback,
+      )
+      expect(result).toEqual(new Date('2026-06-15T00:00:00Z'))
+    })
+
+    it('should return fallback date when events API fails', async () => {
+      mockRequest.mockRejectedValueOnce(new Error('API error'))
+
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(
+        123,
+        'testuser',
+        fallback,
+      )
+      expect(result).toEqual(fallback)
+    })
+
+    it('should return fallback date when assigneeLogin is empty', async () => {
+      const fallback = new Date('2026-07-01T00:00:00Z')
+      const result = await service.getLatestAssignmentDate(123, '', fallback)
+      expect(result).toEqual(fallback)
+      expect(mockRequest).not.toHaveBeenCalled()
+    })
+  })
+
   describe('searchIssues', () => {
     it('should prepend repo context to query', async () => {
       mockRequest.mockResolvedValueOnce({ data: { total_count: 0, items: [] } })

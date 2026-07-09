@@ -94,21 +94,52 @@ export class IssueService {
     return response.data
   }
 
-  async getIssueEvents(
-    issueNumber: number,
-  ): Promise<Array<{ event?: string; assignee?: { login?: string }; created_at?: string }>> {
+  async getIssueEvents(issueNumber: number): Promise<
+    Array<{
+      event?: string
+      assignee?: { login?: string }
+      created_at?: string
+    }>
+  > {
     const response = await this.octokit.request(
       'GET /repos/{owner}/{repo}/issues/{issue_number}/events',
       {
         owner: this.repoContext.owner,
         repo: this.repoContext.repo,
         issue_number: issueNumber,
+        per_page: 100,
         headers: {
           'X-GitHub-Api-Version': API_VERSION,
         },
       },
     )
     return response.data
+  }
+
+  async getLatestAssignmentDate(
+    issueNumber: number,
+    assigneeLogin: string,
+    fallbackDate: Date,
+  ): Promise<Date> {
+    if (!assigneeLogin) return fallbackDate
+
+    try {
+      const events = await this.getIssueEvents(issueNumber)
+      const assignedEvents = events.filter(
+        (e) => e.event === 'assigned' && e.assignee?.login === assigneeLogin,
+      )
+
+      if (assignedEvents.length > 0) {
+        const latest = assignedEvents.reduce((a, b) =>
+          new Date(a.created_at || 0) > new Date(b.created_at || 0) ? a : b,
+        )
+        return new Date(latest.created_at || fallbackDate.toISOString())
+      }
+    } catch {
+      // Events API failed, keep the fallback date
+    }
+
+    return fallbackDate
   }
 
   async searchIssues(
