@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { differenceInDays } from 'date-fns'
 import type {
   Command,
   CommandContext,
@@ -12,7 +13,7 @@ export class AutoSuggestCommand implements Command {
     services: CommandServices,
   ): Promise<CommandResult> {
     const { issue, comment, config } = context
-    const { commentService, validator } = services
+    const { commentService, issueService, validator } = services
     const username = comment?.user?.login
 
     core.info(`🤖 Comment indicates interest in contribution`)
@@ -34,11 +35,26 @@ export class AutoSuggestCommand implements Command {
         ? config.alreadyAssignedPinnedText
         : config.alreadyAssignedText
 
+      // Calculate remaining days based on the most recent assignment event
+      // for the current assignee. Falls back to issue.updated_at if no event
+      // is available, so other comments/edits don't skew the inactivity window.
+      const lastActivity = await issueService.getLatestAssignmentDate(
+        Number(issue?.number),
+        issue?.assignee?.login,
+        issue?.updated_at ? new Date(issue.updated_at) : new Date(),
+      )
+      const daysSinceActivity = differenceInDays(new Date(), lastActivity)
+      const daysRemaining = Math.max(
+        0,
+        config.daysUntilUnassign - daysSinceActivity,
+      )
+
       await commentService.createTemplatedComment(
         Number(issue?.number),
         template,
         {
           total_days: String(config.daysUntilUnassign),
+          days_remaining: daysRemaining,
           handle: username,
           assignee: issue?.assignee?.login,
         },

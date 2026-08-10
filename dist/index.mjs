@@ -41900,7 +41900,7 @@ var AssignUserCommand = class {
 var AutoSuggestCommand = class {
 	async execute(context, services) {
 		const { issue, comment, config } = context;
-		const { commentService, validator } = services;
+		const { commentService, issueService, validator } = services;
 		const username = comment?.user?.login;
 		info(`🤖 Comment indicates interest in contribution`);
 		if (validator.isAlreadyAssigned({
@@ -41912,8 +41912,12 @@ var AutoSuggestCommand = class {
 				labels: issue?.labels,
 				number: Number(issue?.number)
 			}) ? config.alreadyAssignedPinnedText : config.alreadyAssignedText;
+			const lastActivity = await issueService.getLatestAssignmentDate(Number(issue?.number), issue?.assignee?.login, issue?.updated_at ? new Date(issue.updated_at) : /* @__PURE__ */ new Date());
+			const daysSinceActivity = differenceInDays(/* @__PURE__ */ new Date(), lastActivity);
+			const daysRemaining = Math.max(0, config.daysUntilUnassign - daysSinceActivity);
 			await commentService.createTemplatedComment(Number(issue?.number), template, {
 				total_days: String(config.daysUntilUnassign),
+				days_remaining: daysRemaining,
 				handle: username,
 				assignee: issue?.assignee?.login
 			});
