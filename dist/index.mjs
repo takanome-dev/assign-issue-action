@@ -30370,9 +30370,8 @@ __webpack_unused_export__ = defaultContentType
 /******/ }
 /******/ 
 /************************************************************************/
-/******/ /* webpack/runtime/compat */
-/******/ 
-/******/ if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = new URL('.', import.meta.url).pathname.slice(import.meta.url.match(/^file:\/\/\/\w:/) ? 1 : 0, -1) + "/";
+/******/ /* webpack/runtime/asset-relocator-loader */
+/******/ if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = decodeURIComponent(new URL('.', import.meta.url).pathname).slice(import.meta.url.match(/^file:\/\/\/\w:/) ? 1 : 0, -1) + "/";
 /******/ 
 /************************************************************************/
 var __webpack_exports__ = {};
@@ -41851,7 +41850,6 @@ mustache.Writer = Writer;
 
 
 
-
 //#region commands/assign-user.command.ts
 var AssignUserCommand = class {
 	constructor(parsedCommand) {
@@ -41894,7 +41892,6 @@ var AssignUserCommand = class {
 		};
 	}
 };
-
 //#endregion
 //#region commands/auto-suggest.command.ts
 var AutoSuggestCommand = class {
@@ -41938,18 +41935,6 @@ var AutoSuggestCommand = class {
 		};
 	}
 };
-
-//#endregion
-//#region commands/types.ts
-let CommandType = /* @__PURE__ */ function(CommandType) {
-	CommandType["SELF_ASSIGN"] = "self_assign";
-	CommandType["SELF_UNASSIGN"] = "self_unassign";
-	CommandType["ASSIGN_USER"] = "assign_user";
-	CommandType["UNASSIGN_USER"] = "unassign_user";
-	CommandType["AUTO_SUGGEST"] = "auto_suggest";
-	return CommandType;
-}({});
-
 //#endregion
 //#region commands/command-parser.ts
 const CONTRIBUTION_PHRASES = [
@@ -42002,30 +41987,24 @@ var CommandParser = class {
 		if (body.trim().startsWith(">")) return null;
 		if (this.config.maintainers.includes(commenterLogin) && (body.includes(this.config.selfAssignCmd) || body.includes(this.config.selfUnassignCmd))) return null;
 		const { selfAssignCmd, selfUnassignCmd, assignUserCmd, unassignUserCmd, enableAutoSuggestion } = this.config;
-		if (enableAutoSuggestion && CONTRIBUTION_PHRASES.some((phrase) => body.toLowerCase().includes(phrase.toLowerCase()))) return { type: CommandType.AUTO_SUGGEST };
-		if (body === selfAssignCmd || body.includes(selfAssignCmd)) return { type: CommandType.SELF_ASSIGN };
-		if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) return { type: CommandType.SELF_UNASSIGN };
-		if (body.includes(assignUserCmd)) {
-			const targetUsername = this.extractUsername(rawBody, assignUserCmd);
-			return {
-				type: CommandType.ASSIGN_USER,
-				targetUsername
-			};
-		}
-		if (body.includes(unassignUserCmd)) {
-			const targetUsername = this.extractUsername(rawBody, unassignUserCmd);
-			return {
-				type: CommandType.UNASSIGN_USER,
-				targetUsername
-			};
-		}
+		if (enableAutoSuggestion && CONTRIBUTION_PHRASES.some((phrase) => body.toLowerCase().includes(phrase.toLowerCase()))) return { type: "auto_suggest" };
+		if (body === selfAssignCmd || body.includes(selfAssignCmd)) return { type: "self_assign" };
+		if (body === selfUnassignCmd || body.includes(selfUnassignCmd)) return { type: "self_unassign" };
+		if (body.includes(assignUserCmd)) return {
+			type: "assign_user",
+			targetUsername: this.extractUsername(rawBody, assignUserCmd)
+		};
+		if (body.includes(unassignUserCmd)) return {
+			type: "unassign_user",
+			targetUsername: this.extractUsername(rawBody, unassignUserCmd)
+		};
 		return null;
 	}
 	/**
 	* Check if a command is maintainer-only
 	*/
 	isMaintainerCommand(command) {
-		return command.type === CommandType.ASSIGN_USER || command.type === CommandType.UNASSIGN_USER;
+		return command.type === "assign_user" || command.type === "unassign_user";
 	}
 	/**
 	* Extract @username from the text after a command
@@ -42036,7 +42015,6 @@ var CommandParser = class {
 		return rawBody.slice(idx + command.length).trim().match(/@([a-zA-Z0-9-]{1,39})/i)?.[1];
 	}
 };
-
 //#endregion
 //#region commands/self-assign.command.ts
 var SelfAssignCommand = class {
@@ -42147,7 +42125,6 @@ var SelfAssignCommand = class {
 		}
 	}
 };
-
 //#endregion
 //#region commands/self-unassign.command.ts
 var SelfUnassignCommand = class {
@@ -42194,7 +42171,6 @@ var SelfUnassignCommand = class {
 		};
 	}
 };
-
 //#endregion
 //#region commands/unassign-user.command.ts
 var UnassignUserCommand = class {
@@ -42250,59 +42226,6 @@ var UnassignUserCommand = class {
 		};
 	}
 };
-
-//#endregion
-//#region utils/lib/inputs.ts
-let INPUTS = /* @__PURE__ */ function(INPUTS) {
-	INPUTS["SELF_ASSIGN_CMD"] = "self_assign_cmd";
-	INPUTS["SELF_UNASSIGN_CMD"] = "self_unassign_cmd";
-	INPUTS["ASSIGN_USER_CMD"] = "assign_user_cmd";
-	INPUTS["UNASSIGN_USER_CMD"] = "unassign_user_cmd";
-	INPUTS["GITHUB_TOKEN"] = "github_token";
-	INPUTS["MAINTAINERS"] = "maintainers";
-	INPUTS["ENABLE_AUTO_SUGGESTION"] = "enable_auto_suggestion";
-	INPUTS["ALLOW_SELF_ASSIGN_AUTHOR"] = "allow_self_assign_author";
-	INPUTS["ASSIGNED_LABEL"] = "assigned_label";
-	INPUTS["REQUIRED_LABEL"] = "required_label";
-	INPUTS["PIN_LABEL"] = "pin_label";
-	INPUTS["DAYS_UNTIL_UNASSIGN"] = "days_until_unassign";
-	INPUTS["STALE_ASSIGNMENT_LABEL"] = "stale_assignment_label";
-	INPUTS["ASSIGNED_TEXT"] = "assigned_text";
-	INPUTS["ASSIGNED_NEWCOMER_TEXT"] = "assigned_newcomer_text";
-	INPUTS["UNASSIGNED_TEXT"] = "unassigned_text";
-	INPUTS["SELF_UNASSIGNED_TEXT"] = "self_unassigned_text";
-	INPUTS["ALREADY_ASSIGNED_TEXT"] = "already_assigned_text";
-	INPUTS["ALREADY_ASSIGNED_PINNED_TEXT"] = "already_assigned_pinned_text";
-	INPUTS["ASSIGNMENT_SUGGESTION_TEXT"] = "assignment_suggestion_text";
-	INPUTS["BLOCK_ASSIGNMENT_TEXT"] = "block_assignment_text";
-	INPUTS["ENABLE_REMINDER"] = "enable_reminder";
-	INPUTS["REMINDER_DAYS"] = "reminder_days";
-	INPUTS["REMINDER_TEXT"] = "reminder_text";
-	INPUTS["MAX_ASSIGNMENTS"] = "max_assignments";
-	INPUTS["MAX_ASSIGNMENTS_TEXT"] = "max_assignments_text";
-	INPUTS["MAX_OVERALL_ASSIGNMENT_LABELS"] = "max_overall_assignment_labels";
-	INPUTS["MAX_OVERALL_ASSIGNMENT_COUNT"] = "max_overall_assignment_count";
-	INPUTS["MAX_OVERALL_ASSIGNMENT_TEXT"] = "max_overall_assignment_text";
-	INPUTS["SELF_ASSIGN_AUTHOR_BLOCKED_TEXT"] = "self_assign_author_blocked_text";
-	INPUTS["IGNORED_USERS"] = "ignored_users";
-	INPUTS["IGNORED_TEXT"] = "ignored_text";
-	INPUTS["CLOSED_ISSUE_ASSIGNMENT_TEXT"] = "closed_issue_assignment_text";
-	INPUTS["ASSIGNED_COMMENT"] = "assigned_comment";
-	INPUTS["ASSIGNED_COMMENT_NEWCOMER"] = "assigned_comment_newcomer";
-	INPUTS["UNASSIGNED_COMMENT"] = "unassigned_comment";
-	INPUTS["ALREADY_ASSIGNED_COMMENT"] = "already_assigned_comment";
-	INPUTS["ALREADY_ASSIGNED_COMMENT_PINNED"] = "already_assigned_comment_pinned";
-	INPUTS["ASSIGNMENT_SUGGESTION_COMMENT"] = "assignment_suggestion_comment";
-	INPUTS["BLOCK_ASSIGNMENT_COMMENT"] = "block_assignment_comment";
-	INPUTS["REMINDER_COMMENT"] = "reminder_comment";
-	INPUTS["MAX_ASSIGNMENTS_MESSAGE"] = "max_assignments_message";
-	INPUTS["MAX_OVERALL_ASSIGNMENT_MESSAGE"] = "max_overall_assignment_message";
-	INPUTS["SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT"] = "self_assign_author_blocked_comment";
-	INPUTS["IGNORED_MESSAGE"] = "ignored_message";
-	INPUTS["CLOSED_ISSUE_ASSIGNMENT_COMMENT"] = "closed_issue_assignment_comment";
-	return INPUTS;
-}({});
-
 //#endregion
 //#region core/config.ts
 let cachedConfig = null;
@@ -42325,11 +42248,11 @@ function getInputWithDeprecation(newName, deprecatedName) {
 	return newValue;
 }
 function loadConfig() {
-	const githubToken = getInput(INPUTS.GITHUB_TOKEN);
+	const githubToken = getInput("github_token");
 	if (!githubToken) throw new Error("Missing required input: github_token");
-	const maintainersInput = getInput(INPUTS.MAINTAINERS);
-	const maxOverallLabelsInput = getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_LABELS);
-	const reminderDaysInput = getInput(INPUTS.REMINDER_DAYS);
+	const maintainersInput = getInput("maintainers");
+	const maxOverallLabelsInput = getInput("max_overall_assignment_labels");
+	const reminderDaysInput = getInput("reminder_days");
 	let reminderDays = "auto";
 	if (reminderDaysInput !== "auto") {
 		const parsed = Number.parseInt(reminderDaysInput, 10);
@@ -42337,42 +42260,41 @@ function loadConfig() {
 	}
 	return {
 		githubToken,
-		selfAssignCmd: getInput(INPUTS.SELF_ASSIGN_CMD),
-		selfUnassignCmd: getInput(INPUTS.SELF_UNASSIGN_CMD),
-		assignUserCmd: getInput(INPUTS.ASSIGN_USER_CMD),
-		unassignUserCmd: getInput(INPUTS.UNASSIGN_USER_CMD),
-		assignedLabel: getInput(INPUTS.ASSIGNED_LABEL),
-		requiredLabel: getInput(INPUTS.REQUIRED_LABEL),
-		pinLabel: getInput(INPUTS.PIN_LABEL),
-		staleAssignmentLabel: getInput(INPUTS.STALE_ASSIGNMENT_LABEL),
-		daysUntilUnassign: Number(getInput(INPUTS.DAYS_UNTIL_UNASSIGN)) || 14,
+		selfAssignCmd: getInput("self_assign_cmd"),
+		selfUnassignCmd: getInput("self_unassign_cmd"),
+		assignUserCmd: getInput("assign_user_cmd"),
+		unassignUserCmd: getInput("unassign_user_cmd"),
+		assignedLabel: getInput("assigned_label"),
+		requiredLabel: getInput("required_label"),
+		pinLabel: getInput("pin_label"),
+		staleAssignmentLabel: getInput("stale_assignment_label"),
+		daysUntilUnassign: Number(getInput("days_until_unassign")) || 14,
 		maintainers: maintainersInput ? maintainersInput.split(",").map((m) => m.trim()).filter(Boolean) : [],
-		enableAutoSuggestion: getBooleanInput(INPUTS.ENABLE_AUTO_SUGGESTION),
-		allowSelfAssignAuthor: getInput(INPUTS.ALLOW_SELF_ASSIGN_AUTHOR) !== "false",
+		enableAutoSuggestion: getBooleanInput("enable_auto_suggestion"),
+		allowSelfAssignAuthor: getInput("allow_self_assign_author") !== "false",
 		blockAssignment: getInput("block_assignment") === "true",
-		maxAssignments: Number.parseInt(getInput(INPUTS.MAX_ASSIGNMENTS) || "3", 10),
+		maxAssignments: Number.parseInt(getInput("max_assignments") || "3", 10),
 		maxOverallAssignmentLabels: maxOverallLabelsInput ? maxOverallLabelsInput.split(",").map((l) => l.trim()).filter(Boolean) : [],
-		maxOverallAssignmentCount: Number.parseInt(getInput(INPUTS.MAX_OVERALL_ASSIGNMENT_COUNT) || "0", 10),
-		enableReminder: getInput(INPUTS.ENABLE_REMINDER) === "true",
+		maxOverallAssignmentCount: Number.parseInt(getInput("max_overall_assignment_count") || "0", 10),
+		enableReminder: getInput("enable_reminder") === "true",
 		reminderDays,
-		assignedText: getInputWithDeprecation(INPUTS.ASSIGNED_TEXT, INPUTS.ASSIGNED_COMMENT),
-		assignedNewcomerText: getInputWithDeprecation(INPUTS.ASSIGNED_NEWCOMER_TEXT, INPUTS.ASSIGNED_COMMENT_NEWCOMER),
-		unassignedText: getInputWithDeprecation(INPUTS.UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT),
-		selfUnassignedText: getInputWithDeprecation(INPUTS.SELF_UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT) || getInputWithDeprecation(INPUTS.UNASSIGNED_TEXT, INPUTS.UNASSIGNED_COMMENT),
-		alreadyAssignedText: getInputWithDeprecation(INPUTS.ALREADY_ASSIGNED_TEXT, INPUTS.ALREADY_ASSIGNED_COMMENT),
-		alreadyAssignedPinnedText: getInputWithDeprecation(INPUTS.ALREADY_ASSIGNED_PINNED_TEXT, INPUTS.ALREADY_ASSIGNED_COMMENT_PINNED),
-		assignmentSuggestionText: getInputWithDeprecation(INPUTS.ASSIGNMENT_SUGGESTION_TEXT, INPUTS.ASSIGNMENT_SUGGESTION_COMMENT),
-		blockAssignmentText: getInputWithDeprecation(INPUTS.BLOCK_ASSIGNMENT_TEXT, INPUTS.BLOCK_ASSIGNMENT_COMMENT),
-		reminderText: getInputWithDeprecation(INPUTS.REMINDER_TEXT, INPUTS.REMINDER_COMMENT),
-		maxAssignmentsText: getInputWithDeprecation(INPUTS.MAX_ASSIGNMENTS_TEXT, INPUTS.MAX_ASSIGNMENTS_MESSAGE),
-		maxOverallAssignmentText: getInputWithDeprecation(INPUTS.MAX_OVERALL_ASSIGNMENT_TEXT, INPUTS.MAX_OVERALL_ASSIGNMENT_MESSAGE),
-		selfAssignAuthorBlockedText: getInputWithDeprecation(INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_TEXT, INPUTS.SELF_ASSIGN_AUTHOR_BLOCKED_COMMENT),
-		ignoredUsers: getInput(INPUTS.IGNORED_USERS) ? getInput(INPUTS.IGNORED_USERS).split(",").map((u) => u.trim()).filter(Boolean) : [],
-		ignoredText: getInputWithDeprecation(INPUTS.IGNORED_TEXT, INPUTS.IGNORED_MESSAGE),
-		closedIssueAssignmentText: getInputWithDeprecation(INPUTS.CLOSED_ISSUE_ASSIGNMENT_TEXT, INPUTS.CLOSED_ISSUE_ASSIGNMENT_COMMENT)
+		assignedText: getInputWithDeprecation("assigned_text", "assigned_comment"),
+		assignedNewcomerText: getInputWithDeprecation("assigned_newcomer_text", "assigned_comment_newcomer"),
+		unassignedText: getInputWithDeprecation("unassigned_text", "unassigned_comment"),
+		selfUnassignedText: getInputWithDeprecation("self_unassigned_text", "unassigned_comment") || getInputWithDeprecation("unassigned_text", "unassigned_comment"),
+		alreadyAssignedText: getInputWithDeprecation("already_assigned_text", "already_assigned_comment"),
+		alreadyAssignedPinnedText: getInputWithDeprecation("already_assigned_pinned_text", "already_assigned_comment_pinned"),
+		assignmentSuggestionText: getInputWithDeprecation("assignment_suggestion_text", "assignment_suggestion_comment"),
+		blockAssignmentText: getInputWithDeprecation("block_assignment_text", "block_assignment_comment"),
+		reminderText: getInputWithDeprecation("reminder_text", "reminder_comment"),
+		maxAssignmentsText: getInputWithDeprecation("max_assignments_text", "max_assignments_message"),
+		maxOverallAssignmentText: getInputWithDeprecation("max_overall_assignment_text", "max_overall_assignment_message"),
+		selfAssignAuthorBlockedText: getInputWithDeprecation("self_assign_author_blocked_text", "self_assign_author_blocked_comment"),
+		ignoredUsers: getInput("ignored_users") ? getInput("ignored_users").split(",").map((u) => u.trim()).filter(Boolean) : [],
+		ignoredText: getInputWithDeprecation("ignored_text", "ignored_message"),
+		closedIssueAssignmentText: getInputWithDeprecation("closed_issue_assignment_text", "closed_issue_assignment_comment")
 	};
 }
-
 //#endregion
 //#region core/octokit-client.ts
 const ThrottledOctokit = Octokit.plugin(throttling);
@@ -42399,7 +42321,6 @@ function createOctokitClient(token) {
 		}
 	});
 }
-
 //#endregion
 //#region services/assignment/assignment-validator.ts
 var AssignmentValidator = class {
@@ -42560,7 +42481,6 @@ var AssignmentValidator = class {
 		return { valid: true };
 	}
 };
-
 //#endregion
 //#region services/assignment/newcomer-checker.ts
 var NewcomerChecker = class {
@@ -42579,7 +42499,6 @@ var NewcomerChecker = class {
 		}
 	}
 };
-
 //#endregion
 //#region services/github/comment-service.ts
 const API_VERSION$2 = "2022-11-28";
@@ -42614,7 +42533,6 @@ var CommentService = class {
 		return mustache_mustache.render(template, data);
 	}
 };
-
 //#endregion
 //#region services/github/issue-service.ts
 const API_VERSION$1 = "2022-11-28";
@@ -42723,7 +42641,6 @@ var IssueService = class {
 		return Promise.allSettled([this.removeAssignee(issueNumber, username), ...labelsToRemove.map((label) => this.removeLabel(issueNumber, label))]);
 	}
 };
-
 //#endregion
 //#region services/github/team-service.ts
 var TeamService = class {
@@ -42767,7 +42684,6 @@ var TeamService = class {
 		return (await this.resolveMaintainers(maintainers)).includes(username);
 	}
 };
-
 //#endregion
 //#region services/github/stats-service.ts
 const API_VERSION = "2022-11-28";
@@ -42814,7 +42730,6 @@ var StatsService = class {
 		})).data;
 	}
 };
-
 //#endregion
 //#region handlers/comment-handler.ts
 var CommentHandler = class {
@@ -42867,16 +42782,15 @@ var CommentHandler = class {
 	}
 	getCommand(parsedCommand) {
 		switch (parsedCommand.type) {
-			case CommandType.SELF_ASSIGN: return new SelfAssignCommand();
-			case CommandType.SELF_UNASSIGN: return new SelfUnassignCommand();
-			case CommandType.ASSIGN_USER: return new AssignUserCommand(parsedCommand);
-			case CommandType.UNASSIGN_USER: return new UnassignUserCommand(parsedCommand);
-			case CommandType.AUTO_SUGGEST: return new AutoSuggestCommand();
+			case "self_assign": return new SelfAssignCommand();
+			case "self_unassign": return new SelfUnassignCommand();
+			case "assign_user": return new AssignUserCommand(parsedCommand);
+			case "unassign_user": return new UnassignUserCommand(parsedCommand);
+			case "auto_suggest": return new AutoSuggestCommand();
 			default: return null;
 		}
 	}
 };
-
 //#endregion
 //#region utils/helpers/common.ts
 /**
@@ -42898,9 +42812,8 @@ function chunkArray(array, chunkSize) {
 */
 function getDaysBetween(start, end) {
 	const diffTime = Math.abs(end.getTime() - start.getTime());
-	return Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
+	return Math.ceil(diffTime / 864e5);
 }
-
 //#endregion
 //#region handlers/schedule-handler.ts
 var ScheduleHandler = class {
@@ -43128,7 +43041,6 @@ var ScheduleHandler = class {
 		await summary_summary.write();
 	}
 };
-
 //#endregion
 //#region index.ts
 (async () => {
@@ -43141,6 +43053,6 @@ var ScheduleHandler = class {
 		if (error instanceof Error) return setFailed(error.message);
 	}
 })();
-
 //#endregion
+
 
